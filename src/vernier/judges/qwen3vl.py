@@ -15,11 +15,28 @@ does not depend on the model volunteering a number in its answer text. Calibrati
 and never pooled across kinds (ARCHITECTURE.md).
 
 Two calls per frame, one per task (hand_count, manipulation), combined into one `JudgeResponse`.
+
+`_call_qwen3vl` is wired to the real vLLM server (`cloud/modal_qwen3vl.py`, Modal today, AWS
+once Modal credits run out) via the standard `openai` client pointed at `QWEN3VL_BASE_URL` --
+verified against the installed `openai` package's own response types, not assumed: multimodal
+content blocks are `{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}`
+alongside a `{"type": "text", ...}` block (vLLM's OpenAI-compatible server implements the same
+shape OpenAI's own vision API uses), `response.model` echoes back `--served-model-name`, and
+`response.choices[0].logprobs.content` carries real per-output-token logprobs. A documented,
+real vLLM limitation: *input*-side prompt logprobs are not properly supported for multimodal
+requests (vLLM issue #16107) -- this module only ever reads *output*-token logprobs (the
+model's own answer), never prompt logprobs, so that gap does not apply here.
 """
 
 from __future__ import annotations
 
+import base64
+import math
+import os
+import time
 from typing import Literal, cast
+
+import openai
 
 from vernier.judges.base import JudgeAdapter, parse_hand_count_response, parse_manipulation_response
 from vernier.judges.prompts import PromptVariant, load_prompt
@@ -39,9 +56,19 @@ _STATUS_SEVERITY: dict[JudgeStatus, int] = {
     "ok": 0,
 }
 
-# Wave 1 placeholder: an open-weights model's "revision" is a checkpoint identifier/hash
-# resolved from the loaded weights (Wave 2/4), not fabricated here ahead of a real load.
-_JUDGE_REV_PLACEHOLDER = "unresolved-wave1-qwen3vl"
+_MODEL = "Qwen/Qwen3-VL-8B-Instruct-FP8"
+_MAX_OUTPUT_TOKENS = 64  # the answer is always a short JSON object, never free-form prose
+
+# Modal L4 pricing at time of writing (docs/DECISIONS.md D042, verified live) -- a rough
+# per-call attribution (this call's own wall-clock share of warm-container time), not an
+# invoice. Deliberately excludes idle warm-time between calls, which is a real cost this number
+# undercounts; the actual total spend for a run should be read from Modal's own billing, not
+# summed from JudgeResponse.cost_usd across many calls.
+_MODAL_L4_USD_PER_HOUR = 0.80
+
+# Reported by judge_rev() before any real call has happened -- an open-weights model's
+# "revision" is only meaningful once something has actually loaded and answered.
+_JUDGE_REV_UNRESOLVED = "unresolved (no live call yet)"
 
 
 def _combine_status(a: JudgeStatus, b: JudgeStatus) -> JudgeStatus:
@@ -64,23 +91,100 @@ def _logprob_confidence(token_logprob: float | None) -> Confidence:
     return Confidence(kind="logprob", value=value)
 
 
+def _mean_output_token_probability(
+    logprobs: "openai.types.chat.chat_completion.ChoiceLogprobs | None",
+) -> float | None:
+    """Convert real per-output-token logprobs into a single [0, 1] confidence value.
+
+    The mean token probability across the response's own answer tokens -- this project's own
+    operationalization, not a value vLLM/OpenAI hands back directly (there is no single "the
+    confidence" field on a chat completion). Chosen over e.g. the first token's probability
+    alone because the answer is a short JSON object (`{"hand_count": 2}`) where the
+    semantically-decisive token is not reliably the first one emitted. Returns `None` when the
+    server didn't return per-token logprobs at all (e.g. `logprobs` wasn't honoured).
+    """
+    if logprobs is None or not logprobs.content:
+        return None
+    mean_logprob = sum(t.logprob for t in logprobs.content) / len(logprobs.content)
+    return math.exp(mean_logprob)
+
+
 class Qwen3VLJudge(JudgeAdapter):
-    """The reproducibility anchor: open weights, no API keys required. Exposes logprob confidence."""
+    """The sole judge in the panel (`docs/DECISIONS.md` D042): self-hosted, open weights, no
+    API key required. Exposes logprob confidence."""
 
     judge = "qwen3-vl"
 
+    def __init__(self) -> None:
+        # Lazy: constructing openai.OpenAI() with no base_url/api_key raises immediately if
+        # OPENAI_API_KEY isn't set in the environment, and merely constructing a Qwen3VLJudge
+        # (e.g. in a test that monkeypatches _call_qwen3vl and never touches the real client)
+        # must not require QWEN3VL_BASE_URL to exist.
+        self._client_instance: openai.OpenAI | None = None
+        self._last_model_version = _JUDGE_REV_UNRESOLVED
+
+    @property
+    def _client(self) -> openai.OpenAI:
+        if self._client_instance is None:
+            base_url = os.environ["QWEN3VL_BASE_URL"]
+            self._client_instance = openai.OpenAI(base_url=base_url, api_key="EMPTY")
+        return self._client_instance
+
     def judge_rev(self) -> str:
-        return _JUDGE_REV_PLACEHOLDER
+        return self._last_model_version
+
+    def _image_bytes_for(self, frame: FrameRef) -> bytes:
+        """Seam: resolve `frame` to its real JPEG bytes.
+
+        Not wired here -- needs the evaluation-parquet adapter
+        (`sampling.draw._candidate_frames`'s own still-unwired seam) to supply a frame_id ->
+        bytes lookup first, so the two seams aren't duplicated.
+        """
+        raise NotImplementedError(
+            "Qwen3VLJudge._image_bytes_for needs the evaluation-parquet adapter wired first"
+        )
 
     def _call_qwen3vl(self, frame: FrameRef, prompt_text: str) -> tuple[str, int, float, float | None]:
-        """Wave 2/4 seam: real local-or-Modal inference call.
+        """Issue one real call to the self-hosted Qwen3-VL server for one task's prompt
+        against `frame`'s image, and return `(raw_response_text, latency_ms, cost_usd,
+        token_logprob)`.
 
-        Returns `(raw_response_text, latency_ms, cost_usd, token_logprob)`. `token_logprob` is
-        the per-token logprob-derived confidence in [0, 1] when the loaded model exposes one for
-        this call, else `None` (e.g. a prompt variant under which this judge chooses not to
-        expose one). Not wired in Wave 1.
+        `latency_ms` is wall-clock time around the call -- neither vLLM's nor OpenAI's response
+        carries a latency/duration field of its own. `cost_usd` is a rough per-call attribution
+        of Modal L4 warm-container time (see `_MODAL_L4_USD_PER_HOUR`'s docstring for why this
+        is an underestimate, not an invoice). `judge_rev()` becomes resolvable after this call
+        via `response.model`.
         """
-        raise NotImplementedError
+        image_bytes = self._image_bytes_for(frame)
+        image_b64 = base64.standard_b64encode(image_bytes).decode("ascii")
+
+        start = time.monotonic()
+        response = self._client.chat.completions.create(
+            model=_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"},
+                        },
+                        {"type": "text", "text": prompt_text},
+                    ],
+                }
+            ],
+            max_tokens=_MAX_OUTPUT_TOKENS,
+            logprobs=True,
+        )
+        latency_ms = int((time.monotonic() - start) * 1000)
+
+        self._last_model_version = response.model or self._last_model_version
+        cost_usd = (latency_ms / 1000) * (_MODAL_L4_USD_PER_HOUR / 3600)
+
+        choice = response.choices[0]
+        token_logprob = _mean_output_token_probability(choice.logprobs)
+
+        return choice.message.content or "", latency_ms, cost_usd, token_logprob
 
     def judge_frame(self, frame: FrameRef, prompt_variant: PromptVariant) -> JudgeResponse:
         hand_count_prompt = load_prompt(prompt_variant, task="hand_count")
