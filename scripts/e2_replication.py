@@ -49,7 +49,15 @@ def _run_variant(
     variant: PromptVariant,
     judge: JudgeAdapter,
     published: dict[str, tuple[int, bool]],
+    *,
+    checkpoint_path: Path | None = None,
+    checkpoint_every: int = 100,
 ) -> dict[str, Any]:
+    """`checkpoint_path`, if given, is overwritten with the running aggregate every
+    `checkpoint_every` frames -- real insurance for a real, many-hour run: without it, an
+    interruption anywhere before the loop's own final line loses every call made so far, since
+    nothing here was written to disk until now. `None` (the default) keeps existing callers
+    (smoke-scale runs, tests) byte-for-byte unchanged."""
     n_ok = 0
     hand_ge1 = hand_eq2 = active_yes = 0
     hand_count_agree = active_labor_agree = 0
@@ -58,30 +66,49 @@ def _run_variant(
     total_latency_ms = 0
     status_counts: dict[str, int] = {}
 
-    for frame in frames:
+    for i, frame in enumerate(frames, start=1):
         resp = judge.judge_frame(frame, variant)
         total_cost_usd += resp.cost_usd
         total_latency_ms += resp.latency_ms
         status_counts[resp.status] = status_counts.get(resp.status, 0) + 1
-        if resp.status != "ok":
-            continue
-        n_ok += 1
-        if resp.hands_visible is not None and resp.hands_visible >= 1:
-            hand_ge1 += 1
-        if resp.hands_visible == 2:
-            hand_eq2 += 1
-        if resp.manipulation:
-            active_yes += 1
+        if resp.status == "ok":
+            n_ok += 1
+            if resp.hands_visible is not None and resp.hands_visible >= 1:
+                hand_ge1 += 1
+            if resp.hands_visible == 2:
+                hand_eq2 += 1
+            if resp.manipulation:
+                active_yes += 1
 
-        label = published.get(frame.frame_id)
-        if label is None:
-            continue
-        n_comparable += 1
-        published_hand_count, published_active = label
-        if resp.hands_visible == published_hand_count:
-            hand_count_agree += 1
-        if resp.manipulation == published_active:
-            active_labor_agree += 1
+            label = published.get(frame.frame_id)
+            if label is not None:
+                n_comparable += 1
+                published_hand_count, published_active = label
+                if resp.hands_visible == published_hand_count:
+                    hand_count_agree += 1
+                if resp.manipulation == published_active:
+                    active_labor_agree += 1
+
+        if checkpoint_path is not None and (i % checkpoint_every == 0 or i == len(frames)):
+            denom = n_ok or 1
+            comparable_denom = n_comparable or 1
+            checkpoint_path.write_text(
+                json.dumps(
+                    {
+                        "n_processed": i,
+                        "n_total": len(frames),
+                        "n_ok": n_ok,
+                        "status_counts": status_counts,
+                        "hand_ge1_rate": hand_ge1 / denom,
+                        "hand_eq2_rate": hand_eq2 / denom,
+                        "active_manipulation_rate": active_yes / denom,
+                        "total_cost_usd": total_cost_usd,
+                        "total_latency_ms": total_latency_ms,
+                    },
+                    indent=2,
+                )
+            )
+            print(f"[{variant}] {i}/{len(frames)} checkpointed", flush=True)
 
     denom = n_ok or 1  # denominator excludes non-ok responses (CONTRACTS.md rule 2: absence
     # is explicit); n_ok == 0 makes every rate below vacuously 0.0, not a division error.
@@ -143,15 +170,37 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument("--out", type=Path, default=Path("data/e2_results.json"))
+    parser.add_argument(
+        "--checkpoint-every",
+        type=int,
+        default=100,
+        help="write a running-aggregate checkpoint every N frames (real insurance for a long run)",
+    )
     args = parser.parse_args(argv)
 
     frames = draw_sample("E10k-ego")[: args.n]
     published = published_labels_for_sample("E10k-ego", {f.frame_id for f in frames})
     judge = Qwen3VLJudge()
 
+    checkpoint_dir = args.out.parent
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
     results = {
-        "P0a": _run_variant(frames, "P0a", judge, published),
-        "P0b": _run_variant(frames, "P0b", judge, published),
+        "P0a": _run_variant(
+            frames,
+            "P0a",
+            judge,
+            published,
+            checkpoint_path=checkpoint_dir / f"{args.out.stem}.P0a.checkpoint.json",
+            checkpoint_every=args.checkpoint_every,
+        ),
+        "P0b": _run_variant(
+            frames,
+            "P0b",
+            judge,
+            published,
+            checkpoint_path=checkpoint_dir / f"{args.out.stem}.P0b.checkpoint.json",
+            checkpoint_every=args.checkpoint_every,
+        ),
     }
 
     output = {
