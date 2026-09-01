@@ -72,7 +72,16 @@ def load_membership_frame_ids(membership_path: Path) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--parquet", type=Path, required=True, help="path to an evaluation parquet")
+    parser.add_argument(
+        "--parquet",
+        type=str,
+        required=True,
+        help=(
+            "path (or fsspec URI, e.g. hf://datasets/<repo>@<rev>/<file>.parquet) to an "
+            "evaluation parquet -- kept as a plain str, not Path: Path() collapses a URI's "
+            "'//' and breaks pyarrow's filesystem resolution for anything but a local file"
+        ),
+    )
     parser.add_argument(
         "--membership", type=Path, required=True, help="path to a written sample-membership JSON"
     )

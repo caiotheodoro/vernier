@@ -9,6 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import check_eval_parquets  # noqa: E402
 from check_eval_parquets import find_missing_frames, load_membership_frame_ids  # noqa: E402
 
 
@@ -69,3 +70,29 @@ def test_load_membership_frame_ids(tmp_path: Path) -> None:
         json.dumps([{"frame_id": "a", "sample": "G200-ego"}, {"frame_id": "b", "sample": "G200-ego"}])
     )
     assert load_membership_frame_ids(membership_path) == ["a", "b"]
+
+
+def test_cli_passes_a_remote_uri_through_unmangled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Regression test: --parquet was originally `type=Path`, which collapses a URI's "//" --
+    # `Path("hf://a/b")` stringifies back to "hf:/a/b", a single slash, which pyarrow's
+    # filesystem resolver then rejects outright. Caught only by actually running the CLI
+    # against a real `hf://` URI (see docs/DECISIONS.md, Wave 2 prep) -- this fixture data
+    # never exercised the CLI's own argument parsing, only the pure functions it calls.
+    uri = "hf://datasets/builddotai/Egocentric-10K-Evaluation@deadbeef/egocentric_10k.parquet"
+    seen: dict[str, object] = {}
+
+    def fake_read_table(source: object, columns: list[str]) -> pa.Table:
+        seen["source"] = source
+        return _table([{"frame_id": "a", "image": {"bytes": b"\x89PNG", "path": "a.png"}}])
+
+    monkeypatch.setattr(check_eval_parquets.pq, "read_table", fake_read_table)  # type: ignore[attr-defined]
+
+    membership_path = tmp_path / "membership.json"
+    membership_path.write_text(json.dumps([{"frame_id": "a"}]))
+
+    exit_code = check_eval_parquets.main(["--parquet", uri, "--membership", str(membership_path)])
+
+    assert exit_code == 0
+    assert seen["source"] == uri  # exact string, not a Path-mangled "hf:/..."
