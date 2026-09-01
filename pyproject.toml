@@ -28,6 +28,10 @@ dev = [
     "pytest>=8.0",
     "mypy>=1.10",
 ]
+probes = [
+    "scikit-learn>=1.4",
+    "numpy>=1.26",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -48,5 +52,9 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["sklearn", "sklearn.*"]
 ignore_missing_imports = true
 
