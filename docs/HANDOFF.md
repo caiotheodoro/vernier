@@ -3,12 +3,14 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-08-31, after Wave S, Wave 0, and a two-pass refinement audit (D031, D032).**
+**Last updated: 2026-09-01, after Wave S, Wave 0, a two-pass refinement audit (D031, D032), and
+a file-ownership fix that makes Wave 1 actually dispatchable (D033, `WAVES.md`).**
 
 ## Where this stands
 
 **Documentation and interface freeze complete and committed. Survey gate passed. Wave S and
-Wave 0 done. No experiments, no judge called, no code beyond typed stubs and contract models.**
+Wave 0 done, Wave 1 dispatch-ready. No experiments, no judge called, no code beyond typed stubs
+and contract models.**
 
 `SURVEY.md` returned **PROCEED, narrowed**: the contribution is H5 (cross-corpus judge
 confound) plus judge-as-instrument, not judge validation, which is prior-arted. The survey also
@@ -59,18 +61,22 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D032 |
+| Decisions | `DECISIONS.md`, D001–D033 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
-| Interface | `src/vernier/` — pydantic models (`models.py`) + nine typed stub units, `tests/fixtures/` — **committed**, `ea75148` |
+| Interface | `src/vernier/` — pydantic models (`models.py`) + eighteen Wave-1-ready unit files, `tests/fixtures/` — **committed**, `496e514` |
+| Waves | `WAVES.md` — the fan-out → independent-review paradigm and every wave's acceptance/review/eval/rubric criteria |
 
 ## The next action
 
-**Wave 1**: eighteen units, one directory and one test file each, TDD against Wave 0's
-fixtures, offline, no network. Ownership rule: one agent per module, no shared-file edits. Not
-yet dispatched — a separate decision from this resume. The P1 tier from `DECISIONS.md` D031/D032
-(CI, pre-commit privacy-gate hook, `scripts/check_eval_parquets.py`, HF-revision assertion in
-`sampling`, H5/R100 power simulation, rubric pilot, backbone pin, honest — not no-op —
-`Makefile` experiment targets) is also still open and arguably belongs before Wave 1, not after.
+**Wave 1 is dispatch-ready but not yet dispatched** — a separate decision from this resume.
+`WAVES.md` has the corrected 18-unit table (every unit now maps to exactly one file,
+`DECISIONS.md` D033) and the full fan-out → independent-review loop each unit runs through
+before its work is trusted or committed. Read `WAVES.md` before dispatching, not just this file.
+
+The P1 tier from `DECISIONS.md` D031/D032 (CI, pre-commit privacy-gate hook,
+`scripts/check_eval_parquets.py`, HF-revision assertion in `sampling`, H5/R100 power
+simulation, rubric pilot, backbone pin, honest — not no-op — `Makefile` experiment targets) is
+also still open and arguably belongs before Wave 1, not after.
 
 ## Open questions
 
