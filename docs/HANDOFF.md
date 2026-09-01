@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D042 |
+| Decisions | `DECISIONS.md`, D001–D043 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -144,28 +144,38 @@ finding.
 
 ## The next action
 
-**The Qwen3-VL judge server is deployed and smoke-tested for real, text-only path only.**
-`cloud/modal_qwen3vl.py` is live on Modal (`vernier-qwen3vl-judge`, scale-to-zero,
-`min_containers=0`), health-checks pass, and a real text-only chat completion against the
-deployed endpoint (`https://dev-caiotheodoro--vernier-qwen3vl-judge-server.us-east.modal.direct`)
-returned a correct response (`"OK"`) with real usage stats. Two real deploy-blocking bugs were
-caught only by actually running it and are fixed and committed (`8b6fd49`): Modal's own proxy
-auth (`unauthenticated=True` now — the plain `openai` client can't supply Modal-workspace auth
-headers) and a KV-cache OOM (`--max-model-len 8192` — the model's 262144 default demands 36GB,
-the L4 has ~7GB free after weights).
+**The Qwen3-VL judge is deployed and fully smoke-tested live end to end, image + logprobs
+included — real correct output.** `cloud/modal_qwen3vl.py` is live on Modal
+(`vernier-qwen3vl-judge`, scale-to-zero, `min_containers=0`; a cold start after idle takes
+~5 minutes, observed live). The evaluation parquet (`egocentric_10k.parquet`, real HF repo is
+**three separate parquet files**, one per corpus arm — `egocentric_10k.parquet`→`E10k-ego`,
+`ego4d.parquet`→`E10k-ego4d`, `epic_kitchens.parquet`→`E10k-epic`, not one file filtered by a
+column, confirmed via `HfApi().list_repo_files`) was downloaded locally
+(`hf_hub_download`, ~1.79GB, ~25 min at this session's network speed) after two remote
+single-row `hf://` reads stalled 9+ minutes each and were killed — a real fix for real slowness,
+recorded here so it isn't rediscovered: **always `hf_hub_download` the file locally before
+reading individual rows/images out of it; never stream single-row reads over `hf://`.**
 
-**Not yet exercised: the real multimodal (image + logprobs) request path.** Fetching one real
-frame's bytes from the evaluation parquet to test this stalled twice in this session (a
-single-row `hf://` read via pyarrow ran 9+ minutes with no output, same slowness already noted
-below re: `check_eval_parquets.py`) — killed both times, not a vernier code bug, an artifact of
-streaming a single row out of a large remotely-hosted parquet without a local copy. The
-multimodal request shape itself (`image_url` content block + `logprobs: true`) is independently
-verified against the installed `openai` package's real response types and vLLM's own docs, but
-has not been fired against the live server with a real image. **Next session should either
-`hf_hub_download` the evaluation parquet locally first** (this project's own noted fix for the
-same slowness, see below) **or otherwise get one real frame's bytes some other way**, then send
-one real multimodal request to the deployed endpoint before trusting `judges/qwen3vl.py` end to
-end.
+A real `Qwen3VLJudge.judge_frame` call against a real frame (`cc94d1f8-749a-400f-82e1-
+de35158cfc18`) returned `status: "ok"`, `hands_visible: 2`, `manipulation: true`, both
+**exactly matching that frame's real published `hand_count`/`active_labor` labels**, latency
+~950ms, cost ~$0.0002/call (Modal L4 warm-container attribution). Two real bugs were caught
+only by this live call and are fixed, tested, and committed:
+
+- **`docs/DECISIONS.md` D043 — the parsing contract was built on a false premise.** D014/F1
+  claimed the shipped prompts specify a JSON response schema; they don't — every prompt
+  variant (P0-P7) asks for a bare `0`/`1`/`2` or `yes`/`no` (P7 adds a comma + confidence),
+  verified against a fresh live download of Build AI's own prompt files. The real model
+  answered correctly and vernier's own parser called it `"unparseable"` until this was fixed.
+  `judges/base.py`'s three parsing functions are rewritten around the real format; all of that
+  file's tests (and `test_judges_qwen3vl.py`'s mocked raw responses) rewritten to match.
+- `Qwen3VLJudge._client`'s `base_url` was missing vLLM's `/v1` path segment — every real call
+  404ed until fixed (own regression test added).
+
+Two earlier deploy-blocking bugs from this session's prior pass are also fixed and committed
+(`8b6fd49`): Modal's own proxy auth (`unauthenticated=True` — the plain `openai` client can't
+supply Modal-workspace auth headers) and a KV-cache OOM (`--max-model-len 8192` — the model's
+262144 default demands 36GB, the L4 has ~7GB free after weights).
 
 - `GEMINI_API_KEY`, `ANTHROPIC_API_KEY` — moot now. Per D042 the panel is Qwen3-VL only;
   `judges/gemini.py`/`judges/claude.py` are deleted, not stubbed.
@@ -177,8 +187,10 @@ end.
 
 What's left unwired: `sampling/draw.py`'s `_candidate_frames`/`_factory_worker_hours`, and
 `judges/qwen3vl.py`'s `_image_bytes_for` (frame_id → real JPEG bytes — both need the same
-evaluation-parquet adapter, so build it once, not twice). `_call_qwen3vl` itself is real,
-tested, and now confirmed live for text; only the image path is unverified live. Follow
+evaluation-parquet adapter, so build it once, not twice; now that the real per-sample file
+mapping is known, both are unblocked, just not yet written). `_call_qwen3vl` and the full
+`judge_frame` merge/parse path are real, tested, and now confirmed live end to end for one real
+frame — no known gap left before running a small real smoke batch across many frames. Follow
 `WAVES.md`'s Wave 2 section (evaluation-parquet adapter, live judge harness with cost/latency
 accounting, E2 replication runner, E5 prompt-sweep runner) and its own added safeguard: smoke-
 test at small N before any full-scale judge run, since no dollar cap is pre-registered for judge-

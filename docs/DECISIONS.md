@@ -824,3 +824,64 @@ Anthropic is out of the panel entirely, not merely deprioritized.
 path) — this alone does NOT license silently reverting to the original three-judge design
 without checking with Caio first, since the reframe was also a deliberate judgment call about
 SOTA having moved on, not purely a forced-by-unavailability decision.
+
+---
+
+## D043 — The published "JSON response schema" claim (D014/F1) was wrong; judge parsing rewritten
+
+Caught by an actual live call, not inspection: the Qwen3-VL judge server, deployed and
+smoke-tested this session, was fed the real, pinned `P0b` hand-count prompt against a real
+frame and answered `"2"` — correct, matching that frame's real published `hand_count` label
+exactly — and `judges/base.py`'s `parse_hand_count_response` classified it `"unparseable"`.
+Same result for the manipulation task (`"yes"`, correct, unparseable).
+
+Root cause: D014/`UPSTREAM-FINDINGS.md` F1 claimed Build AI's shipped prompts specify "a
+constrained JSON response schema (`hand_count` as INTEGER; `answer` as an enum of `yes`/`no`)".
+That is false. Read directly, both pinned prompt files
+(`docs/upstream/P0a-hand_count.txt`/`P0b-hand_count.txt`, `P0a-active_manipulation.txt`/
+`P0b-active_manipulation.txt` — byte-identical to a fresh live download of Build AI's own
+`prompts/*.txt` from the evaluation-release repo, re-verified this session) end in a bare-value
+instruction: "Return only one of: 0, 1, 2. No extra words." and 'Respond only with: "yes" or
+"no."'. Every derived variant (`judges/prompts.py`, P1-P7) preserves that bare-value ending;
+P7's confidence extension appends a comma and a number, still not JSON:
+"...followed by a comma and a confidence value... No extra words." F1 conflated the
+*evaluation parquet's stored column schema* (`hand_count: int32`, `active_labor: "yes"/"no"` —
+a real schema, just not a *prompted* one, confirmed via the parquet footer) with what the
+prompt actually instructs the model to emit — and this went uncaught through Wave 1's fixture-
+and-mock-based tests because every test's own mocked "raw response" was written in the same
+(wrong) JSON shape the code expected, so parser and test agreed with each other and disagreed
+with reality together.
+
+**Fixed**: `judges/base.py`'s `parse_hand_count_response`, `parse_manipulation_response`, and
+`build_confidence` rewritten around one shared regex (`_VALUE_RE`) matching the real format —
+a bare `0`/`1`/`2` or `yes`/`no` (case-insensitive, tolerant of surrounding quotes/backticks and
+a trailing period, since that much noise isn't a content deviation), optionally followed by a
+P7-style `, <confidence>`. `_extract_json_object` (JSON extraction, markdown-fence handling)
+deleted — nothing in the real format ever needs it. All 28 of that file's tests rewritten
+against real bare-value fixtures instead of JSON ones; `test_judges_qwen3vl.py`'s mocked
+`_call_qwen3vl` return values updated the same way. Re-ran the live call after the fix: same
+frame, same prompt, `status: "ok"`, `hands_visible: 2`, `manipulation: true` — both matching
+the frame's real published labels.
+
+Also caught and fixed in the same pass, same root cause (a real live 404, not assumed):
+`Qwen3VLJudge._client`'s `base_url` was missing the `/v1` path segment vLLM's OpenAI-compatible
+server actually serves at — `openai.OpenAI()`'s *default* base_url already ends in `/v1`, but
+the client does not append it for a custom one. Every real call would have 404ed regardless of
+the parsing fix above. Fixed alongside, with its own regression test
+(`test_client_base_url_appends_v1_for_vlllms_openai_compatible_routes`).
+
+Corrected everywhere the false JSON claim appeared in a live (non-frozen, non-gitignored) doc:
+`docs/UPSTREAM-FINDINGS.md` F1 (correction appended, not silently rewritten — the false claim
+stays visible with the correction attached, matching this project's own "correction discipline
+... applied first to itself" framing), `README.md`, `llms.txt`. `AGENTS.md`/`docs/RUBRIC.md`/
+`docs/PRE-REGISTRATION.md` never actually carried the claim despite D014 listing them.
+
+The lesson, consistent with `docs/HANDOFF.md`'s own recorded ones (D031/D032): a claim read
+from an upstream artifact and then relied on by hand-written mocks, without ever being
+exercised against the real thing, can be wrong in a way that a fully-green test suite hides
+completely — cross-checking against a live call is what surfaced this, matching this project's
+own repeated finding that self-consistent code and tests are not the same thing as correct
+code.
+
+**Reverses if:** nothing. It was a factual error, corrected against primary sources (the real
+prompt files, re-verified live) and a real live call.

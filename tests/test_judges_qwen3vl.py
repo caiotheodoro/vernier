@@ -82,8 +82,8 @@ def test_both_tasks_ok_with_logprob_combines_to_ok_with_logprob_confidence(
     _patch_calls(
         monkeypatch,
         [
-            ('{"hand_count": 2}', 100, 0.0, 0.83),
-            ('{"answer": "yes"}', 150, 0.0, 0.91),
+            ("2", 100, 0.0, 0.83),
+            ("yes", 150, 0.0, 0.91),
         ],
     )
     judge = Qwen3VLJudge()
@@ -109,8 +109,8 @@ def test_confidence_round_trips_through_real_pydantic_model(
     _patch_calls(
         monkeypatch,
         [
-            ('{"hand_count": 1}', 100, 0.0, 0.5),
-            ('{"answer": "no"}', 100, 0.0, 0.5),
+            ("1", 100, 0.0, 0.5),
+            ("no", 100, 0.0, 0.5),
         ],
     )
     judge = Qwen3VLJudge()
@@ -131,8 +131,8 @@ def test_hand_count_logprob_none_falls_back_to_manipulation_logprob(
     _patch_calls(
         monkeypatch,
         [
-            ('{"hand_count": 1}', 100, 0.0, None),
-            ('{"answer": "yes"}', 100, 0.0, 0.77),
+            ("1", 100, 0.0, None),
+            ("yes", 100, 0.0, 0.77),
         ],
     )
     judge = Qwen3VLJudge()
@@ -144,8 +144,8 @@ def test_both_logprobs_none_falls_back_to_kind_none(monkeypatch: pytest.MonkeyPa
     _patch_calls(
         monkeypatch,
         [
-            ('{"hand_count": 1}', 100, 0.0, None),
-            ('{"answer": "yes"}', 100, 0.0, None),
+            ("1", 100, 0.0, None),
+            ("yes", 100, 0.0, None),
         ],
     )
     judge = Qwen3VLJudge()
@@ -159,8 +159,8 @@ def test_logprob_out_of_range_falls_back_to_kind_none_without_raising(
     _patch_calls(
         monkeypatch,
         [
-            ('{"hand_count": 1}', 100, 0.0, 1.5),
-            ('{"answer": "yes"}', 100, 0.0, -0.2),
+            ("1", 100, 0.0, 1.5),
+            ("yes", 100, 0.0, -0.2),
         ],
     )
     judge = Qwen3VLJudge()
@@ -177,7 +177,7 @@ def test_hand_count_ok_manipulation_refused_combines_to_refused_both_null(
     _patch_calls(
         monkeypatch,
         [
-            ('{"hand_count": 1}', 100, 0.0, 0.6),
+            ("1", 100, 0.0, 0.6),
             ("I'm sorry, I cannot help with that.", 100, 0.0, None),
         ],
     )
@@ -197,8 +197,8 @@ def test_hand_count_unparseable_manipulation_ok_combines_to_unparseable(
     _patch_calls(
         monkeypatch,
         [
-            ("not json at all", 100, 0.0, None),
-            ('{"answer": "yes"}', 100, 0.0, 0.5),
+            ("not a recognizable answer", 100, 0.0, None),
+            ("yes", 100, 0.0, 0.5),
         ],
     )
     judge = Qwen3VLJudge()
@@ -242,8 +242,8 @@ def test_judge_frame_never_raises_on_garbage_input(monkeypatch: pytest.MonkeyPat
 
 def test_judge_frame_never_raises_on_garbage_logprob_type(monkeypatch: pytest.MonkeyPatch) -> None:
     garbage_responses: list[tuple[str, int, float, float | None]] = [
-        ('{"hand_count": 1}', 100, 0.0, "not-a-float"),  # type: ignore[list-item]
-        ('{"answer": "yes"}', 100, 0.0, None),
+        ("1", 100, 0.0, "not-a-float"),  # type: ignore[list-item]
+        ("yes", 100, 0.0, None),
     ]
     _patch_calls(monkeypatch, garbage_responses)
     judge = Qwen3VLJudge()
@@ -313,7 +313,7 @@ def test_call_qwen3vl_extracts_text_latency_and_mean_token_probability(
 
     judge = Qwen3VLJudge()
     monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
-    completion = _fake_completion('{"hand_count": 2}', token_logprobs=[-0.1, -0.05])
+    completion = _fake_completion("2", token_logprobs=[-0.1, -0.05])
 
     class _FakeCompletions:
         def create(self, **kwargs: object) -> ChatCompletion:
@@ -326,7 +326,7 @@ def test_call_qwen3vl_extracts_text_latency_and_mean_token_probability(
 
     raw, latency_ms, cost_usd, token_logprob = judge._call_qwen3vl(_frame(), "count the hands")
 
-    assert raw == '{"hand_count": 2}'
+    assert raw == "2"
     assert latency_ms >= 0
     assert cost_usd >= 0
     assert token_logprob == pytest.approx(math.exp((-0.1 + -0.05) / 2))
@@ -337,7 +337,7 @@ def test_call_qwen3vl_returns_none_logprob_when_server_omits_them(
 ) -> None:
     judge = Qwen3VLJudge()
     monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
-    completion = _fake_completion('{"answer": "yes"}', token_logprobs=None)
+    completion = _fake_completion("yes", token_logprobs=None)
 
     class _FakeCompletions:
         def create(self, **kwargs: object) -> ChatCompletion:
@@ -350,11 +350,30 @@ def test_call_qwen3vl_returns_none_logprob_when_server_omits_them(
     assert token_logprob is None
 
 
+def test_client_base_url_appends_v1_for_vlllms_openai_compatible_routes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Caught by a real 404 against the live deployed server, not by any prior test here: every
+    other test in this file monkeypatches the `_client` property itself, so none of them
+    exercise its real construction. `openai.OpenAI()`'s own default base_url already ends in
+    "/v1" -- the client never appends it for a custom base_url, so a bare Modal server root URL
+    404s on every real call unless "/v1" is appended here."""
+    monkeypatch.setenv("QWEN3VL_BASE_URL", "https://example.modal.direct")
+    judge = Qwen3VLJudge()
+    assert str(judge._client.base_url) == "https://example.modal.direct/v1/"
+
+
+def test_client_base_url_handles_a_trailing_slash(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("QWEN3VL_BASE_URL", "https://example.modal.direct/")
+    judge = Qwen3VLJudge()
+    assert str(judge._client.base_url) == "https://example.modal.direct/v1/"
+
+
 def test_call_qwen3vl_updates_judge_rev_from_the_real_response(monkeypatch: pytest.MonkeyPatch) -> None:
     judge = Qwen3VLJudge()
     monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
     completion = _fake_completion(
-        '{"hand_count": 0}', token_logprobs=[-0.02], model="Qwen/Qwen3-VL-8B-Instruct-FP8"
+        "0", token_logprobs=[-0.02], model="Qwen/Qwen3-VL-8B-Instruct-FP8"
     )
 
     class _FakeCompletions:

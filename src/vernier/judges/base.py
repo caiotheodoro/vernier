@@ -9,10 +9,8 @@ A judge never decides ground truth -- it is the object of measurement, not the o
 
 from __future__ import annotations
 
-import json
 import re
 from abc import ABC, abstractmethod
-from typing import Any
 
 from vernier.models import Confidence, FrameRef, JudgeResponse, JudgeStatus
 from vernier.judges.prompts import PromptVariant
@@ -49,32 +47,22 @@ _REFUSAL_MARKERS = (
 )
 
 
-def _extract_json_object(raw: str) -> dict[str, Any] | None:
-    """Best-effort extraction of a JSON object from a raw model response.
+# The real, verified answer format every prompt variant (P0-P7) actually specifies
+# (`docs/DECISIONS.md` D043) -- never JSON. P0-P6: a bare value, "No extra words". P7: the same
+# bare value, then a comma and a confidence number in [0, 1]. Case-insensitive (yes/no), and
+# tolerant of a model wrapping the bare value in quotes/backticks or a trailing period despite
+# the "no extra words" instruction -- that much formatting noise is not a content deviation.
+# Anything else (extra prose, a missing value) is a real "no extra words" violation and is
+# honestly unparseable, not coerced into "ok".
+_VALUE_RE = re.compile(
+    r"^\s*[\"'`]?\s*(?P<value>[0-2]|yes|no)\s*[\"'`]?\s*"
+    r"(?:,\s*(?P<confidence>[0-9]*\.?[0-9]+))?\s*\.?\s*$",
+    re.IGNORECASE,
+)
 
-    Handles the three shapes judges actually return: a bare JSON object, one wrapped in a
-    markdown code fence, and one embedded in surrounding prose ("Here is the result: {...}").
-    Returns `None` if no JSON object could be recovered at all -- callers then fall back to
-    refusal/unparseable classification of the raw text.
-    """
-    text = raw.strip()
-    fence_match = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
-    if fence_match:
-        text = fence_match.group(1).strip()
 
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        start = text.find("{")
-        end = text.rfind("}")
-        if start == -1 or end == -1 or end <= start:
-            return None
-        try:
-            parsed = json.loads(text[start : end + 1])
-        except json.JSONDecodeError:
-            return None
-
-    return parsed if isinstance(parsed, dict) else None
+def _match_value(raw: str) -> re.Match[str] | None:
+    return _VALUE_RE.match(raw)
 
 
 def _looks_like_refusal(raw: str) -> bool:
@@ -84,40 +72,40 @@ def _looks_like_refusal(raw: str) -> bool:
 
 
 def parse_hand_count_response(raw: str) -> tuple[int | None, JudgeStatus]:
-    """Parse a raw response to the hand-count prompt against Build AI's published schema:
-    `{"hand_count": <int>}` (`docs/UPSTREAM-FINDINGS.md` F1).
+    """Parse a raw response to the hand-count prompt against the real, shipped bare-value
+    format (`docs/DECISIONS.md` D043) -- never JSON.
 
-    - Valid JSON with `hand_count` in {0, 1, 2} -> `(value, "ok")`.
-    - JSON present but `hand_count` missing, of the wrong type, or outside {0, 1, 2} ->
-      `(None, "unparseable")`.
-    - No JSON object recoverable at all, and the text matches a first-person refusal marker
+    - A bare `0`, `1`, or `2` (optionally quoted/backticked, optionally followed by a P7-style
+      `, <confidence>` or a trailing period) -> `(value, "ok")`.
+    - Any other recognizable value token (e.g. `yes`/`no`, out of range) -> `(None,
+      "unparseable")`.
+    - No value token recoverable at all, and the text matches a first-person refusal marker
       (see `_REFUSAL_MARKERS`) -> `(None, "refused")`.
-    - No JSON object recoverable and no refusal marker matched -> `(None, "unparseable")`.
+    - No value token recoverable and no refusal marker matched -> `(None, "unparseable")`.
     """
-    data = _extract_json_object(raw)
-    if data is None:
+    match = _match_value(raw.strip())
+    if match is None:
         return (None, "refused") if _looks_like_refusal(raw) else (None, "unparseable")
 
-    value = data.get("hand_count")
-    if isinstance(value, bool) or not isinstance(value, int) or value not in (0, 1, 2):
+    value = match.group("value")
+    if value not in ("0", "1", "2"):
         return None, "unparseable"
-    return value, "ok"
+    return int(value), "ok"
 
 
 def parse_manipulation_response(raw: str) -> tuple[bool | None, JudgeStatus]:
-    """Parse a raw response to the manipulation prompt against Build AI's published schema:
-    `{"answer": "yes" | "no"}` (`docs/UPSTREAM-FINDINGS.md` F1).
+    """Parse a raw response to the manipulation prompt against the real, shipped bare-value
+    format (`docs/DECISIONS.md` D043) -- never JSON.
 
-    Same classification rules as `parse_hand_count_response`: a JSON object with `answer`
-    exactly `"yes"` or `"no"` is `"ok"`; any other JSON value for `answer` (missing, wrong
-    type, or outside the enum) is `"unparseable"`; unrecoverable JSON falls back to the same
-    refusal-marker heuristic.
+    Same classification rules as `parse_hand_count_response`: a bare `yes`/`no` (case-
+    insensitive) is `"ok"`; any other recognizable value token is `"unparseable"`; no value
+    token falls back to the same refusal-marker heuristic.
     """
-    data = _extract_json_object(raw)
-    if data is None:
+    match = _match_value(raw.strip())
+    if match is None:
         return (None, "refused") if _looks_like_refusal(raw) else (None, "unparseable")
 
-    value = data.get("answer")
+    value = match.group("value").lower()
     if value == "yes":
         return True, "ok"
     if value == "no":
@@ -126,17 +114,17 @@ def parse_manipulation_response(raw: str) -> tuple[bool | None, JudgeStatus]:
 
 
 def build_confidence(raw: str) -> Confidence:
-    """Build a `Confidence` from a raw response's parsed JSON, covering only the `"none"` and
-    `"verbalized"` cases.
+    """Build a `Confidence` from a raw response's bare-value text, covering only the `"none"`
+    and `"verbalized"` cases.
 
-    Per `docs/UPSTREAM-FINDINGS.md` F8, the published Build AI schema (P0a/P0b, and P1-P6
-    which only touch the hand/manipulation rule text) exposes no confidence field at all, so
-    `kind="none"` is the correct result there. `P7` (`docs/PRE-REGISTRATION.md`) extends the
-    schema with a `confidence` number in [0, 1]; when present and valid this returns
-    `kind="verbalized"`. A `confidence` field that is present but the wrong type or out of
-    range is treated as no usable signal and also falls back to `kind="none"` rather than
-    raising, since a judge emitting a malformed confidence value is a parsing failure of that
-    one field, not grounds to fail the whole response.
+    Per `docs/UPSTREAM-FINDINGS.md` F8, the published Build AI prompts (P0a/P0b, and P1-P6
+    which only touch the hand/manipulation rule text) never ask for a confidence value at all,
+    so `kind="none"` is the correct result there. `P7` (`docs/PRE-REGISTRATION.md`) extends the
+    answer with a comma-separated confidence number in [0, 1] (never JSON, `docs/DECISIONS.md`
+    D043); when present and valid this returns `kind="verbalized"`. A confidence token that is
+    present but out of range or not a number is treated as no usable signal and also falls back
+    to `kind="none"` rather than raising, since a judge emitting a malformed confidence value is
+    a parsing failure of that one field, not grounds to fail the whole response.
 
     This function does NOT handle `kind="logprob"`: per `docs/ARCHITECTURE.md`'s
     confidence-extraction seam, only judges with open-weights access (Qwen3-VL) can produce a
@@ -144,15 +132,11 @@ def build_confidence(raw: str) -> Confidence:
     this function -- which only sees the already-serialized response text -- does not have
     access to. The caller (that adapter) constructs `Confidence(kind="logprob", ...)` itself.
     """
-    data = _extract_json_object(raw)
-    if data is None:
+    match = _match_value(raw.strip())
+    if match is None or match.group("confidence") is None:
         return Confidence(kind="none", value=None)
 
-    value = data.get("confidence")
-    if value is None or isinstance(value, bool) or not isinstance(value, (int, float)):
-        return Confidence(kind="none", value=None)
-
-    value = float(value)
+    value = float(match.group("confidence"))
     if not 0 <= value <= 1:
         return Confidence(kind="none", value=None)
 

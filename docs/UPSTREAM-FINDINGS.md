@@ -13,8 +13,21 @@ in `docs/upstream/`.
 
 vernier's first drafts described the quality metric as coming from "a one-line prompt". That
 was taken from press coverage and it is **wrong**. The shipped prompts are structured: a role
-line, an explicit task, an explicit definition, five bulleted rules, and a constrained JSON
-response schema (`hand_count` as INTEGER; `answer` as an enum of `yes`/`no`).
+line, an explicit task, an explicit definition, five bulleted rules, and a constrained answer
+format.
+
+**Correction (`docs/DECISIONS.md` D043):** that constrained format is not JSON. The claim above
+originally said "a constrained JSON response schema (`hand_count` as INTEGER; `answer` as an
+enum of `yes`/`no`)" — conflating the *evaluation parquet's stored column* schema
+(`hand_count: int32`, `active_labor: "yes"/"no"` — a real schema, just not a *prompted* one)
+with what the prompt actually instructs the model to emit. Read directly, both shipped prompt
+files (`docs/upstream/P0a-*`/`P0b-*`) end in a bare-value instruction — "Return only one of: 0,
+1, 2. No extra words." and 'Respond only with: "yes" or "no."' — never JSON, in any of P0-P7
+(`docs/PRE-REGISTRATION.md`'s P7 confidence extension asks for the bare value plus a
+comma-separated confidence number, still not JSON). `judges/base.py`'s two response parsers
+were built against the wrong claim above and, until D043, would have misclassified every
+correct real answer as `"unparseable"` — caught by an actual live call to the deployed
+Qwen3-VL judge, not by inspection.
 
 They are more careful than the secondary sources suggested. The audit's premise survives —
 there is still no human gold, no agreement statistic, no interval, no prompt-sensitivity

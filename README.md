@@ -18,7 +18,10 @@ visibility and active manipulation density compared to previous in-the-wild egoc
 datasets".
 
 The prompts behind them are more careful than press coverage suggested — structured, with
-explicit rules and a constrained JSON schema. What is missing is everything downstream of
+explicit rules and a constrained bare-value answer format (`0`/`1`/`2`, `yes`/`no` — not JSON,
+corrected in `docs/DECISIONS.md` D043 after the earlier "constrained JSON schema" claim, D014,
+was found to not match the shipped prompt files it was supposedly read from). What is missing
+is everything downstream of
 that: no human gold, no agreement statistic, no confidence interval, no prompt-sensitivity
 analysis, and no test that the judge applies the same scale to a factory floor and a home
 kitchen. **The margin over EPIC-KITCHENS-100 is 6.05 pp and 6.62 pp** — small enough that a

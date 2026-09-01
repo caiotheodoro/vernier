@@ -126,7 +126,14 @@ class Qwen3VLJudge(JudgeAdapter):
     @property
     def _client(self) -> openai.OpenAI:
         if self._client_instance is None:
-            base_url = os.environ["QWEN3VL_BASE_URL"]
+            # Caught by a real live call, not assumed: openai.OpenAI()'s *default* base_url
+            # already ends in "/v1" (confirmed: constructing the client with no base_url at all
+            # yields "https://api.openai.com/v1/"), but the client does not append "/v1" itself
+            # for a custom base_url -- it only ever does `base_url + "/chat/completions"`. vLLM's
+            # OpenAI-compatible server serves at `/v1/chat/completions`, so a bare
+            # QWEN3VL_BASE_URL (just the Modal server's root URL) 404s on every real call unless
+            # "/v1" is appended here.
+            base_url = os.environ["QWEN3VL_BASE_URL"].rstrip("/") + "/v1"
             self._client_instance = openai.OpenAI(base_url=base_url, api_key="EMPTY")
         return self._client_instance
 

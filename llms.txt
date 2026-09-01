@@ -6,7 +6,8 @@ Build AI sells egocentric factory video with published guarantees on quality. Th
 number behind the headline claim -- 96.42% of frames contain a hand, 91.66% show
 active manipulation, "SOTA in hand visibility and active manipulation density" -- comes
 from 10,000 frames labelled once by gemini-2.5-flash. The prompts are structured and
-reasonably careful -- explicit rules, a constrained JSON schema -- but there is no human
+reasonably careful -- explicit rules, a constrained bare-value answer format (0/1/2, yes/no --
+not JSON, see docs/DECISIONS.md D043) -- but there is no human
 gold, no agreement statistic, no confidence interval, no prompt-sensitivity analysis, and no
 test that the judge scores factory floors and home kitchens on the same scale, which is the
 assumption the cross-dataset comparison rests on entirely. The dataset card and the shipped
