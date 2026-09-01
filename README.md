@@ -69,10 +69,11 @@ AI — currently knows how wrong they could be.
 
 ## The two results
 
-**Result 1 — validate the judge.** Replicate Build AI's protocol on their own published
-frames; collect human gold
-against a written rubric; run a three-judge panel including one open-weights model; sweep the
-prompt; and test whether the judge scores the three compared domains on the same scale.
+**Result 1 — validate the judge.** Compare Build AI's own published labels against a live,
+self-hosted open-weights judge on their own published frames (`docs/DECISIONS.md` D042 —
+their original judge is deprecated for new API keys, so this is a comparison, not a live
+replication); collect human gold against a written rubric; sweep the prompt; and test whether
+the judge scores the three compared domains on the same scale.
 
 **Result 2 — the transfer probe — dropped (`docs/DECISIONS.md` D048).** Their thesis is that
 egocentric factory data is a general learning framework. The corpus draws 164,868 downloads in

@@ -124,7 +124,7 @@ real observed per-call rates.*
 
 ## E5 — Prompt sensitivity
 
-Written for three judges; post-D042, P1–P7 across `P2k`, the live Qwen3-VL judge only (Build
+Written when the live panel held three live judges; post-D042, P1–P7 across `P2k`, the live Qwen3-VL judge only (Build
 AI's own stored labels exist for `P0` alone — they never published a multi-variant sweep to
 compare against), against the `P0a`/`P0b` reference. Reported as the range and SD of each
 headline figure, with Holm–Bonferroni over the 21-test family declared in advance. Real,

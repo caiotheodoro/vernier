@@ -267,7 +267,7 @@ frozen text above is not misled about what actually happened, without touching a
 Every entry here is a pointer to the real `DECISIONS.md` record, not a restatement of it.
 
 - **`gemini-2.5-flash` (named throughout the judge-panel text above as the replication target
-  and one of three judges) became unreachable for new API keys** before this project's own
+  and one of the three original judges) became unreachable for new API keys** before this project's own
   live replication could run. The panel is now the self-hosted Qwen3-VL judge alone; H1 is
   redefined from a live replication into a comparison against Build AI's own already-published
   labels on the same frames. `docs/DECISIONS.md` D042.

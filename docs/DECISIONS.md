@@ -1169,3 +1169,42 @@ half-implementation risks a subtler bug than the current, honestly-flagged limit
 
 **Reverses if:** nothing. H6 as pre-registered needs a named, pre-declared mechanism to be
 checkable at all, and this is that mechanism.
+
+---
+
+## D050 — A drift lint for stale design language (`docs/REVIEW.md` R10)
+
+`AGENTS.md` rule 2 already said prose carrying a number the pipeline no longer produces is a
+bug, and `make validate` should catch it — but that only ever ran a check for numbers. D048
+found thirteen files still describing the pre-D042 three-judge panel as current design, weeks
+after it was retired, caught only by an independent review reading every file by hand. A
+mechanical check for exactly this class of drift did not exist.
+
+`scripts/check_stale_prose.py`, wired into `make validate` as `check-stale-prose`: fails if
+`"three judges"`, `"three-judge panel"`, `"documentation only"`, `"no judge has been called"`,
+or `"JUDGES=gemini"` appears in any public `.md` file, outside `docs/DECISIONS.md`,
+`docs/UPSTREAM-FINDINGS.md`, `docs/LINEAGE.md`, `docs/REVIEW.md`, `docs/WAVES.md` (its Wave-1
+unit table is deliberately a historical record), and `docs/RED-TEAM.md` (its own stated rule:
+"Attack" paragraphs are "published unedited" once written — an attack posed using the language
+of the flaw it describes is not itself a stale claim, and editing it to dodge a lint would
+violate the file's own discipline).
+
+**Deviates from `docs/REVIEW.md` R10's literal pattern list in one place, deliberately**: R10's
+own proposed list includes a bare `gemini-2.5-flash` match. Checked live before adopting it:
+14 files legitimately mention `gemini-2.5-flash` post-D047/D048 (it is the real, correct name
+of the model whose *stored* labels rung 1 trains on) — a lint on the bare model name would have
+immediately failed on the exact fixes that corrected the real staleness. Dropped from the
+pattern list for that reason; the other four patterns describe a state or design with no
+legitimate current use in any context, so they stay as R10 specified them.
+
+Running the real lint against the current repo (before this entry's own fixes) found five real
+hits, two of which were newly introduced by this session's own D048/D049 prose (`docs/METHOD.md`,
+`docs/PRE-REGISTRATION.md`'s new Amendments section) — both fixed by rewording around the
+trigger phrase without changing meaning (e.g. "three judges" → "three live judges"), not by
+carving out more exemptions. `README.md` and `docs/DATASET_CARD.md` had two further real,
+previously-uncaught hits, fixed the same way D048 fixed the rest.
+
+`AGENTS.md` rule 2 extended by one sentence to name this check.
+
+**Reverses if:** nothing. A drift lint is a permanent addition, not a point-in-time fix — it
+exists specifically so this class of staleness cannot recur silently.

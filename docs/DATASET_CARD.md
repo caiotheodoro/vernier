@@ -45,8 +45,9 @@ statistical cluster and no per-worker result is published.
 ## Known limitations
 
 One rater, no inter-rater agreement; the rater read the audited prompt before writing the
-rubric; three judges with correlated lineage; closed-judge responses not re-callable once the
-endpoint moves. `RED-TEAM.md` carries all of these in full.
+rubric; two judge arms (a live open-weights judge and Build AI's own frozen stored labels)
+whose independence is unverified; closed-judge responses not re-callable once the endpoint
+moves — it happened (`docs/DECISIONS.md` D042). `RED-TEAM.md` carries all of these in full.
 
 ## License
 

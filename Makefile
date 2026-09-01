@@ -2,7 +2,7 @@
 # is documentation-only until `make survey` has an answer. `test`, `typecheck`, `fixtures` and
 # `validate` are Wave 0 -- the interface freeze -- and do run. The rest fail loudly (not
 # silently) until the wave that implements them replaces the recipe -- see docs/HANDOFF.md.
-.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep \
+.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose \
         domain-bias distil calibrate estimate probe card validate privacy-gate \
         test typecheck fixtures check-eval-parquets install-hooks
 
@@ -61,7 +61,10 @@ fixtures:      ## Wave 0: regenerate tests/fixtures/{valid,malformed}/*.json fro
 check-eval-parquets:  ## D016: verify evaluation parquets contain the frames the published labels refer to.
 	python3 scripts/check_eval_parquets.py
 
-validate: privacy-gate test typecheck fixtures  ## All gates: structure, no placeholders, internal consistency, privacy.
+check-stale-prose:  ## D050/REVIEW.md R10: fail if a retired design (e.g. the pre-D042 three-judge panel) is still described as current anywhere public.
+	python3 scripts/check_stale_prose.py
+
+validate: privacy-gate test typecheck fixtures check-stale-prose  ## All gates: structure, no placeholders, internal consistency, privacy, no stale design language.
 
 privacy-gate:  ## Fail loudly if anything under docs/private/ is stageable.
 	@if git add -A --dry-run 2>/dev/null | grep -q 'docs/private'; then \
