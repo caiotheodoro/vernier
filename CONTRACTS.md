@@ -207,7 +207,7 @@ Referenced by every published proportion.
 {
   "source_corpus":  "egocentric-10k",
   "n_frames":       "<matched across corpora by construction>",
-  "backbone":       "<fixed by docs/SURVEY.md before training>",
+  "backbone":       "facebook/dinov3-vits16-pretrain-lvd1689m",
   "downstream":     "<benchmark fixed by docs/SURVEY.md>",
   "metric":         "<the benchmark's own primary metric>",
   "value":          0.0,

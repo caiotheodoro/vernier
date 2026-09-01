@@ -487,3 +487,24 @@ freeze catching up to its own stated rule before Wave 1 is dispatched rather tha
 
 **Reverses:** nothing. Pure file reorganization; no hypothesis, contract, or public function
 signature changed — only which file each lives in.
+
+## D034 — Backbone pinned: DINOv3 ViT-S/16, not ViT-B/16
+
+`SURVEY.md` named DINOv3 (2508.10104) but left the size an open choice, "ViT-S/16 or
+ViT-B/16." `docs/HANDOFF.md`'s P1 tier listed "pinning the DINOv3 backbone choice" as still
+open. Pinned: **`facebook/dinov3-vits16-pretrain-lvd1689m`** — the LVD-1689M general-purpose
+checkpoint (not the SAT493M satellite-imagery variant, which is the wrong domain), ViT-S/16,
+frozen. Verified live against the Hugging Face Hub listing, not assumed from the paper name.
+
+**Why S over B:** rung 1 of `distil` is pre-registered as "laptop-runnable... the baseline
+that must be beaten before anything more expensive is justified" (`METHOD.md` E7), and
+`probe`'s Result 2 is separately kill-gated on compute budget (D008). The smaller backbone
+reduces feature-extraction cost across every corpus draw it touches (`S10k-U`, `S10k-S`,
+`G200-*`, the domain-bias arms) without a stated reason to prefer B/16's extra capacity for a
+frozen-feature linear probe or transfer-probe task. `CONTRACTS.md`'s `ProbeResult.backbone`
+placeholder and `tests/fixtures.py`'s stray `"dinov2-large"` value (a DINOv2/DINOv3 naming
+inconsistency, not a deliberate choice) are both corrected to this pin.
+
+**Reverses if:** rung 1's linear probe fails to beat the naive-judge-proportion baseline and a
+capacity-limited failure mode is suspected — then re-run rung 1 against
+`facebook/dinov3-vitb16-pretrain-lvd1689m` before concluding the rung itself doesn't work.
