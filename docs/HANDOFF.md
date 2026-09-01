@@ -136,44 +136,55 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D041 |
+| Decisions | `DECISIONS.md`, D001–D042 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
-| Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py` |
+| Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
 | Waves | `WAVES.md` — the fan-out → independent-review paradigm and every wave's acceptance/review/eval/rubric criteria |
 
 ## The next action
 
-**Wave 2 (integration, network allowed) is next, and is blocked on credentials, not on
-anything this session could have designed or coded around.** `.env` does not exist in this
-environment. Before Wave 2 can do anything real:
+**The Qwen3-VL judge server is deployed and smoke-tested for real, text-only path only.**
+`cloud/modal_qwen3vl.py` is live on Modal (`vernier-qwen3vl-judge`, scale-to-zero,
+`min_containers=0`), health-checks pass, and a real text-only chat completion against the
+deployed endpoint (`https://dev-caiotheodoro--vernier-qwen3vl-judge-server.us-east.modal.direct`)
+returned a correct response (`"OK"`) with real usage stats. Two real deploy-blocking bugs were
+caught only by actually running it and are fixed and committed (`8b6fd49`): Modal's own proxy
+auth (`unauthenticated=True` now — the plain `openai` client can't supply Modal-workspace auth
+headers) and a KV-cache OOM (`--max-model-len 8192` — the model's 262144 default demands 36GB,
+the L4 has ~7GB free after weights).
 
-- `GEMINI_API_KEY`, `ANTHROPIC_API_KEY` — required for H1's actual replication and the full
-  judge panel. No substitute: reading Build AI's own recorded `hand_count`/`active_labor`
-  columns back out of their own published parquet and calling that "vernier's replication"
-  would be exactly the circularity this project exists to avoid (verified live that doing so
-  trivially reproduces every published figure to two decimal places — which is precisely why
-  it cannot stand in for an independent call).
-- `HF_TOKEN` — required only for `S10k-U`/`S10k-S` (the sampling-design sensitivity arm, which
+**Not yet exercised: the real multimodal (image + logprobs) request path.** Fetching one real
+frame's bytes from the evaluation parquet to test this stalled twice in this session (a
+single-row `hf://` read via pyarrow ran 9+ minutes with no output, same slowness already noted
+below re: `check_eval_parquets.py`) — killed both times, not a vernier code bug, an artifact of
+streaming a single row out of a large remotely-hosted parquet without a local copy. The
+multimodal request shape itself (`image_url` content block + `logprobs: true`) is independently
+verified against the installed `openai` package's real response types and vLLM's own docs, but
+has not been fired against the live server with a real image. **Next session should either
+`hf_hub_download` the evaluation parquet locally first** (this project's own noted fix for the
+same slowness, see below) **or otherwise get one real frame's bytes some other way**, then send
+one real multimodal request to the deployed endpoint before trusting `judges/qwen3vl.py` end to
+end.
+
+- `GEMINI_API_KEY`, `ANTHROPIC_API_KEY` — moot now. Per D042 the panel is Qwen3-VL only;
+  `judges/gemini.py`/`judges/claude.py` are deleted, not stubbed.
+- `HF_TOKEN` — still required for `S10k-U`/`S10k-S` (the sampling-design sensitivity arm, which
   needs the contact-gated `Egocentric-10K` corpus for its raw factory/worker metadata) and for
   Result 2's transfer probe at scale. **Not required** for `E10k-ego`/`E10k-ego4d`/`E10k-epic`/
   `P2k`/`G200-*`/`R100` — the evaluation release itself is `gated: False`, verified live via
-  `HfApi().dataset_info(...)`, so Wave 2's evaluation-parquet adapter and D016's real check can
-  both be built and run with no token at all. This was not obvious from `.env.example`'s
-  wording alone (it only names the corpus datasets as gated) and is worth not re-discovering.
+  `HfApi().dataset_info(...)`.
 
-**`_call_gemini`/`_call_claude` are no longer stubs — they call the real SDKs** (see above);
-what's left unwired is `sampling/draw.py`'s `_candidate_frames`/`_factory_worker_hours`, each
-judge adapter's new `_image_bytes_for` (frame_id → real bytes; both need the evaluation-parquet
-adapter), and `judges/qwen3vl.py`'s `_call_qwen3vl` (open weights, no API key, but needs local
-or Modal inference wiring — a different kind of setup than an env var). The evaluation-parquet
-adapter is the one piece of this list buildable and runnable right now with no credential at
-all (see above) — it just wasn't done this session, since `_candidate_frames` is a Wave-1-owned,
-already-reviewed file and deserved its own careful pass rather than a rushed addition here.
-Follow `WAVES.md`'s Wave 2 section (evaluation-parquet adapter, live judge harness with cost/latency
+What's left unwired: `sampling/draw.py`'s `_candidate_frames`/`_factory_worker_hours`, and
+`judges/qwen3vl.py`'s `_image_bytes_for` (frame_id → real JPEG bytes — both need the same
+evaluation-parquet adapter, so build it once, not twice). `_call_qwen3vl` itself is real,
+tested, and now confirmed live for text; only the image path is unverified live. Follow
+`WAVES.md`'s Wave 2 section (evaluation-parquet adapter, live judge harness with cost/latency
 accounting, E2 replication runner, E5 prompt-sweep runner) and its own added safeguard: smoke-
 test at small N before any full-scale judge run, since no dollar cap is pre-registered for judge-
-panel spend (only Modal/distillation compute is, per D008).
+panel spend (only Modal/distillation compute is, per D008). **Do not scale toward the
+pre-registered sample sizes without a separate, explicit decision from Caio** — the approved
+reframe plan scoped only "deploy, smoke-test, report real cost/latency," not a production run.
 
 ## Open questions
 
