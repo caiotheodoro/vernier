@@ -13,10 +13,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# judges  -- the panel: one closed replication target, one second frontier judge, one open model
 # probes  -- frozen-feature backbones for the transfer probe
 # distil  -- LoRA training path for the open instrument
 # space   -- the demo
+judges = [
+    # gemini-2.5-flash, the replication target. google-generativeai is deprecated
+    # (EOL 2025-11-30); google-genai is its replacement.
+    "google-genai>=1.0",
+]
 data = [
     "pyarrow>=17",
 ]
@@ -57,4 +61,3 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["sklearn", "sklearn.*"]
 ignore_missing_imports = true
-

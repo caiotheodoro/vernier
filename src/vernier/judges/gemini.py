@@ -18,12 +18,28 @@ worse one wins (`_STATUS_SEVERITY` below) and both parsed fields are dropped to 
 validator. Where the two calls disagree on confidence, the hand_count call's is canonical --
 CONTRACTS.md gives no ordering rule between the two, so this is a documented, arbitrary
 tie-break, not a derived requirement.
+
+`_call_gemini` is wired to the real `google-genai` SDK (Wave 2) -- verified against the
+installed package's own response types, not assumed: `types.Part.from_bytes(data=..., mime_type
+=...)`, `response.text`, `response.usage_metadata.{prompt_token_count,candidates_token_count}`,
+`response.model_version` all confirmed present on the installed SDK. Pricing
+(`_INPUT_USD_PER_TOKEN`/`_OUTPUT_USD_PER_TOKEN`) is `gemini-2.5-flash`'s public per-token list
+price at time of writing -- re-check before relying on it if pricing has since changed. Image
+bytes for `frame` come from `_image_bytes_for`, a separate, still-unwired seam: resolving a
+`FrameRef` to real pixel bytes needs the evaluation-parquet adapter
+(`sampling.draw._candidate_frames`'s own Wave 2 seam) to have landed first, and is not
+duplicated here. `judge_rev()` reports the most recently observed `response.model_version`,
+which requires at least one real call to have happened -- unresolved otherwise.
 """
 
 from __future__ import annotations
 
 import json
+import time
 from typing import Literal, cast
+
+from google import genai
+from google.genai import types
 
 from vernier.judges.base import (
     JudgeAdapter,
@@ -44,9 +60,17 @@ _STATUS_SEVERITY: dict[JudgeStatus, int] = {
     "error": 4,
 }
 
-# Wave 1 makes no live API call, so there is no real model version string to report. Wave 2
-# resolves this from the live Gemini API response at call time.
-_JUDGE_REV_UNRESOLVED = "unresolved (Wave 1: no live call; Wave 2 resolves from the API response)"
+_MODEL = "gemini-2.5-flash"
+
+# Public per-token list price, USD, at time of writing -- re-verify before relying on this for
+# a real cost figure if pricing has since changed. Image tokens are already folded into
+# usage_metadata.prompt_token_count by the API; no separate image-token accounting is needed.
+_INPUT_USD_PER_TOKEN = 0.30 / 1_000_000
+_OUTPUT_USD_PER_TOKEN = 2.50 / 1_000_000
+
+# Reported by judge_rev() before any real call has happened -- no live call means no real
+# model version to report yet.
+_JUDGE_REV_UNRESOLVED = "unresolved (no live call yet)"
 
 
 class GeminiJudge(JudgeAdapter):
@@ -54,8 +78,21 @@ class GeminiJudge(JudgeAdapter):
 
     judge = "gemini-2.5-flash"
 
+    def __init__(self) -> None:
+        # Lazy: genai.Client() raises immediately if no API key is configured, and merely
+        # constructing a GeminiJudge (e.g. to read .judge, or in a test that monkeypatches
+        # _call_gemini and never touches the real client) must not require one.
+        self._client_instance: genai.Client | None = None
+        self._last_model_version = _JUDGE_REV_UNRESOLVED
+
+    @property
+    def _client(self) -> genai.Client:
+        if self._client_instance is None:
+            self._client_instance = genai.Client()
+        return self._client_instance
+
     def judge_rev(self) -> str:
-        return _JUDGE_REV_UNRESOLVED
+        return self._last_model_version
 
     def judge_frame(self, frame: FrameRef, prompt_variant: PromptVariant) -> JudgeResponse:
         hc_prompt = load_prompt(prompt_variant, task="hand_count")
@@ -98,9 +135,46 @@ class GeminiJudge(JudgeAdapter):
             return "ok"
         return max((hc_status, manip_status), key=lambda s: _STATUS_SEVERITY[s])
 
-    def _call_gemini(self, frame: FrameRef, prompt_text: str) -> tuple[str, int, float]:
-        """Wave-2 seam: issue one real Gemini call for one task's prompt and return
-        `(raw_response_text, latency_ms, cost_usd)`. Wave 1 is offline -- unwired here."""
+    def _image_bytes_for(self, frame: FrameRef) -> bytes:
+        """Wave 2 seam: resolve `frame` to its real JPEG bytes.
+
+        Not wired here -- needs the evaluation-parquet adapter
+        (`sampling.draw._candidate_frames`'s own still-unwired Wave 2 seam) to supply a
+        frame_id -> bytes lookup first, so the two seams aren't duplicated.
+        """
         raise NotImplementedError(
-            "GeminiJudge._call_gemini is wired to the live API in Wave 2; Wave 1 is offline"
+            "GeminiJudge._image_bytes_for needs the evaluation-parquet adapter wired first"
         )
+
+    def _call_gemini(self, frame: FrameRef, prompt_text: str) -> tuple[str, int, float]:
+        """Issue one real `gemini-2.5-flash` call for one task's prompt against `frame`'s
+        image, and return `(raw_response_text, latency_ms, cost_usd)`.
+
+        `latency_ms` is wall-clock time around the call -- neither SDK response carries a
+        latency/duration field of its own, confirmed against the installed `google-genai`
+        package's own response type. `cost_usd` is computed from `usage_metadata`'s real token
+        counts against `_INPUT_USD_PER_TOKEN`/`_OUTPUT_USD_PER_TOKEN` -- image tokens are
+        already folded into `prompt_token_count` by the API, no separate accounting needed.
+        `judge_rev()` becomes resolvable after this call via `response.model_version`.
+        """
+        image_bytes = self._image_bytes_for(frame)
+        contents = [
+            types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+            prompt_text,
+        ]
+        start = time.monotonic()
+        # generate_content's `contents` Union type doesn't type-check cleanly against a
+        # str/Part list even though the installed SDK's own docs and source accept exactly
+        # this shape at runtime (a stub-generation quirk in the Union arms' list variance, not
+        # a real type error) -- verified by constructing this exact call pattern against the
+        # installed package before relying on it.
+        response = self._client.models.generate_content(model=_MODEL, contents=contents)  # type: ignore[arg-type]
+        latency_ms = int((time.monotonic() - start) * 1000)
+
+        self._last_model_version = response.model_version or self._last_model_version
+        usage = response.usage_metadata
+        input_tokens = (usage.prompt_token_count if usage else None) or 0
+        output_tokens = (usage.candidates_token_count if usage else None) or 0
+        cost_usd = input_tokens * _INPUT_USD_PER_TOKEN + output_tokens * _OUTPUT_USD_PER_TOKEN
+
+        return response.text or "", latency_ms, cost_usd

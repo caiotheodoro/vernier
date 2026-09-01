@@ -1,8 +1,14 @@
-"""Behavioural tests for `GeminiJudge.judge_frame`/`judge_rev`.
+"""Behavioural tests for `GeminiJudge.judge_frame`/`judge_rev`/`_call_gemini`.
 
-Wave 1 is offline: no real Gemini call happens. `_call_gemini` is the seam Wave 2 wires to the
-live API; here it is monkeypatched to return synthetic `(raw_text, latency_ms, cost_usd)`
-tuples so these tests exercise only the merge/parse/status logic this file owns.
+Most tests here monkeypatch `_call_gemini` itself to return synthetic
+`(raw_text, latency_ms, cost_usd)` tuples, exercising only the merge/parse/status logic
+`judge_frame` owns. The tests near the bottom instead exercise `_call_gemini`'s own real
+`google-genai` SDK wiring by mocking at the client boundary and constructing actual
+`google.genai.types.GenerateContentResponse` instances -- no live API call is made or possible
+without a `GEMINI_API_KEY`, but the request/response shape is checked against the real,
+installed SDK's own types, not a hand-rolled guess at their shape. `_image_bytes_for` (resolving
+a `FrameRef` to real image bytes) is the one seam still unwired, pending the evaluation-parquet
+adapter.
 
 Resolution of the one-call-per-task-vs-both-fields ambiguity (see task brief): `models.py`'s
 `JudgeResponse._hands_visible_and_manipulation_null_iff_unparseable_or_worse` validator requires
@@ -19,6 +25,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+from google.genai import types as genai_types
 
 from tests.fixtures import make_frame_ref
 from vernier.judges.gemini import GeminiJudge
@@ -191,10 +198,89 @@ def test_judge_class_attribute_is_frozen_model_name() -> None:
     assert GeminiJudge.judge == "gemini-2.5-flash"
 
 
-# --- _call_gemini seam raises NotImplementedError until Wave 2 -----------------------------
+# --- _image_bytes_for is the one seam still unwired (needs the evaluation-parquet adapter) -
 
 
-def test_call_gemini_seam_unwired_raises_not_implemented() -> None:
+def test_image_bytes_for_seam_unwired_raises_not_implemented() -> None:
     judge = GeminiJudge()
     with pytest.raises(NotImplementedError):
+        judge._image_bytes_for(FRAME)
+
+
+def test_call_gemini_propagates_the_unwired_image_seam() -> None:
+    # _call_gemini itself is real (wired to the google-genai SDK); it still raises here only
+    # because it calls the still-unwired _image_bytes_for seam before ever touching the API.
+    judge = GeminiJudge()
+    with pytest.raises(NotImplementedError, match="_image_bytes_for"):
         judge._call_gemini(FRAME, "some prompt text")
+
+
+# --- _call_gemini: real SDK wiring, mocked at the client boundary --------------------------
+#
+# These construct actual `google.genai.types.GenerateContentResponse` instances (the real SDK's
+# own response type, installed and imported here -- not a hand-rolled stand-in) so a mismatch
+# between this test's assumptions and the real SDK's shape would surface as a pydantic
+# validation error in the fixture itself, not just a false-positive passing test.
+
+
+def _fake_response(
+    text: str, *, prompt_tokens: int, output_tokens: int, model_version: str = "gemini-2.5-flash-001"
+) -> genai_types.GenerateContentResponse:
+    return genai_types.GenerateContentResponse(
+        candidates=[
+            genai_types.Candidate(
+                content=genai_types.Content(
+                    parts=[genai_types.Part(text=text)], role="model"
+                )
+            )
+        ],
+        usage_metadata=genai_types.GenerateContentResponseUsageMetadata(
+            prompt_token_count=prompt_tokens,
+            candidates_token_count=output_tokens,
+            total_token_count=prompt_tokens + output_tokens,
+        ),
+        model_version=model_version,
+    )
+
+
+def test_call_gemini_extracts_text_latency_and_cost_from_a_real_response_shape(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    judge = GeminiJudge()
+    monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
+
+    response = _fake_response('{"hand_count": 2}', prompt_tokens=1000, output_tokens=10)
+
+    class _FakeModels:
+        def generate_content(self, *, model: str, contents: object) -> object:
+            assert model == "gemini-2.5-flash"
+            return response
+
+    fake_client = type("FakeClient", (), {"models": _FakeModels()})()
+    monkeypatch.setattr(GeminiJudge, "_client", property(lambda self: fake_client))
+
+    raw, latency_ms, cost_usd = judge._call_gemini(FRAME, "count the hands")
+
+    assert raw == '{"hand_count": 2}'
+    assert latency_ms >= 0
+    # 1000 input tokens * $0.30/1e6 + 10 output tokens * $2.50/1e6
+    assert cost_usd == pytest.approx(1000 * 0.30 / 1_000_000 + 10 * 2.50 / 1_000_000)
+
+
+def test_call_gemini_updates_judge_rev_from_the_real_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    judge = GeminiJudge()
+    monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
+    response = _fake_response(
+        '{"answer": "yes"}', prompt_tokens=500, output_tokens=5, model_version="gemini-2.5-flash-002"
+    )
+
+    class _FakeModels:
+        def generate_content(self, *, model: str, contents: object) -> object:
+            return response
+
+    fake_client = type("FakeClient", (), {"models": _FakeModels()})()
+    monkeypatch.setattr(GeminiJudge, "_client", property(lambda self: fake_client))
+
+    assert judge.judge_rev() != "gemini-2.5-flash-002"  # unresolved before any call
+    judge._call_gemini(FRAME, "did they touch it")
+    assert judge.judge_rev() == "gemini-2.5-flash-002"
