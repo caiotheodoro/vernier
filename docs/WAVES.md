@@ -141,12 +141,26 @@ construction. `pytest` passing is not sufficient acceptance for these units on i
 ## Wave 2 — integration, ~6 agents, network allowed
 
 - Evaluation-parquet adapter, and D016's first check made real: the parquets actually contain
-  the frames the published labels refer to.
-- Egocentric-10K streaming draw for the sampling-design arm.
-- Live judge harness with cost and latency accounting.
-- E2 replication runner (`P0a`, `P0b`, both corpus arms).
-- E5 prompt-sweep runner with IPR/PAR reporting.
-- CI gates and `make validate` end to end.
+  the frames the published labels refer to. **Done** (`sampling.draw._candidate_frames`/
+  `image_bytes_for`), live-verified against the deployed Qwen3-VL judge (`docs/HANDOFF.md`).
+- Egocentric-10K streaming draw for the sampling-design arm. **Blocked**, not done: `S10k-U`/
+  `S10k-S` need the raw, contact-gated corpus, which this account doesn't have access to and
+  which turns out to be WebDataset tar shards, not a parquet (`docs/DECISIONS.md` D044).
+- Live judge harness with cost and latency accounting. **Done** — `JudgeResponse.cost_usd`/
+  `latency_ms`, populated for real by every live call, plus `scripts/e2_replication.py`/
+  `scripts/e5_prompt_sweep.py` aggregating both across a run.
+- E2 replication runner (`P0a`, `P0b`, both corpus arms). **Done and smoke-tested live**
+  (`scripts/e2_replication.py`) against `E10k-ego` under both P0 arms; scaling past a smoke N
+  needs Caio's separate go-ahead.
+- E5 prompt-sweep runner with IPR/PAR reporting. **Done and smoke-tested live**
+  (`scripts/e5_prompt_sweep.py`); IPR/PAR is a flagged, faithful-but-not-pinned construction of
+  2604.16413's definition, not a verified reproduction of its exact formula.
+- CI gates and `make validate` end to end. **Done**, unchanged from Wave 0/1 — still green.
+- Not originally itemized here, but turned out to be a real, load-bearing gap this wave: a
+  driver that actually runs the sample-drawing DAG end to end and persists it
+  (`scripts/draw_all_samples.py`, new) — every subset sample (`P2k`/`G200-*`/`R100`) and Wave
+  3's own frame pool (`labels/tool.py`) depend on this having run first. Running it once
+  surfaced and fixed a real pre-existing bug, D045.
 
 **Acceptance:** end-to-end run against real evaluation parquets succeeds; D016's check is a real
 assertion, not a manual step; `make validate` stays green; no live API key ever appears in a log
