@@ -33,10 +33,13 @@ are actually buying.
 
 vernier measures the judge, then replaces it with something re-runnable.
 
-> **Status: pre-experiment.** No judge has been called, no label written, no model trained.
-> The protocol is specified in `docs/PRE-REGISTRATION.md` and freezes before `src/` exists.
-> That ordering is the whole point: a project auditing someone's unvalidated measurement does
-> not get to improvise its own.
+> **Status: mid-experiment.** The protocol is specified in `docs/PRE-REGISTRATION.md` and froze
+> before `src/` existed -- that ordering is the whole point: a project auditing someone's
+> unvalidated measurement does not get to improvise its own. Since then: the live judge
+> (Qwen3-VL, self-hosted, `docs/DECISIONS.md` D042) is deployed and has been called for real,
+> at smoke scale, with results matching Build AI's own published labels on every frame checked.
+> No human label exists yet -- Wave 3 (600 primary + 100 retest, `docs/HANDOFF.md`) is the
+> critical path and has not started. No model has been trained.
 >
 > What *has* happened is a close read of the published artifacts, which corrected several of
 > this repository's own earlier claims. Those corrections are in `docs/UPSTREAM-FINDINGS.md`,
@@ -71,11 +74,15 @@ frames; collect human gold
 against a written rubric; run a three-judge panel including one open-weights model; sweep the
 prompt; and test whether the judge scores the three compared domains on the same scale.
 
-**Result 2 — the transfer probe.** Their thesis is that egocentric factory data is a general
-learning framework. The corpus draws 164,868 downloads in 30 days against 203 for the
-evaluation set that justifies it, and the publishing org has zero public models. Matched-size frozen-feature probes across Egocentric-*, Ego4D and EPIC-KITCHENS-100
-on a common downstream task test that thesis publicly for the first time. Kill-gated: if it
-is not tractable on the available compute, Result 1 ships alone.
+**Result 2 — the transfer probe — dropped (`docs/DECISIONS.md` D048).** Their thesis is that
+egocentric factory data is a general learning framework. The corpus draws 164,868 downloads in
+30 days against 203 for the evaluation set that justifies it, and the publishing org has zero
+public models. Matched-size frozen-feature probes across Egocentric-*, Ego4D and
+EPIC-KITCHENS-100 on a common downstream task would have tested that thesis publicly for the
+first time. It does not run: the raw Egocentric-10K corpus is inaccessible to this account
+(D044), EPIC-KITCHENS-100 registration requires an institutional email this project does not
+have (`SURVEY.md`), and the evaluation release ships no downstream-task labels at all to probe
+against. Result 1 ships alone.
 
 ## Two things found before any experiment ran
 

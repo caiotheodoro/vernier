@@ -4,15 +4,18 @@ How a third party re-runs this end to end. The standard vernier applies to Build
 measurement applies here first: if this document does not let a stranger obtain commensurable
 numbers, the project has failed on its own terms.
 
-**Nothing here is runnable yet.** The repository is documentation-only; this file fixes the
-contract that the eventual code must satisfy, so that reproducibility is a design constraint
-rather than something retrofitted.
+**`make sample` and `make human-labels` are real and runnable now** (`docs/HANDOFF.md`); the
+judge/agreement/estimate/prompt-sweep commands below are the fixed contract the rest of the
+pipeline satisfies as each wave lands, not yet all wired into these exact `make` targets — see
+`docs/HANDOFF.md` for what actually runs today (`scripts/e2_replication.py`,
+`scripts/e5_prompt_sweep.py`, `scripts/generate_rung1_labels.py`) versus what this file fixes as
+the target shape.
 
-## The open-judge-only path is first-class
+## The open-judge-only path is the only path
 
-Two of the three judges are closed APIs. A reproduction route that required paid keys would
-reproduce exactly the flaw vernier is auditing, so the open path is primary and must stay
-tested:
+Per `docs/DECISIONS.md` D042, `gemini-2.5-flash` is deprecated for new API keys and Anthropic
+was never re-added — there is no closed-API judge left to call live, and no paid keys are
+needed anywhere in this reproduction path:
 
 ```
 make effective-n                # H8: no data, no keys, no compute at all
@@ -28,11 +31,12 @@ This yields every structural result — H8, design effects, prompt sensitivity, 
 agreement for the open judge, and PPI-rectified prevalence for that judge — without a single
 dollar of API spend. `make effective-n` in particular needs nothing but public participant
 counts, so the cheapest finding in the project is also the most reproducible one. What it
-cannot yield is the replication of Build AI's own figures, which requires their judge. That
-asymmetry is the point, and it is reported rather than hidden.
-
-The full path adds `JUDGES=gemini-2.5-flash,claude,qwen3-vl` and needs the keys in
-`.env.example`.
+cannot yield by calling a live judge is a live replication of Build AI's own figures — but that
+comparison no longer needs one: their own `gemini-2.5-flash` labels ship in the evaluation
+parquets (`UPSTREAM-FINDINGS.md` F9) and are read directly, for free, by
+`scripts/e2_replication.py` and `scripts/generate_rung1_labels.py`. The asymmetry this section
+used to report — replication requires their judge, and their judge cannot be called — is
+resolved, not just disclosed: the comparison runs on stored data instead.
 
 ## What must be fixed for numbers to match
 

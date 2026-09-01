@@ -1061,3 +1061,68 @@ consistent and "worked" by every test that shared its own assumption about the t
 
 **Reverses if:** nothing. It was a real, verified design mistake, caught, and fixed before
 completion.
+
+---
+
+## D048 — Absorbing `docs/REVIEW.md`: kill Result 2, disclose the pretraining confound, correct stale pre-D042 prose
+
+Bundles three of `docs/REVIEW.md`'s recommendations into one entry, per its own suggested
+order ("R9, R1, R5 and the stale-prose sweep... all documentation, all pre-data, all cheap").
+R1 was large enough to warrant its own entry (D047); this one covers the rest of that bundle.
+
+**R9 — Result 2 (the transfer probe) is dropped, explicitly.** Every document still described
+it as "kill-gated" or "pending", which a reader cannot distinguish from "not yet attempted".
+The real reasons it does not run, all already on the record separately, are restated together
+here for the first time: the raw Egocentric-10K corpus is inaccessible to this account
+(D044); EPIC-KITCHENS-100 registration requires an institutional email this project does not
+have (`SURVEY.md`); and the evaluation release ships no downstream-task labels to probe
+against at all, regardless of access. The kill-gate (a timeboxed compute spike) is never
+reached — the inputs it would need do not exist for this project, which is a stronger and
+more final statement than "the gate is closed." Updated: `README.md`, `docs/METHOD.md` E9,
+`docs/BENCHMARK.md` R6, `docs/COVERAGE.md`, `docs/ARCHITECTURE.md` `probe`, `docs/WAVES.md`.
+
+**R5 — the pretraining-contamination confound on H5 is disclosed, not mitigated.** EPIC-
+KITCHENS-100 and Ego4D are public and plausibly in Qwen3-VL's own pretraining mix; the gated,
+November-2025 Egocentric-10K almost certainly is not. Pretraining exposure would bias judge
+accuracy in the *opposite* direction from H5's prediction, so a null H5 result has three
+readings (no effect / underpowered per D035 / contamination masking a real effect) that cannot
+currently be told apart. Recorded as `docs/RED-TEAM.md` A15 and a new `docs/COVERAGE.md` row.
+The review's proposed cheap probe (ask the judge to name the source dataset per frame, report
+accuracy per corpus as a memorisation signal) is NOT run in this entry — a real live-judge
+cost, deferred alongside R8's scale-up decision, tracked as still-open.
+
+**Stale pre-D042 prose corrected** across `README.md` (status block, Result 2), `AGENTS.md`
+(current-state line), `docs/METHOD.md` (E2, E4, E5, E7, E8), `docs/EVALS_CARD.md`, `docs/
+REPRODUCTION.md`, `docs/RED-TEAM.md` (A3, A7, A11, A15 new), `docs/ARCHITECTURE.md` (`judges`,
+`probe`), `docs/BENCHMARK.md` (R1, R6), `docs/COVERAGE.md`. Two real factual bugs also caught
+and fixed in the same pass, independent of D042: `docs/RUBRIC.md` Task 1 rule 3 said gloves are
+"why P4 exists" — P3 is gloves, P4 is reflections, per `PRE-REGISTRATION.md`'s own table; and
+`docs/RED-TEAM.md` A4 said "Eight variants × three figures is 21" — the real count is seven
+variants (7 × 3 = 21, the arithmetic was already right, only the word was wrong).
+
+**`docs/PRE-REGISTRATION.md` gets a new `## Amendments` section**, appended per the review's
+own recommendation — the frozen text above it is untouched, word for word; the new section only
+points at this entry and D042/D044/D047, so a reader of the frozen document is not misled about
+what actually happened since it froze. This is itself the kind of change `PRE-REGISTRATION.md`'s
+own rules permit (a `DECISIONS.md`-tracked amendment, not a silent rewrite) — recorded here so
+the permission is on the record, not just exercised.
+
+**Also corrected, a real capability gap in the frozen calibration claim (`docs/METHOD.md` E8,
+review point 3, not R5 or R9 but adjacent):** "calibration restricted to P7" was true only for
+Build AI's own closed-API measurement (their schema exposes no confidence under any prompt).
+The self-hosted Qwen3-VL judge exposes a real answer-token logprob regardless of prompt variant
+(`judges/qwen3vl.py`, confirmed working live against real frames, `docs/HANDOFF.md`) —
+calibration of the open judge under the *published* bare-value P0 format is a real, measurable
+result, not gated to P7. The "what could not be checked" entry for H7 should narrow once this
+is actually computed at scale; not done in this entry.
+
+**Not done in this entry, tracked as open follow-up from `docs/REVIEW.md`:** R2 (pseudo-cluster
+design effect on Build AI's own frames), R3 (a second rater on `R100`), R4 (judge test-retest),
+R6 (pre-data gold-size/allocation amendment for H5 — time-critical: must land before the first
+label is written), R7 (pin the rung-3 guarantee mechanism), R8 (authorize the full-N E2/E5
+run), R10 (a drift-lint script for `make validate`), and R5's own live probe (disclosed here,
+not run).
+
+**Reverses if:** access to the raw Egocentric-10K corpus and an institutional EPIC-KITCHENS-100
+affiliation both materialise — then Result 2's kill-gate re-opens as originally pre-registered,
+per R9's own stated reversal condition.

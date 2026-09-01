@@ -28,8 +28,12 @@ original in `corpus`.
 
 ## `judges`
 
-One adapter per judge behind a single interface: frame in, `JudgeResponse` out. Closed models
-(Gemini, Claude) and the open model (Qwen3-VL) differ only in the adapter.
+One adapter per judge behind a single interface: frame in, `JudgeResponse` out. Written when
+the panel was three live judges (closed models Gemini/Claude, plus the open Qwen3-VL) differing
+only in the adapter; post-`docs/DECISIONS.md` D042 the live panel is Qwen3-VL alone, and
+`gemini-2.5-flash`'s retired adapter is replaced by reading its own stored labels directly from
+the evaluation parquets (`scripts/published_labels.py`) rather than an adapter at all -- there
+is no live call left to adapt.
 
 Owns: prompt-variant substitution, response parsing, `status` classification, cost and latency
 accounting, retry policy, and recording `judge_rev` per response. Depends on: `sampling` for
@@ -100,9 +104,12 @@ is the only way to say whether the instrument inherits the judge's errors.
 
 ## `probe`
 
-Result 2. Matched frozen-feature probes across corpora. Matching on frame count, cluster
-count and training budget is enforced in code, not left to the caller, because an unmatched
-comparison silently measures the sampling.
+Result 2 — **dropped, `docs/DECISIONS.md` D048; this module is not built.** Would have been
+matched frozen-feature probes across corpora, matching on frame count, cluster count and
+training budget enforced in code rather than left to the caller, because an unmatched
+comparison silently measures the sampling. The gate is never reached: the raw corpus this
+project would need is inaccessible, EPIC-KITCHENS-100 needs an institutional email this
+project lacks, and the evaluation release ships no downstream-task labels regardless.
 
 ## `card`
 

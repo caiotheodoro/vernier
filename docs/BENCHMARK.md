@@ -25,10 +25,16 @@ card, Ego4D from ego4d-data.org, EPIC-KITCHENS-100 from arXiv 2006.13256's full 
 "~45" previously used here was the kitchen/environment count, not participants — the paper's
 own figure is 37 subjects across 45 kitchen environments).
 
-## R1 — Replication (E2)
+## R1 — Comparison, not replication (E2, `docs/DECISIONS.md` D042)
 
-On Build AI's own published frames, so any gap is the judge or the prompt, never the sample.
-Headline prevalence is the **PPI** estimate; the raw judge proportion is shown beside it.
+Written when H1 was a live replication under the original judge; that judge
+(`gemini-2.5-flash`) is deprecated for new API keys, so this is now a comparison between Build
+AI's own published labels (stored in the evaluation parquet, read directly, never re-called)
+and the live Qwen3-VL judge, on the identical published frames — any gap is the judge or the
+prompt, never the sample. `P0a`/`P0b` below are the live judge's own answers under each prompt
+arm. Headline prevalence is the **PPI** estimate; the raw judge proportion is shown beside it.
+A real preliminary run exists at n=100 (`docs/HANDOFF.md`) — not filled in below, since it is
+far short of the pre-registered N and would misrepresent a smoke test as the headline result.
 
 | Figure | Published | `P0a` | `P0b` | Within ±2 pp (H1) | `P0a`−`P0b` (H1b) |
 |---|---|---|---|---|---|
@@ -99,13 +105,14 @@ constant-answer baseline, with AC1 primary and κ beside it; error inheritance; 
 reliability diagrams per judge and for the distillate; and **J / ΔJ** for calibration
 instability across the three corpora.
 
-## R6 — Transfer probe (E9, if the gate opens)
+## R6 — Transfer probe (E9) — dropped, `docs/DECISIONS.md` D048
 
 Matched frozen-feature probes across Egocentric-*, Ego4D and EPIC-KITCHENS-100 on the
-downstream task fixed by `SURVEY.md`. Matched on frame count, cluster count and training
-budget simultaneously.
-
-If the gate closes, this section says so and names the compute that would have been required.
+downstream task fixed by `SURVEY.md` would have tested this. It does not run: the raw
+Egocentric-10K corpus is inaccessible to this account (D044), EPIC-KITCHENS-100 registration
+requires an institutional email this project does not have (`SURVEY.md`), and the evaluation
+release ships no downstream-task labels at all. This is not a compute-budget gate closing --
+the inputs the probe needs do not exist for this project.
 
 ## What could not be checked
 

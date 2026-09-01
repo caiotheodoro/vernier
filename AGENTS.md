@@ -4,8 +4,10 @@
 instrument anyone can re-run.** `README.md` is the argument. This file is the operating
 rules.
 
-**Current state: documentation only.** No data downloaded, no judge called, no model
-trained. `docs/HANDOFF.md` is the resume point.
+**Current state: mid-experiment.** Real data drawn and persisted, the live judge deployed and
+called for real at smoke scale, matching Build AI's own published labels on every frame
+checked. No human label exists yet — Wave 3 is the critical path. No model trained.
+`docs/HANDOFF.md` is the resume point.
 
 ## The claim
 

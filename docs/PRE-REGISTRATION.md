@@ -259,3 +259,23 @@ second result damages the first.
   recorded per response, and a mid-experiment version change is a `DECISIONS.md` entry. This
   is unfixable from outside and is itself a finding about any SLA whose instrument is a
   versionless third-party API.
+
+## Amendments
+
+This file is frozen and not rewritten after the fact — this section exists so a reader of the
+frozen text above is not misled about what actually happened, without touching a word of it.
+Every entry here is a pointer to the real `DECISIONS.md` record, not a restatement of it.
+
+- **`gemini-2.5-flash` (named throughout the judge-panel text above as the replication target
+  and one of three judges) became unreachable for new API keys** before this project's own
+  live replication could run. The panel is now the self-hosted Qwen3-VL judge alone; H1 is
+  redefined from a live replication into a comparison against Build AI's own already-published
+  labels on the same frames. `docs/DECISIONS.md` D042.
+- **Result 2 (the transfer probe) is dropped**, its kill-gate never reached: the raw corpus
+  this project would need is inaccessible to this account, EPIC-KITCHENS-100 registration
+  needs an institutional email this project does not have, and the evaluation release ships no
+  downstream-task labels to probe against regardless of access. `docs/DECISIONS.md` D044, D048.
+- **A wider absorption of the D042 reframe's consequences** — the rung-1 distillation teacher,
+  the judge-arm framing for E4/E6, and calibration's real availability under the open judge —
+  is recorded in `docs/DECISIONS.md` D047, D048, following an independent review,
+  `docs/REVIEW.md`.

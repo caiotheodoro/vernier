@@ -94,8 +94,8 @@ no longer exist in the tree. `judges/qwen3vl.py` (unit 6) is the sole surviving 
 Every unit now maps to exactly one file (`docs/DECISIONS.md` D033) — the ownership rule below
 is enforceable, not just stated. `distil` rung 2 (`distil/lora.py`, Qwen3-VL LoRA on Modal) has
 no Wave 1 unit by design — it needs network/GPU, so it belongs to Wave 4, not an offline wave.
-`probe` (Result 2) is deliberately absent from this table — it is kill-gated and belongs to
-Wave 4 as well.
+`probe` (Result 2) is deliberately absent from this table — it was kill-gated, and the gate is
+never reached: Result 2 is dropped (`docs/DECISIONS.md` D048), not deferred to Wave 4.
 
 **Acceptance (mechanical):** the unit's test file passes offline, no network; `mypy --strict`
 clean on the unit's files; no `NotImplementedError` left in its public functions; `git diff

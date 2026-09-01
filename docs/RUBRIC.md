@@ -39,7 +39,7 @@ Answer ∈ {0, 1, 2}.
    published 96.42% is implausible under a strict reading. Tagged `partial`.
 3. **Gloves count.** A gloved hand is a hand. The corpus is factory work and gloves are
    near-universal; excluding them would make the metric meaningless. **P0 does not say
-   this**, which is why P4 exists. Tagged `glove`.
+   this**, which is why P3 exists. Tagged `glove`.
 4. **Sleeves and cuffs do not.** A covered forearm with no hand visible is 0 for that hand.
 5. **Occlusion by a held object counts as visible only if hand pixels remain.** A hand fully
    behind the workpiece is not visible, even when its presence is obvious from context.

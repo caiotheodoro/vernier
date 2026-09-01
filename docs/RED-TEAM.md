@@ -37,6 +37,13 @@ constrains post-hoc adjustment, not initial framing.
 
 ## A3 — Three judges are not three opinions
 
+**Written pre-D042, when the panel was three live judges (Gemini, Claude, an open model).**
+Post-reframe (`docs/DECISIONS.md` D042) the panel is Qwen3-VL alone, live, plus Build AI's own
+stored `gemini-2.5-flash` labels as a frozen second arm (`docs/REVIEW.md` point 2) -- two
+judges, one of them never re-called. The attack's shape survives: a live judge and a frozen
+label set from a different model family are not automatically independent either, and the
+answer below still applies with "panel" read as "the two judge arms."
+
 **Attack.** Panel agreement is reported as though the judges were independent. They share
 pretraining data, architectural lineage, and probably training images. Correlated errors
 inflate Fleiss' κ and make the panel look more reliable than it is.
@@ -47,7 +54,7 @@ alongside. `COVERAGE.md` lists judge independence as assumed false.
 
 ## A4 — Multiplicity in the prompt sweep
 
-**Attack.** Eight variants × three figures is 21 comparisons. Something will look
+**Attack.** Seven variants × three figures is 21 comparisons. Something will look
 significant.
 
 **Answer.** Holm–Bonferroni over the 21-test family, declared in `PRE-REGISTRATION.md` before
@@ -89,6 +96,13 @@ failure may be a version difference and nothing more.
 API cannot be reproduced by its own vendor either. That belongs in the writeup regardless of
 how H1 lands.
 
+**It happened.** `gemini-2.5-flash` did not merely drift — it became unreachable entirely,
+deprecated for new API keys before this project's own live replication could run
+(`docs/DECISIONS.md` D042, live 404 confirmed). This is the sharpest possible version of the
+attack: not "the answer may have shifted" but "the instrument is gone." H1 was redefined from a
+replication into a comparison against Build AI's own stored labels for exactly this reason.
+The finding stands stronger for it, not weaker.
+
 ## A8 — Distillation could look good for the wrong reason
 
 **Attack.** H6's ≥ 0.90 agreement threshold is easy to clear when the base rate is 96%. A
@@ -125,13 +139,19 @@ project stops. The value of noticing exceeds the value of a duplicated result.
 
 ## A11 — Reproducibility, checked against vernier's own standard
 
-**Attack.** vernier criticises a measurement that cannot be independently re-run. Two of the
-three judges are closed APIs behind paid keys.
+**Attack, as written pre-D042.** vernier criticises a measurement that cannot be independently
+re-run. Two of the three judges are closed APIs behind paid keys.
 
 **Answer.** Qwen3-VL is in the panel specifically so the full audit is re-runnable with no
 API keys, and `REPRODUCTION.md` documents the open-judge-only path as a first-class route
 rather than a degraded one. If that path is ever broken or untested, this criticism lands in
 full.
+
+**Stronger now, not weaker (`docs/DECISIONS.md` D042).** The panel is Qwen3-VL alone, live --
+there are no paid-API keys left in the reproducible path at all. The one closed model that ever
+mattered, `gemini-2.5-flash`, is gone from the live path entirely (A7); its stored labels remain
+only as Build AI's own published record, not as something this project's own reproduction
+depends on re-calling.
 
 ## A13 — H2 is now measured somewhere other than where it is claimed
 
@@ -170,3 +190,22 @@ be worthless.
 `AGENTS.md` forbids quoting it in any public document; `ETHICS.md` and every finding are
 written without reference to it. This entry exists so that the conflict is disclosed by the
 project itself rather than discovered in it.
+
+## A15 — The live judge may have seen two of the three compared domains
+
+**Attack.** H5 predicts higher judge error on EPIC-KITCHENS-100 than on Egocentric-10K.
+EPIC-KITCHENS-100 and Ego4D are public and widely used in vision-language pretraining and
+instruction-tuning mixes; Qwen3-VL has plausibly trained on both. Egocentric-10K was released
+November 2025 and is contact-gated -- the model has almost certainly never seen it.
+Pretraining exposure would push judge accuracy in the *opposite* direction from H5's
+prediction (better on the domains it has seen, i.e. EPIC-KITCHENS and Ego4D, not worse), so a
+null H5 result has three possible readings -- no real effect, an underpowered test (D035), or
+contamination masking a real effect -- and without naming the confound the writeup can only
+tell two of them apart.
+
+**Answer, disclosure only.** Not mitigated in this project's v1. A cheap probe exists (ask the
+live judge, per frame, to name the source dataset, and report accuracy per corpus as a
+memorisation signal, `docs/REVIEW.md` R5) but has not been run. Also disclosed: the same
+question is unanswerable for the frozen `gemini-2.5-flash` labels -- there is no way to probe a
+model that can no longer be called. If H5 comes back null, this entry must be cited in the
+writeup as a live alternative explanation, not silently left to the reader to guess.
