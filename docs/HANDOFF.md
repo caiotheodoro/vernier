@@ -185,18 +185,26 @@ supply Modal-workspace auth headers) and a KV-cache OOM (`--max-model-len 8192` 
   `P2k`/`G200-*`/`R100` — the evaluation release itself is `gated: False`, verified live via
   `HfApi().dataset_info(...)`.
 
-What's left unwired: `sampling/draw.py`'s `_candidate_frames`/`_factory_worker_hours`, and
-`judges/qwen3vl.py`'s `_image_bytes_for` (frame_id → real JPEG bytes — both need the same
-evaluation-parquet adapter, so build it once, not twice; now that the real per-sample file
-mapping is known, both are unblocked, just not yet written). `_call_qwen3vl` and the full
-`judge_frame` merge/parse path are real, tested, and now confirmed live end to end for one real
-frame — no known gap left before running a small real smoke batch across many frames. Follow
-`WAVES.md`'s Wave 2 section (evaluation-parquet adapter, live judge harness with cost/latency
-accounting, E2 replication runner, E5 prompt-sweep runner) and its own added safeguard: smoke-
-test at small N before any full-scale judge run, since no dollar cap is pre-registered for judge-
-panel spend (only Modal/distillation compute is, per D008). **Do not scale toward the
-pre-registered sample sizes without a separate, explicit decision from Caio** — the approved
-reframe plan scoped only "deploy, smoke-test, report real cost/latency," not a production run.
+**The E10k-* evaluation-parquet adapter is now real and fully wired, closing the loop end to
+end with zero manual glue.** `sampling/draw.py`'s `_candidate_frames` (real per-sample HF
+parquet download + `FrameRef` pool, including real decoded `width`/`height` via a new Pillow
+dependency, since the parquet carries neither) and the new `sampling/draw.image_bytes_for`
+(real, process-cached `frame_id → JPEG bytes` lookup) are both committed and tested.
+`Qwen3VLJudge._image_bytes_for` is now a one-line delegation to `image_bytes_for`, not a raise.
+Verified live twice: `draw_sample("E10k-ego")` → a real frame → `judge.judge_frame()` → real
+image bytes resolved automatically → real vLLM call → `status: "ok"`, and **the live judge's
+answer matched Build AI's own published `hand_count`/`active_labor` label exactly on both
+frames tried**. `S10k-U`/`S10k-S` still raise `NotImplementedError` — the raw, contact-gated
+Egocentric-10K corpus is a different dataset whose real schema hasn't been inspected yet;
+`_factory_worker_hours` is unwired for the same reason.
+
+**No known gap is left before running a small real smoke batch across many E10k-* frames.**
+Follow `WAVES.md`'s Wave 2 section (live judge harness with cost/latency accounting, E2
+replication runner, E5 prompt-sweep runner) and its own added safeguard: smoke-test at small N
+before any full-scale judge run, since no dollar cap is pre-registered for judge-panel spend
+(only Modal/distillation compute is, per D008). **Do not scale toward the pre-registered sample
+sizes without a separate, explicit decision from Caio** — the approved reframe plan scoped only
+"deploy, smoke-test, report real cost/latency," not a production run.
 
 ## Open questions
 
