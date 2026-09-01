@@ -885,3 +885,32 @@ code.
 
 **Reverses if:** nothing. It was a factual error, corrected against primary sources (the real
 prompt files, re-verified live) and a real live call.
+
+---
+
+## D044 — `HF_TOKEN` does not actually unblock the raw Egocentric-10K corpus
+
+Corrects a claim this session itself made earlier (`docs/HANDOFF.md`, since fixed): that
+`HF_TOKEN` was "confirmed to unblock" `builddotai/Egocentric-10K` (the raw, gated corpus
+`S10k-U`/`S10k-S` need). That was based on `HfApi().dataset_info(...)`/`list_repo_files(...)`
+succeeding — which HF permits against gated-repo *metadata* regardless of access — not on an
+actual file download. A real `hf_hub_download` against the same repo, same token, returns
+`GatedRepoError: 403 ... you are not in the authorized list`. The account behind this token has
+not been granted access to this specific gated dataset; a real, outstanding blocker, not a
+code gap.
+
+Separately, checking `list_repo_files` (which does work) shows the raw corpus is not a parquet
+at all: `factory_{NNN}/workers/worker_{NNN}/factory{NNN}worker{NNN}_part{NN}.tar` — WebDataset
+tar shards, plus one `intrinsics.json` per worker. `S10k-U`/`S10k-S`'s real adapter will need
+tar extraction, and, if the shards hold video rather than still frames, frame extraction on top
+— a different shape of work than the evaluation-release parquet adapter, not a same-pattern
+port of it.
+
+**Lesson, same shape as D043's**: a claim in this repo's own docs, made from a metadata-only
+check, was taken as "access confirmed" and repeated without a real download ever being
+attempted. Caught this time before any code was written against it, not after.
+
+**Reverses if:** the account behind `HF_TOKEN` is granted access to
+`builddotai/Egocentric-10K` (Caio requesting/confirming it on the dataset page) — at which
+point `S10k-U`/`S10k-S` wiring can proceed, starting from an actual look at one real `.tar`
+shard's contents, not from this entry's own untested assumption about what's inside them.

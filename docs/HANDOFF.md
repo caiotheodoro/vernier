@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D043 |
+| Decisions | `DECISIONS.md`, D001–D044 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -217,12 +217,27 @@ toward the pre-registered sample sizes (10,000) without a separate, explicit dec
 Caio** — the approved reframe plan scoped only "deploy, smoke-test, report real cost/latency,"
 not a production run, and that boundary hasn't been revisited.
 
-Still unwired, a distinctly separate task: **`S10k-U`/`S10k-S`** (the sampling-design
-sensitivity arm) needs the raw, contact-gated Egocentric-10K corpus adapter — a different
-dataset from the evaluation release, real schema not yet inspected (`HF_TOKEN` is confirmed to
-unblock access to it, per earlier `.env` testing, but nothing has read its actual parquet
-schema yet). `_factory_worker_hours` is the same gap. `WAVES.md`'s "Egocentric-10K streaming
-draw for the sampling-design arm" line item is this.
+Still unwired, and a materially bigger task than the evaluation-parquet adapter was — **two
+real findings from checking, not assuming, this session**:
+
+1. **`HF_TOKEN` does NOT actually unblock the raw `Egocentric-10K` corpus.** An earlier note in
+   this file claimed it did; that was wrong, corrected here after actually trying a real
+   download. `HfApi().dataset_info(...)`/`list_repo_files(...)` succeed (HF exposes gated-repo
+   *metadata* regardless of access), but a real `hf_hub_download` of any file 403s:
+   `GatedRepoError: ... you are not in the authorized list`. This account has not been granted
+   access — a real, outstanding blocker, not a code gap. Caio needs to either request/confirm
+   access on the dataset page or say this arm is out of scope.
+2. **The raw corpus is not a parquet at all.** `list_repo_files` (metadata access, which does
+   work) shows `factory_{NNN}/workers/worker_{NNN}/factory{NNN}worker{NNN}_part{NN}.tar` —
+   WebDataset-style tar shards, one `intrinsics.json` per worker, no parquet anywhere. Real
+   contents unverified (blocked by finding 1 above), but this is enough to know
+   `S10k-U`/`S10k-S`'s real adapter will need tar extraction and (if the shards hold video
+   rather than stills) frame extraction — a different, larger shape of work than
+   `_frames_from_eval_parquet`'s single `pq.read_table` call, not a same-pattern port of it.
+
+`_factory_worker_hours` is the same gap. `WAVES.md`'s "Egocentric-10K streaming draw for the
+sampling-design arm" line item is this — scope it as its own investigation once access is
+resolved, not an extension of the E10k-* adapter's pattern.
 
 ## Open questions
 
