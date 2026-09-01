@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import io
 import random
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
@@ -104,7 +105,7 @@ def _rng(seed: int, sample: SampleName) -> random.Random:
 # Each `E10k-*` sample draws from its own file within the one pinned evaluation-release repo
 # (`_EVAL_HF_REPO`) -- confirmed live via `HfApi().list_repo_files`, not assumed from the
 # single-file example `docs/UPSTREAM-FINDINGS.md` F9 happened to inspect.
-_EVAL_PARQUET_FILENAME: dict[SampleName, str] = {
+_EVAL_PARQUET_FILENAME: dict[str, str] = {
     "E10k-ego": "egocentric_10k.parquet",
     "E10k-ego4d": "ego4d.parquet",
     "E10k-epic": "epic_kitchens.parquet",
@@ -179,6 +180,30 @@ def _frames_from_eval_parquet(path: str, sample: SampleName, corpus_rev: str) ->
     return frames
 
 
+def _download_eval_parquet(sample: str) -> str:
+    """Real network I/O, shared by `_candidate_frames` and `image_bytes_for`: resolve one
+    E10k-* sample's own evaluation-release file to a local path, downloading and caching it if
+    needed (`huggingface_hub` dedupes by content hash -- a second call for the same sample in
+    the same process/machine is a cache hit, not a re-download).
+
+    Raises `NotImplementedError` for `S10k-U`/`S10k-S`: a different, contact-gated dataset whose
+    real schema hasn't been inspected yet.
+    """
+    if sample not in _EVAL_PARQUET_FILENAME:
+        raise NotImplementedError(
+            f"{sample!r} needs the raw Egocentric-10K corpus adapter (S10k-U/S10k-S) -- a "
+            "different, still-unwired dataset, see docs/HANDOFF.md"
+        )
+    from huggingface_hub import hf_hub_download
+
+    return hf_hub_download(
+        repo_id=_EVAL_HF_REPO,
+        repo_type="dataset",
+        revision=PINNED_REVISIONS[_EVAL_HF_REPO],
+        filename=_EVAL_PARQUET_FILENAME[sample],
+    )
+
+
 def _candidate_frames(sample: SampleName) -> list[FrameRef]:
     """Wave 2 seam: the pool `draw_sample` samples from.
 
@@ -188,21 +213,49 @@ def _candidate_frames(sample: SampleName) -> list[FrameRef]:
     hasn't been inspected yet. Wave 1 unit tests monkeypatch this whole function with
     synthetic in-memory `FrameRef` pools, independent of either path.
     """
-    if sample not in _EVAL_PARQUET_FILENAME:
-        raise NotImplementedError(
-            f"_candidate_frames for {sample!r} needs the raw Egocentric-10K corpus adapter "
-            "(S10k-U/S10k-S) -- a different, still-unwired dataset, see docs/HANDOFF.md"
-        )
-    from huggingface_hub import hf_hub_download
+    path = _download_eval_parquet(sample)
+    return _frames_from_eval_parquet(path, sample, PINNED_REVISIONS[_EVAL_HF_REPO])
 
-    revision = PINNED_REVISIONS[_EVAL_HF_REPO]
-    path = hf_hub_download(
-        repo_id=_EVAL_HF_REPO,
-        repo_type="dataset",
-        revision=revision,
-        filename=_EVAL_PARQUET_FILENAME[sample],
-    )
-    return _frames_from_eval_parquet(path, sample, revision)
+
+@lru_cache(maxsize=None)
+def _eval_frame_bytes_by_id(sample: str) -> dict[str, bytes]:
+    """Real, process-cached `frame_id -> image bytes` lookup for one E10k-* sample's
+    evaluation parquet, built once per (process, sample) and reused.
+
+    `_candidate_frames` already reads and discards the whole `image` column per draw; this is
+    the separate, deliberate seam for actually judging a frame (`image_bytes_for` below) --
+    without the cache, a real judging run (two calls per frame, many frames) would re-read a
+    file up to ~1.8GB from disk on every single call.
+    """
+    path = _download_eval_parquet(sample)
+    table = pq.read_table(path, columns=["frame_id", "image"])
+    frame_ids = table.column("frame_id").to_pylist()
+    images = table.column("image").to_pylist()
+    result: dict[str, bytes] = {}
+    for frame_id, image in zip(frame_ids, images, strict=True):
+        image_bytes = image.get("bytes") if isinstance(image, dict) else None
+        if image_bytes:
+            result[frame_id] = image_bytes
+    return result
+
+
+def image_bytes_for(frame: FrameRef) -> bytes:
+    """Real JPEG bytes for one already-drawn `E10k-*` frame -- the seam `judges/qwen3vl.py`'s
+    `_image_bytes_for` calls (`ARCHITECTURE.md`: judges depend on sampling for frames, nothing
+    else).
+
+    Raises `KeyError` if `frame.frame_id` isn't present or has empty image bytes in its own
+    sample's evaluation parquet. `scripts/check_eval_parquets.py` (D016) is the place to check
+    this in bulk, ahead of time, across a whole drawn sample's membership; this seam trusts that
+    check already passed and fails loud, not silently, if it didn't.
+    """
+    by_id = _eval_frame_bytes_by_id(frame.sample)
+    if frame.frame_id not in by_id:
+        raise KeyError(
+            f"frame_id {frame.frame_id!r} not found or has empty image bytes in sample "
+            f"{frame.sample!r}'s evaluation parquet"
+        )
+    return by_id[frame.frame_id]
 
 
 def _factory_worker_hours(sample: SampleName) -> dict[str, float]:

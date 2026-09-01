@@ -251,22 +251,48 @@ def test_judge_frame_never_raises_on_garbage_logprob_type(monkeypatch: pytest.Mo
     assert result.confidence == Confidence(kind="none", value=None)
 
 
-# --- _image_bytes_for is the one seam still unwired (needs the evaluation-parquet adapter) -
+# --- _image_bytes_for: real for E10k-*, still unwired for S10k-U/S10k-S --------------------
+#
+# `_frame()` (the shared fixture above) is an `S10k-U` frame -- real image_bytes_for wiring for
+# that family needs the raw, contact-gated Egocentric-10K corpus adapter, not yet inspected
+# (docs/HANDOFF.md), so these two tests exercise the still-real "raises" path. Real E10k-*
+# wiring itself is `sampling.draw.image_bytes_for`'s own job and is tested there
+# (`tests/test_sampling_draw.py`); `Qwen3VLJudge._image_bytes_for` is a one-line delegation to
+# it, verified below.
 
 
-def test_image_bytes_for_seam_unwired_raises_not_implemented() -> None:
+def test_image_bytes_for_seam_unwired_for_s10k_raises_not_implemented() -> None:
     judge = Qwen3VLJudge()
     with pytest.raises(NotImplementedError):
         judge._image_bytes_for(_frame())
 
 
-def test_call_qwen3vl_propagates_the_unwired_image_seam() -> None:
+def test_call_qwen3vl_propagates_the_unwired_image_seam_for_s10k() -> None:
     # _call_qwen3vl itself is real (wired to the openai client against the self-hosted vLLM
-    # server); it still raises here only because it calls the still-unwired _image_bytes_for
-    # seam before ever touching the network.
+    # server); it still raises here only because it calls the still-unwired S10k-U image seam
+    # before ever touching the network.
     judge = Qwen3VLJudge()
-    with pytest.raises(NotImplementedError, match="_image_bytes_for"):
+    with pytest.raises(NotImplementedError):
         judge._call_qwen3vl(_frame(), "some prompt text")
+
+
+def test_image_bytes_for_delegates_to_the_real_sampling_seam(monkeypatch: pytest.MonkeyPatch) -> None:
+    import vernier.judges.qwen3vl as qwen3vl_mod
+
+    calls: list[FrameRef] = []
+
+    def _fake_image_bytes_for(frame: FrameRef) -> bytes:
+        calls.append(frame)
+        return b"\xff\xd8\xff real-looking jpeg bytes"
+
+    monkeypatch.setattr(qwen3vl_mod, "image_bytes_for", _fake_image_bytes_for)
+
+    judge = Qwen3VLJudge()
+    frame = _frame()
+    result = judge._image_bytes_for(frame)
+
+    assert result == b"\xff\xd8\xff real-looking jpeg bytes"
+    assert calls == [frame]
 
 
 # --- _call_qwen3vl: real SDK wiring, mocked at the client boundary -------------------------

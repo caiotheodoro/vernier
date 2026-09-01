@@ -41,6 +41,7 @@ import openai
 from vernier.judges.base import JudgeAdapter, parse_hand_count_response, parse_manipulation_response
 from vernier.judges.prompts import PromptVariant, load_prompt
 from vernier.models import Confidence, FrameRef, JudgeResponse, JudgeStatus
+from vernier.sampling.draw import image_bytes_for
 
 # Severity order for combining the two per-task call statuses into one JudgeResponse.status:
 # error > timeout > refused > unparseable > ok. Rationale: a hard failure on either call (error,
@@ -141,15 +142,12 @@ class Qwen3VLJudge(JudgeAdapter):
         return self._last_model_version
 
     def _image_bytes_for(self, frame: FrameRef) -> bytes:
-        """Seam: resolve `frame` to its real JPEG bytes.
-
-        Not wired here -- needs the evaluation-parquet adapter
-        (`sampling.draw._candidate_frames`'s own still-unwired seam) to supply a frame_id ->
-        bytes lookup first, so the two seams aren't duplicated.
+        """Resolve `frame` to its real JPEG bytes via `sampling.draw.image_bytes_for`
+        (`ARCHITECTURE.md`: judges depend on sampling for frames, nothing else). Real for the
+        `E10k-*` family; raises `NotImplementedError` for `S10k-U`/`S10k-S` frames, the same as
+        the sampling seam it delegates to.
         """
-        raise NotImplementedError(
-            "Qwen3VLJudge._image_bytes_for needs the evaluation-parquet adapter wired first"
-        )
+        return image_bytes_for(frame)
 
     def _call_qwen3vl(self, frame: FrameRef, prompt_text: str) -> tuple[str, int, float, float | None]:
         """Issue one real call to the self-hosted Qwen3-VL server for one task's prompt
