@@ -38,7 +38,7 @@ probe:         ## Result 2: transfer probe. Kill-gated -- see docs/METHOD.md.
 estimate:      ## PPI prevalence: naive, rectified, interval, design effect.
 	$(NOT_YET)
 card:          ## Emit the measurement card, including "what could not be checked".
-	$(NOT_YET)
+	python3 scripts/emit_card.py
 
 test:          ## Wave 0: run the pytest suite (contract records + fixture generator).
 	python3 -m pytest
