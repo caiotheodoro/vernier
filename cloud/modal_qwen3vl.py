@@ -59,11 +59,12 @@ app = modal.App("vernier-qwen3vl-judge")
 @app.server(
     image=vllm_image,
     gpu=f"L4:{N_GPU}",
-    # Kept warm rather than scaling to zero between calls -- an 8B model's weights take real
-    # time to load, and judging happens in bursts (per-frame calls), not one request every
-    # `scaledown_window`. Remove min_containers if idle-cost matters more than avoiding
-    # per-burst cold starts once real usage volume is known.
-    min_containers=1,
+    # Scale-to-zero for now (min_containers=0, the default): an unattended always-warm
+    # container bills continuously (~$0.80/hr) with no request in flight, which is the wrong
+    # default before the first real deploy has even been smoke-tested. Cold start for an 8B
+    # model is real (likely 1-2 minutes) but bounded and one-time per idle period -- switch to
+    # min_containers=1 once a real judging run's request volume justifies paying to avoid it.
+    min_containers=0,
     scaledown_window=15 * MINUTES,
     startup_timeout=10 * MINUTES,
     volumes={
