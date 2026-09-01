@@ -1,0 +1,5 @@
+#!/bin/sh
+# Installed via `make install-hooks` as .git/hooks/pre-commit. Refuses the commit if
+# docs/private/ is stageable -- see `make privacy-gate` in the Makefile for the actual check.
+set -e
+exec make privacy-gate
