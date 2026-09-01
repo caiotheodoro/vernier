@@ -93,10 +93,6 @@ _EVAL_HF_REPO = "builddotai/Egocentric-10K-Evaluation"
 _MEMBERSHIP_ROOT = Path("data/membership")
 
 
-def _membership_path(sample: SampleName) -> Path:
-    return _MEMBERSHIP_ROOT / f"{sample}.json"
-
-
 def _rng(seed: int, sample: SampleName) -> random.Random:
     """One independent, deterministic RNG stream per (seed, sample) pair."""
     return random.Random(f"{seed}:{sample}")
@@ -348,7 +344,15 @@ def _load_parent_membership(parent: SampleName) -> list[FrameRef]:
     # call time, by which point both modules are fully loaded.
     from vernier.sampling import membership
 
-    return membership.load_membership(parent, _membership_path(parent))
+    # `load_membership(sample, path)` takes the membership ROOT DIRECTORY and appends
+    # `<sample>.json` itself (`membership.py`'s own `_member_path`) -- passing a pre-built file
+    # path here (the bug this comment replaces: `_membership_path(parent)`, itself already
+    # `_MEMBERSHIP_ROOT / f"{parent}.json"`) made every subset draw look for
+    # `data/membership/<parent>.json/<parent>.json`, silently never found. Caught only by
+    # actually running `scripts/draw_all_samples.py` end to end against real written
+    # membership -- every existing test monkeypatches `membership.load_membership` directly,
+    # bypassing this call entirely, so nothing here had ever exercised the real path arithmetic.
+    return membership.load_membership(parent, _MEMBERSHIP_ROOT)
 
 
 def _draw_subset(sample: SampleName, seed: int) -> list[FrameRef]:

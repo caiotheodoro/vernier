@@ -914,3 +914,42 @@ attempted. Caught this time before any code was written against it, not after.
 `builddotai/Egocentric-10K` (Caio requesting/confirming it on the dataset page) — at which
 point `S10k-U`/`S10k-S` wiring can proceed, starting from an actual look at one real `.tar`
 shard's contents, not from this entry's own untested assumption about what's inside them.
+
+---
+
+## D045 — `_load_parent_membership` was passing a file path where a directory was expected
+
+Caught only by actually running `scripts/draw_all_samples.py` end to end for the first time,
+against real written membership -- not by any existing test, all of which monkeypatch
+`membership.load_membership` without ever checking the `path` argument it receives.
+
+`membership.load_membership(sample, path)`'s own contract is that `path` is the membership
+ROOT DIRECTORY; it appends `<sample>.json` itself. `sampling/draw.py`'s
+`_load_parent_membership` instead called it as
+`membership.load_membership(parent, _membership_path(parent))`, where `_membership_path`
+already returned the full file path (`_MEMBERSHIP_ROOT / f"{parent}.json"`). Every real subset
+draw (`P2k`, `G200-ego`, `G200-ego4d`, `G200-epic`, `R100`) would have looked for
+`data/membership/<parent>.json/<parent>.json` -- a path that can never exist -- and raised
+`MembershipNotFoundError`, 100% of the time, the moment anything tried to actually draw one of
+them against real on-disk membership rather than a monkeypatched pool.
+
+**Fixed**: `_load_parent_membership` now passes `_MEMBERSHIP_ROOT` directly; the now-fully-
+redundant `_membership_path` helper (used nowhere else) is deleted. A new regression test
+(`test_load_parent_membership_passes_the_root_directory_not_a_file_path`) asserts the exact
+`path` value `load_membership` receives, which none of the existing monkeypatch-based tests
+did -- that gap in what was being asserted, not a gap in what was being run, is why this
+shipped through Wave 1's review undetected.
+
+Verified live end to end after the fix: `scripts/draw_all_samples.py` (new this session, see
+below) drew and persisted all eight currently-unblocked samples in the real pre-registered
+dependency order --`E10k-ego`/`E10k-ego4d`/`E10k-epic` (10,000 each), `P2k` (2,000),
+`G200-ego`/`G200-ego4d`/`G200-epic` (200 each), `R100` (100) -- each with zero duplicate
+`frame_id`s. `S10k-U`/`S10k-S` skip cleanly (D044).
+
+**Lesson, third time this session (D043, D044, now this)**: a mocked/monkeypatched test suite
+that never exercises the real call it's standing in for can hide a wiring bug indefinitely.
+Each of these three was caught by the same intervention -- actually running the real thing,
+end to end, against real data -- not by more unit tests written the same way as the ones that
+already existed.
+
+**Reverses if:** nothing. It was a real bug, fixed and verified live.

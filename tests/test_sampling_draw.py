@@ -224,6 +224,28 @@ def test_e10k_ego_is_essentially_all_candidate_frames(monkeypatch: pytest.Monkey
 # --- subset relationships: P2k / G200-* / R100 ----------------------------------------------
 
 
+def test_load_parent_membership_passes_the_root_directory_not_a_file_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression guard for a real bug (`docs/DECISIONS.md` D045): `_load_parent_membership`
+    used to pass a pre-built `<root>/<sample>.json` file path where `load_membership(sample,
+    path)` expects the root *directory* (it appends `<sample>.json` itself) -- silently never
+    finding any real, on-disk membership. Every other test here monkeypatches
+    `load_membership` without checking its `path` argument at all, which is exactly how this
+    survived undetected until a real end-to-end run (`scripts/draw_all_samples.py`) hit it."""
+    received_paths: list[object] = []
+
+    def _spy(sample: str, path: object) -> list[FrameRef]:
+        received_paths.append(path)
+        return []
+
+    monkeypatch.setattr(membership_mod, "load_membership", _spy)
+
+    draw_mod._load_parent_membership("E10k-ego")
+
+    assert received_paths == [draw_mod._MEMBERSHIP_ROOT]
+
+
 def test_p2k_is_subset_of_e10k_ego_membership(monkeypatch: pytest.MonkeyPatch) -> None:
     parent = [_eval_frame(sample="E10k-ego", uid=str(i)) for i in range(30)]
     monkeypatch.setattr(
