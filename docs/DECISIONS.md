@@ -1208,3 +1208,43 @@ previously-uncaught hits, fixed the same way D048 fixed the rest.
 
 **Reverses if:** nothing. A drift lint is a permanent addition, not a point-in-time fix — it
 exists specifically so this class of staleness cannot recur silently.
+
+---
+
+## D051 — R2 (pseudo-cluster design effect) is blocked: the pinned DINOv3 checkpoint is gated, and this account lacks access
+
+Attempted `docs/REVIEW.md` R2 (embed every `E10k-*` frame with the pinned DINOv3 backbone,
+cluster by similarity, run the cluster bootstrap over the pseudo-clusters as an exploratory
+proxy for H2) as the next zero-cost, no-human-label item. Real, same pattern as D044: a live
+`hf_hub_download` of `facebook/dinov3-vits16-pretrain-lvd1689m/config.json` (`docs/DECISIONS.md`
+D034's pinned backbone) returns `GatedRepoError: 403 ... you are not in the authorized list`.
+`HfApi().list_models()`'s own `gated` field for this repo is unreliable here -- it reported
+`None` (not gated) for the same repo a real download attempt just refused, the same
+metadata-vs-real-access gap D044 already found once this session, confirmed a second time on a
+different resource.
+
+`torch`/`transformers` (real, already-implied dependencies for this pre-registered backbone,
+not new ones) added to the `probes` extra regardless -- declaring the real dependency now costs
+nothing and is correct whenever access resolves.
+
+Several unofficial third-party re-uploads of the same weights exist and are not gated
+(`vincentamato/dinov3-vits16-pretrain-lvd1689m-pt-outputs`, `Fanqi-Lin-IR/dinov3_vits16_pretrain`,
+others found via a live search). **Not used**: D034 pinned the *official* Meta checkpoint,
+verified live against the real Hub listing specifically to avoid exactly this kind of
+unverified substitution; a third-party mirror could silently carry different weights, and
+nothing in this session verified any of them against a known checksum for the real release.
+Substituting one without that verification would risk the same category of problem D034's own
+pinning discipline exists to prevent, for an exploratory analysis whose whole point is to be a
+trustworthy proxy.
+
+R2 is not attempted further this session. Caio's real options: request Meta's manual access
+grant for the gated checkpoint (real HF Hub UI action, unknown turnaround time); accept a
+verified third-party mirror after checking it against a real weight checksum; or drop R2 as
+also out of reach, alongside `S10k-U`/`S10k-S` (D044) and Result 2 (D048) -- all three of this
+session's real, checked-not-assumed access blockers now point at the same underlying
+constraint: this HF account's gated-content authorization is narrower than its metadata-read
+access, discovered three separate times by three separate real download attempts rather than
+once and generalized.
+
+**Reverses if:** access to the pinned checkpoint is granted, or a third-party mirror is
+verified against a real checksum for the official release.
