@@ -43,8 +43,8 @@ card:          ## Emit the measurement card, including "what could not be checke
 test:          ## Wave 0: run the pytest suite (contract records + fixture generator).
 	python3 -m pytest
 
-typecheck:     ## Wave 0: mypy --strict over src/vernier, tests and scripts.
-	python3 -m mypy src/vernier tests scripts
+typecheck:     ## Wave 0: mypy --strict over src/vernier, tests, scripts and cloud.
+	python3 -m mypy src/vernier tests scripts cloud
 
 fixtures:      ## Wave 0: regenerate tests/fixtures/{valid,malformed}/*.json from tests/fixtures.py.
 	python3 scripts/generate_fixtures.py

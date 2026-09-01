@@ -38,6 +38,12 @@ probes = [
     "scikit-learn>=1.4",
     "numpy>=1.26",
 ]
+cloud = [
+    # cloud/modal_qwen3vl.py -- serving Qwen3-VL-8B-Instruct-FP8 on Modal (docs/DECISIONS.md
+    # D042). AWS, the credits-exhausted fallback, needs no new Python dependency here -- it's
+    # a different deployment target for the same vLLM server, not a different client library.
+    "modal>=1.0",
+]
 
 [build-system]
 requires = ["hatchling"]
