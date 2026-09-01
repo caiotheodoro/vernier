@@ -992,3 +992,72 @@ has -- caught only by actually calling the real thing with real, representative 
 adding more tests shaped like the ones that already existed.
 
 **Reverses if:** nothing. It was a real bug, fixed and verified live.
+
+---
+
+## D047 — Rung-1's real distillation teacher was wrong; caught by an independent review, not by this session's own checking
+
+`docs/review.md` (an independent, fresh-context review of the whole repository post-D042,
+dated 2026-09-01) found a real, costly design mistake in `scripts/generate_rung1_labels.py`
+that this session had already started running against real infrastructure: `docs/METHOD.md`
+E7 states rung 1 trains "on `gemini-2.5-flash` `P0a` labels" -- the judge behind the published
+number, so the instrument reproduces *that judge*, errors included (D007's stated reason: an
+instrument that improved on the thing it measures would stop measuring it). The script instead
+called the live Qwen3-VL judge to *generate* those training labels. But `gemini-2.5-flash`'s
+own labels are not missing -- they are the `hand_count`/`active_labor` columns already shipped
+in the evaluation parquets (`docs/UPSTREAM-FINDINGS.md` F9), verified live to reproduce the
+published headline figures to two decimal places on all three corpora (D040, D042's own live
+cross-check). Training on fresh Qwen3-VL calls instead distils a substitute judge nobody's
+published claim rests on; rung 2 as originally scoped (a Qwen3-VL LoRA fitted to Qwen3-VL-8B's
+own labels) would have been self-distillation, adding nothing.
+
+**Real cost of the mistake, stopped before it completed**: the flawed run was live against the
+deployed Modal judge for ~31 minutes (real API spend, roughly $0.40 at observed per-call
+rates) before being killed on reading the review. The full run, had it completed, would have
+spent ~$5 and ~5.8 hours producing labels for the wrong teacher.
+
+**Fixed**: `scripts/generate_rung1_labels.py` rewritten to read the real, already-stored
+`gemini-2.5-flash` labels directly from the pinned evaluation parquets -- zero live judge
+calls, zero cost, real runtime ~1 second. Per the review's own recommendation, extended beyond
+`E10k-ego` alone to all three evaluation arms (`E10k-ego`/`E10k-ego4d`/`E10k-epic`), each minus
+its own `G200-*` eval-holdout set -- 29,400 real labels generated and verified (sensible
+distribution: `hands_visible>=1` at ~84.7% pooled across all three corpora, consistent with
+Ego4D's and EPIC-KITCHENS-100's own lower published rates pulling the blend down from
+Egocentric-10K's 96.42% alone). The stored-label extraction logic is now shared
+(`scripts/published_labels.py`) between this script and `scripts/e2_replication.py`, which
+already needed the identical real-parquet read for its own H1 comparison.
+
+The live-Qwen3-VL-calling mechanism (`scripts/judge_concurrency.py` plus the per-frame call
+loop) is not discarded -- it is real, tested infrastructure with a real, different use: Qwen3-VL
+as the live *comparison* judge for E4 (judge-vs-judge agreement) and E6 (domain bias), a second
+judge arm alongside the frozen `gemini-2.5-flash` labels, per the review's second point ("the
+panel is two judges, not one"). Repurposed into `scripts/generate_qwen_comparison_labels.py`,
+correctly framed as the comparison arm, not the distillation teacher.
+
+Also recorded from the same concurrency work, independent of this mistake: naive client-side
+concurrency (`ThreadPoolExecutor`, up to 8 workers tested) measurably HURT real throughput on
+the current single-container Modal deployment (sequential ~0.47 frames/sec vs. ~0.36 at 4
+workers vs. ~0.26 at 8 workers) -- single-GPU contention on short bursts, not the hoped-for
+speedup; Modal's own autoscaling needs longer sustained load than a smoke-scale test exercises
+to add containers. `generate_qwen_comparison_labels.py` defaults `--max-workers=1` for this
+reason, pending real evidence at a run size long enough for autoscaling to matter.
+
+**Not yet absorbed from `docs/review.md`, tracked as follow-up, not done in this entry**: R2
+(pseudo-cluster design effect), R3 (second rater on R100), R4 (judge test-retest), R5
+(pretraining-contamination confound on H5), R6 (pre-data gold-size amendment), R7 (pin the
+rung-3 guarantee mechanism), R8 (authorize the full-N E2/E5 run), R9 (explicitly kill Result 2),
+R10 (a drift lint for stale prose), and the stale-prose sweep across `README.md`, `AGENTS.md`,
+`PRE-REGISTRATION.md`'s judge-panel table, `METHOD.md`, `EVALS_CARD.md`, `REPRODUCTION.md`,
+`RED-TEAM.md`, `ARCHITECTURE.md`, `BENCHMARK.md`, and `RUBRIC.md`'s P3/P4 mislabel. This entry
+closes only the one item large enough to be actively spending money and running against the
+wrong target: R1 itself.
+
+**Lesson**: this is the first bug this session caught via an external review rather than by
+running the thing itself and checking the result -- the same real-verification discipline
+(D043-D046), applied from a second, independent context instead of the one that wrote the
+code, per this project's own validator-independence practice. It found something none of this
+session's own live runs would have surfaced, because the running code was internally
+consistent and "worked" by every test that shared its own assumption about the teacher.
+
+**Reverses if:** nothing. It was a real, verified design mistake, caught, and fixed before
+completion.

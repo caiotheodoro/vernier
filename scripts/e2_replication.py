@@ -26,16 +26,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import pyarrow.parquet as pq
+from published_labels import published_labels_for_sample
 
 from vernier.judges.base import JudgeAdapter
 from vernier.judges.prompts import PromptVariant
 from vernier.judges.qwen3vl import Qwen3VLJudge
 from vernier.models import FrameRef
 from vernier.sampling.draw import draw_sample
-from vernier.sampling.revisions import PINNED_REVISIONS
-
-_EVAL_HF_REPO = "builddotai/Egocentric-10K-Evaluation"
 
 # docs/PRE-REGISTRATION.md's headline table, Egocentric-10K row.
 _PUBLISHED = {
@@ -45,31 +42,6 @@ _PUBLISHED = {
 }
 _H1_TOLERANCE_PP = 2.0
 _H1B_TOLERANCE_PP = 1.0
-
-
-def _published_labels(frame_ids: set[str]) -> dict[str, tuple[int, bool]]:
-    """Build AI's own recorded `hand_count`/`active_labor` for each real `frame_id`, read
-    straight from the pinned evaluation parquet -- what H1 compares the live judge against,
-    never treated as ground truth (a judge never decides ground truth, `CONTRACTS.md`)."""
-    from huggingface_hub import hf_hub_download
-
-    path = hf_hub_download(
-        repo_id=_EVAL_HF_REPO,
-        repo_type="dataset",
-        revision=PINNED_REVISIONS[_EVAL_HF_REPO],
-        filename="egocentric_10k.parquet",
-    )
-    table = pq.read_table(path, columns=["frame_id", "hand_count", "active_labor"])
-    out: dict[str, tuple[int, bool]] = {}
-    for fid, hc, al in zip(
-        table.column("frame_id").to_pylist(),
-        table.column("hand_count").to_pylist(),
-        table.column("active_labor").to_pylist(),
-        strict=True,
-    ):
-        if fid in frame_ids:
-            out[fid] = (hc, al == "yes")
-    return out
 
 
 def _run_variant(
@@ -174,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     frames = draw_sample("E10k-ego")[: args.n]
-    published = _published_labels({f.frame_id for f in frames})
+    published = published_labels_for_sample("E10k-ego", {f.frame_id for f in frames})
     judge = Qwen3VLJudge()
 
     results = {
