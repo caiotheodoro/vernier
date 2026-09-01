@@ -9,10 +9,154 @@ A judge never decides ground truth -- it is the object of measurement, not the o
 
 from __future__ import annotations
 
+import json
+import re
 from abc import ABC, abstractmethod
+from typing import Any
 
-from vernier.models import FrameRef, JudgeResponse
+from vernier.models import Confidence, FrameRef, JudgeResponse, JudgeStatus
 from vernier.judges.prompts import PromptVariant
+
+__all__ = [
+    "JudgeAdapter",
+    "parse_hand_count_response",
+    "parse_manipulation_response",
+    "build_confidence",
+]
+
+# First-person refusal phrasing checked when no JSON object can be extracted at all. This is
+# deliberately narrow: it is not a general refusal classifier, only a marker that the model
+# declined rather than answered badly. Any malformed/non-JSON text that does NOT match one of
+# these markers is classified "unparseable", not "refused" -- e.g. a truncated response or a
+# model that answers in free prose without ever saying it is declining. A caller with a richer
+# signal (e.g. an API-level content-filter block reason) should prefer that over this heuristic;
+# this function only ever sees the model's raw text.
+_REFUSAL_MARKERS = (
+    "i cannot",
+    "i can't",
+    "i can not",
+    "i'm unable",
+    "i am unable",
+    "cannot assist",
+    "unable to assist",
+    "as an ai",
+    "i won't",
+    "i will not",
+    "i'm not able",
+    "i am not able",
+    "sorry, i",
+    "sorry, but i",
+)
+
+
+def _extract_json_object(raw: str) -> dict[str, Any] | None:
+    """Best-effort extraction of a JSON object from a raw model response.
+
+    Handles the three shapes judges actually return: a bare JSON object, one wrapped in a
+    markdown code fence, and one embedded in surrounding prose ("Here is the result: {...}").
+    Returns `None` if no JSON object could be recovered at all -- callers then fall back to
+    refusal/unparseable classification of the raw text.
+    """
+    text = raw.strip()
+    fence_match = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
+    if fence_match:
+        text = fence_match.group(1).strip()
+
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            return None
+        try:
+            parsed = json.loads(text[start : end + 1])
+        except json.JSONDecodeError:
+            return None
+
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _looks_like_refusal(raw: str) -> bool:
+    """See `_REFUSAL_MARKERS` docstring above for what this does and does not check."""
+    lowered = raw.lower()
+    return any(marker in lowered for marker in _REFUSAL_MARKERS)
+
+
+def parse_hand_count_response(raw: str) -> tuple[int | None, JudgeStatus]:
+    """Parse a raw response to the hand-count prompt against Build AI's published schema:
+    `{"hand_count": <int>}` (`docs/UPSTREAM-FINDINGS.md` F1).
+
+    - Valid JSON with `hand_count` in {0, 1, 2} -> `(value, "ok")`.
+    - JSON present but `hand_count` missing, of the wrong type, or outside {0, 1, 2} ->
+      `(None, "unparseable")`.
+    - No JSON object recoverable at all, and the text matches a first-person refusal marker
+      (see `_REFUSAL_MARKERS`) -> `(None, "refused")`.
+    - No JSON object recoverable and no refusal marker matched -> `(None, "unparseable")`.
+    """
+    data = _extract_json_object(raw)
+    if data is None:
+        return (None, "refused") if _looks_like_refusal(raw) else (None, "unparseable")
+
+    value = data.get("hand_count")
+    if isinstance(value, bool) or not isinstance(value, int) or value not in (0, 1, 2):
+        return None, "unparseable"
+    return value, "ok"
+
+
+def parse_manipulation_response(raw: str) -> tuple[bool | None, JudgeStatus]:
+    """Parse a raw response to the manipulation prompt against Build AI's published schema:
+    `{"answer": "yes" | "no"}` (`docs/UPSTREAM-FINDINGS.md` F1).
+
+    Same classification rules as `parse_hand_count_response`: a JSON object with `answer`
+    exactly `"yes"` or `"no"` is `"ok"`; any other JSON value for `answer` (missing, wrong
+    type, or outside the enum) is `"unparseable"`; unrecoverable JSON falls back to the same
+    refusal-marker heuristic.
+    """
+    data = _extract_json_object(raw)
+    if data is None:
+        return (None, "refused") if _looks_like_refusal(raw) else (None, "unparseable")
+
+    value = data.get("answer")
+    if value == "yes":
+        return True, "ok"
+    if value == "no":
+        return False, "ok"
+    return None, "unparseable"
+
+
+def build_confidence(raw: str) -> Confidence:
+    """Build a `Confidence` from a raw response's parsed JSON, covering only the `"none"` and
+    `"verbalized"` cases.
+
+    Per `docs/UPSTREAM-FINDINGS.md` F8, the published Build AI schema (P0a/P0b, and P1-P6
+    which only touch the hand/manipulation rule text) exposes no confidence field at all, so
+    `kind="none"` is the correct result there. `P7` (`docs/PRE-REGISTRATION.md`) extends the
+    schema with a `confidence` number in [0, 1]; when present and valid this returns
+    `kind="verbalized"`. A `confidence` field that is present but the wrong type or out of
+    range is treated as no usable signal and also falls back to `kind="none"` rather than
+    raising, since a judge emitting a malformed confidence value is a parsing failure of that
+    one field, not grounds to fail the whole response.
+
+    This function does NOT handle `kind="logprob"`: per `docs/ARCHITECTURE.md`'s
+    confidence-extraction seam, only judges with open-weights access (Qwen3-VL) can produce a
+    logprob-based confidence, and doing so requires the raw model output (token logprobs) that
+    this function -- which only sees the already-serialized response text -- does not have
+    access to. The caller (that adapter) constructs `Confidence(kind="logprob", ...)` itself.
+    """
+    data = _extract_json_object(raw)
+    if data is None:
+        return Confidence(kind="none", value=None)
+
+    value = data.get("confidence")
+    if value is None or isinstance(value, bool) or not isinstance(value, (int, float)):
+        return Confidence(kind="none", value=None)
+
+    value = float(value)
+    if not 0 <= value <= 1:
+        return Confidence(kind="none", value=None)
+
+    return Confidence(kind="verbalized", value=value)
 
 
 class JudgeAdapter(ABC):
