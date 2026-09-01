@@ -599,3 +599,31 @@ undeclared tag fails a test rather than shipping silently.
 **Reverses:** nothing pre-registered. `PRE-REGISTRATION.md`'s frozen text and every hypothesis
 are unaffected — this corrects a gap in the rubric's own internal completeness, the same class
 of fix `RUBRIC.md`'s own text names as the reason it went from 1.0.0 to 1.1.0.
+
+## D037 — `agreement.core`'s frozen stubs gained a required `task` parameter
+
+Wave 1 unit 10 (`docs/WAVES.md`), during implementation, found the frozen stubs for
+`raw_agreement`, `gwet_ac1`, `cohens_kappa`, `fleiss_kappa`, and `intra_rater_kappa`
+unimplementable as written: each took `labels: list[HumanLabel]` and
+`responses: list[JudgeResponse]` with no way to say which of the two comparable fields
+(`hands_visible` for the hand-count task, `manipulation` for the manipulation task) to compare.
+Both fields are always populated together on an `"ok"` response (`models.py`'s
+`JudgeResponse` validator), so nothing in the data itself disambiguates which one a given call
+means to measure — the same `labels`/`responses` pair could be a hand-count agreement query or
+a manipulation agreement query, and the frozen signature had no way to say which.
+
+**Fixed:** each function gained a required `task: str` parameter appended after its existing
+arguments. All prior positional arguments keep their position, order, and type — this is
+additive, not a reordering. `build_agreement_result` already carried `task: str` for the same
+reason; the parameter now reaches every function it calls internally.
+
+Caught and disclosed by the implementing worker in the module's own docstring before any
+review; the independent `opencode` review (`docs/WAVES.md`'s loop) confirmed the reasoning
+sound (`SIGNATURE_CHANGE_VERDICT: sound`) and required this entry exist before the unit could
+be committed — the same amendment discipline `docs/DECISIONS.md` D033 already applied to
+Wave 1's file-ownership plan, applied here to a signature gap in the same interface freeze.
+
+**Reverses:** nothing in `CONTRACTS.md`, `PRE-REGISTRATION.md`, or any hypothesis — this is a
+correction to an unimplementable Wave 0 stub signature, not a change to what any statistic
+means or how it's computed. No other Wave 1 unit called these functions before this fix, so
+the blast radius is contained to `agreement/core.py` itself and its own tests.
