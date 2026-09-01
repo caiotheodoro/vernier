@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D051 |
+| Decisions | `DECISIONS.md`, D001–D052 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -310,12 +310,20 @@ release, which nothing here has done. **Worth surfacing to Caio as a pattern, no
 separate one-offs**: this HF account's gated-content access appears narrower than its
 metadata-read access across at least three unrelated resources now.
 
+**R4 is done at smoke scale (`docs/DECISIONS.md` D052): 100% judge self-agreement**, 20 real
+frames × 3 repeats, on both tasks. Real and reassuring, but `n=20` cannot rule out rare
+disagreement — re-run against the real 600 gold frames once Wave 3 exists, for the actual R4
+result this is a preliminary version of. Also recorded as a real finding: this project's own
+client code (`judges/qwen3vl.py`) does not pin `temperature`/`top_p`/seed at all — the server's
+default sampling applies, unpinned, which is itself worth fixing regardless of what a
+larger-scale retest finds.
+
 **Still open from `docs/REVIEW.md`, genuinely requiring either real spend, real time, or
-Caio's own action — tracked in D048/D049/D051, not lost:** R3 (a second `R100` rater, ~35 min
-of someone else's time), R4 (judge test-retest, a few real dollars), R6 (a pre-data gold-size
-amendment for H5 — **time-critical, must land before the first label is written**), R8
-(authorize the full-N E2/E5 run — the same "explicit decision from Caio" boundary this file has
-held throughout), and R5's own live contamination probe.
+Caio's own action — tracked in D048/D049/D051/D052, not lost:** R3 (a second `R100` rater,
+~35 min of someone else's time), R6 (a pre-data gold-size amendment for H5 — **time-critical,
+must land before the first label is written**), R8 (authorize the full-N E2/E5 run — the same
+"explicit decision from Caio" boundary this file has held throughout), and R5's own live
+contamination probe.
 
 Note for whoever runs this next: `scripts/draw_all_samples.py`'s `ego4d.parquet`/
 `epic_kitchens.parquet` downloads twice hung indefinitely at a fixed byte count via HF's
