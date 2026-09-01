@@ -1248,3 +1248,35 @@ once and generalized.
 
 **Reverses if:** access to the pinned checkpoint is granted, or a third-party mirror is
 verified against a real checksum for the official release.
+
+---
+
+## D052 — Judge test-retest (`docs/REVIEW.md` R4), smoke scale: 100% self-agreement, unpinned sampling params
+
+The project measures a human's self-consistency (`R100`, intra-rater AC1) and had no analogue
+for the machine. `judges/qwen3vl.py`'s `_call_qwen3vl` sets `max_tokens`/`logprobs` explicitly
+but never `temperature`, `top_p`, or a seed -- the server's own default sampling applies,
+unpinned. Post-training iron law 8: a served model is not deterministic across batch
+compositions without batch-invariant inference, even at temperature 0, so real disagreement
+across repeated identical calls was a live possibility, not a formality to confirm.
+
+**Smoke scale, not R4's full form** (`scripts/judge_test_retest.py`): R4's natural target is
+the 600 gold frames, which do not exist yet (Wave 3). Run instead on 20 real, already-drawn
+`E10k-ego` frames, 3 repeats each, `P0b` -- 120 real calls total (60 hand-count, 60
+manipulation).
+
+**Result: 100% self-agreement on both tasks** across all 20 frames (every frame's 3 repeats
+gave the identical `hands_visible` and the identical `manipulation` answer). Real and
+reassuring at this scale, but `n=20` cannot rule out rare disagreement the way a real 600-frame
+run would -- re-run at scale once Wave 3's frame pool exists, for the actual R4 result this
+entry is a preliminary version of.
+
+Real observed config recorded, per R4's own requirement: `Qwen/Qwen3-VL-8B-Instruct-FP8`,
+`vllm serve --max-model-len 8192 --tensor-parallel-size 1`, `max_tokens=64`, `logprobs=True`,
+`temperature`/`top_p`/seed left at the server's own defaults (not pinned by this project's
+client code) -- itself a real finding: this project does not currently control or record the
+sampling parameters most responsible for real generation variance, only observes their effect
+downstream in `judge_rev` and this test-retest number.
+
+**Reverses if:** nothing. A real, positive result at the scale attempted; the full-scale
+re-run is separately tracked, not a reversal of this one.
