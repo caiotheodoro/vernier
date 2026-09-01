@@ -46,10 +46,14 @@ def test_unmet_claims_cover_every_pre_registered_hypothesis() -> None:
         assert any(tag in item for item in items), f"missing {tag!r} in unmet claims"
 
 
-def test_credential_blockers_are_named_specifically() -> None:
+def test_blockers_are_named_specifically() -> None:
+    # Post-reframe (docs/DECISIONS.md D042-D045): real infra exists for H1/H1b/H3, so their
+    # blocker is scale, not missing credentials; H2/Result 2's blocker is a real, checked
+    # access gap (D044), not "HF_TOKEN not configured" (it is configured); H4-H7's blocker is
+    # purely the human labelling itself, the tooling for which is real and ready.
     items = _unmet_claims()
     reasons = " ".join(i.reason for i in items)
-    assert "GEMINI_API_KEY" in reasons
-    assert "ANTHROPIC_API_KEY" in reasons
-    assert "HF_TOKEN" in reasons
-    assert "600 primary human labels" in reasons
+    assert "pre-registered N=10,000 not run" in reasons
+    assert "D044" in reasons
+    assert "NOT authorized" in reasons
+    assert "600 primary + 100 retest human labels" in reasons
