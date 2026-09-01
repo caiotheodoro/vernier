@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D045 |
+| Decisions | `DECISIONS.md`, D001–D046 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -237,9 +237,24 @@ persist with the exact pre-registered counts (`E10k-ego`/`E10k-ego4d`/`E10k-epic
 blocker.** Reads the real, just-persisted membership (`G200-ego`/`G200-ego4d`/`G200-epic` for
 the 600 primary labels, `R100` for the 100 blind retest) through a real, per-rater
 `HumanLabelStore`. Verified live: `next_frame(pass_="primary", rater=...)` and
-`next_frame(pass_="retest", rater=...)` both return a real frame with zero manual glue. **The
-600+100 human labels themselves are still entirely Caio's own work — nothing here does that —
-but there is no more code standing between "start labelling" and actually doing it.**
+`next_frame(pass_="retest", rater=...)` both return a real frame with zero manual glue.
+
+**`scripts/human_labels_cli.py` is new: the actual interactive tool Caio runs** (`make
+human-labels RATER=caio [PASS=primary|retest]`) — shows each frame's real image (opens in the
+OS's default viewer), prompts for both `RUBRIC.md` tasks plus edge-case tags, difficulty, and a
+note, times the frame automatically, and writes via the real `HumanLabelStore`. Building it and
+running one real integration check before calling it done immediately surfaced **`docs/
+DECISIONS.md` D046**: `sampling.draw.image_bytes_for` was keyed by `frame.sample`, which broke
+for every subset sample (`P2k`/`G200-*`/`R100` relabel `sample`, discarding which root `E10k-*`
+arm a frame came from — `R100` unions three different root arms, so `frame.sample` alone can
+never disambiguate). A real `G200-ego4d` frame from `next_frame()` raised `NotImplementedError`
+before the fix — exactly the frames Wave 3 needs. Fixed: it now searches all three root arms by
+`frame_id` (the only key unique across the whole release). Verified live end to end after the
+fix: both `next_frame(pass_="primary", ...)` and `next_frame(pass_="retest", ...)` resolve to a
+real, decodable image.
+
+**The 600+100 human labels themselves are still entirely Caio's own work — nothing here does
+that — but there is no more code standing between "start labelling" and actually doing it.**
 
 Note for whoever runs this next: `scripts/draw_all_samples.py`'s `ego4d.parquet`/
 `epic_kitchens.parquet` downloads twice hung indefinitely at a fixed byte count via HF's
