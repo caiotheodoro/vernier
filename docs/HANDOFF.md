@@ -3,18 +3,33 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-01, after Wave S, Wave 0, the P1 hygiene tier, and Wave 1's full
-18-unit fan-out (all committed, all independently reviewed) — Wave 2 is blocked on credentials,
-not on code or design.**
+**Last updated: 2026-09-01, after Wave S, Wave 0, the P1 hygiene tier, Wave 1's full 18-unit
+fan-out (all committed, all independently reviewed), real Wave 2 judge-SDK wiring, and a real,
+committed `MEASUREMENT_CARD.json` — `verdict=NOT_VERIFIED`, honestly, naming every unmet claim.**
 
 ## Where this stands
 
-**Wave S, Wave 0, the P1 tier, and Wave 1 are all done and committed. Wave 2 is next and is
-real, wireable work — but every path into it needs a credential this environment does not have
-(`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `HF_TOKEN`). One load-bearing exception was found and
-used: the evaluation release itself (`builddotai/Egocentric-10K-Evaluation`) is `gated: False`,
-verified live — unlike the corpus datasets `.env.example` warns are contact-gated — so its three
-parquets are downloadable with no token at all.**
+**A real `MeasurementCard` exists and is committed: `MEASUREMENT_CARD.json`, `verdict=
+NOT_VERIFIED`.** Regenerate with `make card`. It carries exactly one real claim (H8 --
+participant-count precision disparity, pre-registered as computable from public counts alone,
+no judge call or human label needed: a genuine 58.2x spread across the three corpora) and names
+every other pre-registered hypothesis (H1, H1b, H2, H3, H4, H5, H6, H7) plus Result 2 in
+`what_could_not_be_checked`, each with a specific `"BLOCKER:"` reason (which credential is
+missing, or that the 600 human labels don't exist yet) -- so `_derive_verdict` (D038) returns
+`NOT_VERIFIED` because a real blocker is present, not vacuously from having nothing to claim.
+`verify_and_exit` returns nonzero, for real, via `make card`. This is the actual deliverable
+`card/__init__.py`'s own docstring names as the point of the whole exercise ("an audit that
+always exits zero is decoration") -- not a placeholder, and not to be conflated with either the
+H8 computation itself (a real result) or the D016 live-data cross-check in the next paragraph
+(a data-integrity sanity check, never presented as a hypothesis result).
+
+**Wave S, Wave 0, the P1 tier, and Wave 1 are all done and committed. Wave 2 is real, wireable
+work in progress — but every path to a VERIFIED card needs a credential this environment does
+not have (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `HF_TOKEN`), plus the 600 human labels (Wave
+3, which is explicitly Caio's own work, not automatable). One load-bearing exception was found
+and used: the evaluation release itself (`builddotai/Egocentric-10K-Evaluation`) is `gated:
+False`, verified live — unlike the corpus datasets `.env.example` warns are contact-gated — so
+its three parquets are downloadable with no token at all.**
 
 **P1 tier, fully closed** (was open at the last handoff): CI (`.github/workflows/ci.yml`), the
 privacy-gate git hook (`make install-hooks`), `scripts/check_eval_parquets.py` (D016, offline-
