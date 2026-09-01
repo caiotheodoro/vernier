@@ -8,6 +8,7 @@ touch the network or any real corpus file.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -438,3 +439,105 @@ def test_candidate_frames_raises_not_implemented_for_unwired_corpus_samples() ->
 
     with pytest.raises(NotImplementedError, match="S10k-U"):
         _candidate_frames("S10k-U")
+
+
+# --- image_bytes_for: searches all three eval files by frame_id, not by frame.sample --------
+
+
+@pytest.fixture(autouse=True)
+def _clear_eval_frame_bytes_cache() -> Iterator[None]:
+    """`_eval_frame_bytes_by_id` is `@lru_cache`'d at module scope -- without clearing it, one
+    test's monkeypatched `_download_eval_parquet` would leak into the next test's cache hit."""
+    from vernier.sampling.draw import _eval_frame_bytes_by_id
+
+    _eval_frame_bytes_by_id.cache_clear()
+    yield
+    _eval_frame_bytes_by_id.cache_clear()
+
+
+def _patch_eval_downloads(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, contents: dict[str, list[tuple[str, bytes | None]]]
+) -> None:
+    """`contents` maps root sample name ("E10k-ego" etc.) -> rows to write into that sample's
+    synthetic local parquet; `_download_eval_parquet` is monkeypatched to return that file's
+    path instead of hitting the real network."""
+    import vernier.sampling.draw as draw_mod
+
+    paths: dict[str, Path] = {}
+    for sample, rows in contents.items():
+        path = tmp_path / f"{sample}.parquet"
+        _write_eval_parquet(path, rows)
+        paths[sample] = path
+
+    monkeypatch.setattr(draw_mod, "_download_eval_parquet", lambda sample: str(paths[sample]))
+
+
+def test_image_bytes_for_finds_a_frame_by_its_own_root_sample(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    jpeg = _real_jpeg_bytes(8, 8)
+    _patch_eval_downloads(
+        monkeypatch,
+        tmp_path,
+        {"E10k-ego": [("uuid-f0", jpeg)], "E10k-ego4d": [], "E10k-epic": []},
+    )
+
+    result = draw_mod.image_bytes_for(_eval_frame(sample="E10k-ego", uid="f0"))
+
+    assert result == jpeg
+
+
+def test_image_bytes_for_finds_a_subset_sample_frame_via_its_root_arm(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression guard for a real bug: a `G200-ego4d` frame is really an `E10k-ego4d` frame
+    with `sample` relabelled -- caught live when a real `next_frame()`-returned `G200-ego4d`
+    frame raised (frame.sample used to gate which single file was searched)."""
+    jpeg = _real_jpeg_bytes(8, 8)
+    _patch_eval_downloads(
+        monkeypatch,
+        tmp_path,
+        {"E10k-ego": [], "E10k-ego4d": [("uuid-f0", jpeg)], "E10k-epic": []},
+    )
+    frame = _eval_frame(sample="G200-ego4d", uid="f0")
+
+    result = draw_mod.image_bytes_for(frame)
+
+    assert result == jpeg
+
+
+def test_image_bytes_for_r100_frame_found_regardless_of_which_root_arm(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """R100 draws from the union of three different root arms -- `frame.sample == "R100"`
+    alone can never say which file to search, so this must work no matter which one holds it."""
+    jpeg = _real_jpeg_bytes(8, 8)
+    _patch_eval_downloads(
+        monkeypatch,
+        tmp_path,
+        {"E10k-ego": [], "E10k-ego4d": [], "E10k-epic": [("uuid-f0", jpeg)]},
+    )
+    frame = _eval_frame(sample="R100", uid="f0")
+
+    result = draw_mod.image_bytes_for(frame)
+
+    assert result == jpeg
+
+
+def test_image_bytes_for_raises_not_implemented_for_s10k_samples() -> None:
+    frame = _eval_frame(sample="S10k-U", uid="f0")
+
+    with pytest.raises(NotImplementedError, match="S10k-U"):
+        draw_mod.image_bytes_for(frame)
+
+
+def test_image_bytes_for_raises_key_error_when_truly_not_found(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _patch_eval_downloads(
+        monkeypatch, tmp_path, {"E10k-ego": [], "E10k-ego4d": [], "E10k-epic": []}
+    )
+    frame = _eval_frame(sample="G200-ego", uid="never-existed")
+
+    with pytest.raises(KeyError, match="never-existed"):
+        draw_mod.image_bytes_for(frame)

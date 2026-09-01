@@ -953,3 +953,42 @@ end to end, against real data -- not by more unit tests written the same way as 
 already existed.
 
 **Reverses if:** nothing. It was a real bug, fixed and verified live.
+
+---
+
+## D046 — `image_bytes_for` was keyed by `frame.sample`, breaking every subset-sample frame
+
+Caught building `scripts/human_labels_cli.py` (new this session) and running a real, non-
+interactive integration check against it before considering it done -- not by any existing
+test, since `image_bytes_for` had none of its own before this.
+
+`image_bytes_for(frame)` looked up `_eval_frame_bytes_by_id(frame.sample)`, i.e. it only ever
+searched the ONE evaluation parquet named by `frame.sample`. That is correct for a frame whose
+`sample` is one of the three root arms (`E10k-ego`/`E10k-ego4d`/`E10k-epic`) but wrong for
+every subset sample: `_draw_subset`/`_draw_r100` (`sampling/draw.py`) relabel `sample` to the
+subset's own name (`P2k`, `G200-*`, `R100`) via `model_copy`, discarding which root arm a frame
+actually came from. `R100` is the sharpest case -- it draws from the *union* of three different
+root arms, so `frame.sample == "R100"` can never by itself say which of the three files to
+search. A real call, `image_bytes_for()` on a real `G200-ego4d` frame returned by
+`labels.tool.next_frame()`, raised `NotImplementedError` (the `_download_eval_parquet` guard
+firing on `"G200-ego4d"`, a name `_EVAL_PARQUET_FILENAME` never had) -- exactly the frames
+Wave 3's labelling tool needs to show a rater.
+
+**Fixed**: `image_bytes_for` now searches all three root arms' cached `frame_id -> bytes` maps
+in turn (`frame_id`, a UUID4, is the only key unique across the whole release), returning the
+first hit. `S10k-U`/`S10k-S` frames keep their own explicit `NotImplementedError` -- a
+different, unwired dataset, not folded into the same not-found path as a real missing frame.
+Five new tests cover the root case, a subset-sample case, the R100-union case, the
+S10k-U/S10k-S case, and a genuinely-not-found case -- `image_bytes_for` had zero tests of its
+own before this.
+
+Verified live end to end: `next_frame(pass_="primary", ...)` returns a real `G200-ego4d`
+frame, `image_bytes_for` resolves it to a real, PIL-decodable 2560x1920 JPEG; the `retest` pass
+similarly resolves a real `R100` frame to a real 1920x1440 JPEG.
+
+**Lesson, fourth time this session (D043, D044, D045, now this)**: the common thread across
+all four is a function with no test of its own, or tests that share the same gap the function
+has -- caught only by actually calling the real thing with real, representative input, not by
+adding more tests shaped like the ones that already existed.
+
+**Reverses if:** nothing. It was a real bug, fixed and verified live.

@@ -236,22 +236,39 @@ def _eval_frame_bytes_by_id(sample: str) -> dict[str, bytes]:
 
 
 def image_bytes_for(frame: FrameRef) -> bytes:
-    """Real JPEG bytes for one already-drawn `E10k-*` frame -- the seam `judges/qwen3vl.py`'s
-    `_image_bytes_for` calls (`ARCHITECTURE.md`: judges depend on sampling for frames, nothing
-    else).
+    """Real JPEG bytes for one already-drawn frame -- the seam `judges/qwen3vl.py`'s
+    `_image_bytes_for` and `labels/tool.py`'s labelling CLI both call (`ARCHITECTURE.md`:
+    both depend on sampling for frames, nothing else).
 
-    Raises `KeyError` if `frame.frame_id` isn't present or has empty image bytes in its own
-    sample's evaluation parquet. `scripts/check_eval_parquets.py` (D016) is the place to check
+    Searches all three evaluation-release files by `frame_id`, NOT by `frame.sample`: a
+    real bug, caught live (a real `G200-ego4d` frame from `next_frame()` 404'd here before this
+    fix) -- subset samples (`P2k`, `G200-*`, `R100`) relabel `sample` to their own name
+    (`_draw_subset`/`_draw_r100`'s `model_copy`) without preserving which root `E10k-*` arm a
+    frame originally came from, and `R100` in particular draws from the *union* of three
+    different root arms, so `frame.sample` alone can never disambiguate which file to search.
+    `frame_id` (a UUID4) is unique across the whole release, so it is the only reliable key.
+
+    `S10k-U`/`S10k-S` frames get their own explicit `NotImplementedError` (a different,
+    unwired dataset), not folded into the same "not found" path as a real missing frame.
+
+    Raises `KeyError` if `frame.frame_id` isn't present or has empty image bytes in ANY of the
+    three evaluation parquets. `scripts/check_eval_parquets.py` (D016) is the place to check
     this in bulk, ahead of time, across a whole drawn sample's membership; this seam trusts that
     check already passed and fails loud, not silently, if it didn't.
     """
-    by_id = _eval_frame_bytes_by_id(frame.sample)
-    if frame.frame_id not in by_id:
-        raise KeyError(
-            f"frame_id {frame.frame_id!r} not found or has empty image bytes in sample "
-            f"{frame.sample!r}'s evaluation parquet"
+    if frame.sample in ("S10k-U", "S10k-S"):
+        raise NotImplementedError(
+            f"image_bytes_for for sample {frame.sample!r} needs the raw Egocentric-10K corpus "
+            "adapter -- a different, still-unwired dataset, see docs/HANDOFF.md"
         )
-    return by_id[frame.frame_id]
+    for root_sample in _EVAL_PARQUET_FILENAME:
+        by_id = _eval_frame_bytes_by_id(root_sample)
+        if frame.frame_id in by_id:
+            return by_id[frame.frame_id]
+    raise KeyError(
+        f"frame_id {frame.frame_id!r} not found or has empty image bytes in any evaluation "
+        "parquet"
+    )
 
 
 def _factory_worker_hours(sample: SampleName) -> dict[str, float]:
