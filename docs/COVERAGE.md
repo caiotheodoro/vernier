@@ -24,7 +24,7 @@ audited "the SLA" is wrong, and this table exists to make that hard to do by acc
 | | Status |
 |---|---|
 | Do the published figures reproduce under their own protocol | Tested — E2 |
-| How wide are they, honestly, given clustered frames | Tested — E4, cluster bootstrap over `worker_id` |
+| How wide are they, honestly, given clustered frames | Tested — E4. `S10k-U`/`S10k-S` cluster bootstrap over `worker_id`; Build AI's evaluation frames (`P2k`, `G200-*`) carry no `worker_id` and report an iid interval labelled as a lower bound instead (`UPSTREAM-FINDINGS.md` F9, D031) |
 | Does the judge agree with a human applying a written rubric | Tested — E4, against `RUBRIC.md` |
 | Does the figure move when the prompt is reworded | Tested — E5, P0–P7 |
 | Is the judge equally accurate across the compared domains | Tested — E6, the decisive experiment |

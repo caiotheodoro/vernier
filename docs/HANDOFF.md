@@ -3,12 +3,12 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-08-31, after Wave S (full citation audit) and Wave 0 (interface freeze).**
+**Last updated: 2026-08-31, after Wave S, Wave 0, and a two-pass refinement audit (D031, D032).**
 
 ## Where this stands
 
-**Documentation and interface freeze complete. Survey gate passed. Wave S and Wave 0 done.
-No experiments, no judge called, no code beyond typed stubs and contract models.**
+**Documentation and interface freeze complete and committed. Survey gate passed. Wave S and
+Wave 0 done. No experiments, no judge called, no code beyond typed stubs and contract models.**
 
 `SURVEY.md` returned **PROCEED, narrowed**: the contribution is H5 (cross-corpus judge
 confound) plus judge-as-instrument, not judge validation, which is prior-arted. The survey also
@@ -21,10 +21,21 @@ closed before publication" items and caught three further mis-citations**: D021'
 was wrong (2408.15204 is Confidence-Driven Inference, not PPI — the real PPI paper is 2301.09633),
 D024's EPIC-KITCHENS-100 participant count was wrong (37, not ~45 — that was the kitchen count),
 and a working-table citation (2503.05965) claimed to support H3 but does not. See `DECISIONS.md`
-D030 for the full record. **Wave 0 landed and its gate passed, independently verified**: pydantic
-models for every `CONTRACTS.md` record, typed stubs for the nine `ARCHITECTURE.md` units, pytest
-(30 passed), mypy --strict (clean), and a fixture generator (13 valid + 7 malformed/refused
-cases) — `make validate` green end to end. Left uncommitted pending review.
+D030 for the full record. **Wave 0 landed, its gate passed, and it is committed** (`ea75148`):
+pydantic models for every `CONTRACTS.md` record, typed stubs for the nine `ARCHITECTURE.md`
+units, pytest (43 passed), mypy --strict (clean), and a fixture generator (14 valid + 19
+malformed/refused cases) — `make validate` green end to end.
+
+**Three independent AI audit reviews (`docs/private/reviews.txt`) were then cross-checked
+against the actual repo in two passes, not trusted from their prose** — a distillation
+train/eval leak, a `FrameRef`/evaluation-frame contract contradiction, a clustering
+self-contradiction, a mislabelled "effective N," and several validator gaps were all confirmed
+live and fixed (`DECISIONS.md` D031). A second, independent re-audit of that fix then caught
+what D031 missed — an incomplete `AgreementCI` validator, an untouched sibling gap in
+`PPIBlock.cluster_by`, the H8 relabel not reaching the `estimation` module's own identifiers,
+and this file's own stale test/fixture counts and "uncommitted" claim (`DECISIONS.md` D032).
+The lesson, consistent with this project's own methodology: a self-audit's first pass is not
+the last word — verify the fix the same way you verified the original claim.
 
 A direct read of Build AI's published artifacts produced eleven findings, several of which
 corrected this repository's own earlier claims. See `UPSTREAM-FINDINGS.md`.
@@ -48,15 +59,18 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D030 |
-| Private | `docs/private/`, gitignored: outreach, country brief, email draft |
-| Interface | `src/vernier/` — pydantic models (`models.py`) + nine typed stub units, `tests/fixtures/` |
+| Decisions | `DECISIONS.md`, D001–D032 |
+| Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
+| Interface | `src/vernier/` — pydantic models (`models.py`) + nine typed stub units, `tests/fixtures/` — **committed**, `ea75148` |
 
 ## The next action
 
 **Wave 1**: eighteen units, one directory and one test file each, TDD against Wave 0's
 fixtures, offline, no network. Ownership rule: one agent per module, no shared-file edits. Not
-yet dispatched — a separate decision from this resume.
+yet dispatched — a separate decision from this resume. The P1 tier from `DECISIONS.md` D031/D032
+(CI, pre-commit privacy-gate hook, `scripts/check_eval_parquets.py`, HF-revision assertion in
+`sampling`, H5/R100 power simulation, rubric pilot, backbone pin, honest — not no-op —
+`Makefile` experiment targets) is also still open and arguably belongs before Wave 1, not after.
 
 ## Open questions
 

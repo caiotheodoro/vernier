@@ -222,9 +222,17 @@ class AgreementCI(Record):
     B: int | None
 
     @model_validator(mode="after")
-    def _cluster_bootstrap_requires_clusters(self) -> "AgreementCI":
-        if self.method == "cluster-bootstrap" and self.clusters is None:
-            raise ValueError("clusters is required when method is 'cluster-bootstrap'")
+    def _cluster_bootstrap_requires_clusters_and_b(self) -> "AgreementCI":
+        if self.method == "cluster-bootstrap":
+            if self.clusters is None:
+                raise ValueError("clusters is required when method is 'cluster-bootstrap'")
+            if self.B is None:
+                raise ValueError("B is required when method is 'cluster-bootstrap'")
+        else:
+            if self.clusters is not None:
+                raise ValueError("clusters must be null when method is 'iid'")
+            if self.B is not None:
+                raise ValueError("B must be null when method is 'iid'")
         return self
 
 
@@ -275,13 +283,21 @@ class PPIBlock(Record):
     why_not_clustered: str | None
 
     @model_validator(mode="after")
-    def _why_not_clustered_required_when_not_clustered(self) -> "PPIBlock":
+    def _cluster_by_and_why_not_clustered_match_clustered_flag(self) -> "PPIBlock":
         # ARCHITECTURE.md `estimation` seam: "clustered is a property of the arm... the flag
-        # is required and the reason string is required with it."
-        if not self.clustered and not self.why_not_clustered:
-            raise ValueError("why_not_clustered is required when clustered is False")
-        if self.clustered and self.why_not_clustered is not None:
-            raise ValueError("why_not_clustered must be null when clustered is True")
+        # is required and the reason string is required with it." The symmetric case -- what
+        # was clustered on -- is equally required when clustered is True (D031: a prevalence
+        # estimate must never claim clustered=True without naming cluster_by).
+        if self.clustered:
+            if not self.cluster_by:
+                raise ValueError("cluster_by is required when clustered is True")
+            if self.why_not_clustered is not None:
+                raise ValueError("why_not_clustered must be null when clustered is True")
+        else:
+            if self.cluster_by is not None:
+                raise ValueError("cluster_by must be null when clustered is False")
+            if not self.why_not_clustered:
+                raise ValueError("why_not_clustered is required when clustered is False")
         return self
 
 

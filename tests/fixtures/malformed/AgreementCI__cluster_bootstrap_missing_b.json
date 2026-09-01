@@ -1,0 +1,7 @@
+{
+  "lo": 0.62,
+  "hi": 0.79,
+  "method": "cluster-bootstrap",
+  "clusters": 61,
+  "B": null
+}

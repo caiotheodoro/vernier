@@ -4,7 +4,11 @@ Consumes `HumanLabel` plus `JudgeResponse` and emits `PrevalenceEstimate`: the n
 proportion, the PPI-rectified estimate, and its interval -- clustered over the participant
 identifier wherever one exists, and explicitly labelled a width lower bound wherever one does
 not. Also owns the design-effect computation (measured only where a grouping variable is
-available: `S10k-U`/`S10k-S`) and the effective-N comparison behind H8.
+available: `S10k-U`/`S10k-S`) and H8's participant-count precision-disparity lookup.
+
+H8 is not an ICC-adjusted effective sample size -- no such computation exists here or anywhere
+in this repo (D031). A true effective N, once R100/primary labelling produces real cluster-size
+and outcome-variance data, belongs in `design_effect` below, not in a pre-labelling lookup.
 
 Seam: `clustered` is a property of the arm, not a global setting -- callers must always pass
 `cluster_by` explicitly (`None` is a valid, deliberate value) plus, when `None`, the reason.
@@ -18,8 +22,12 @@ CLUSTER_BOOTSTRAP_B = 10_000
 CLUSTER_BOOTSTRAP_SEED = 777
 
 
-def effective_n(participant_counts: dict[str, int]) -> dict[str, float]:
-    """H8: effective N per corpus from public participant counts. No experiment required."""
+def participant_count_disparity(participant_counts: dict[str, int]) -> dict[str, int]:
+    """H8: the participant-count precision disparity per corpus. No experiment required.
+
+    A pass-through report of public participant counts, not an ICC-adjusted effective sample
+    size -- see this module's docstring and `docs/DECISIONS.md` D031.
+    """
     raise NotImplementedError
 
 

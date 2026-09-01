@@ -45,7 +45,7 @@ def test_fixture_is_rejected(name: str, payload: dict[str, object]) -> None:
         model.model_validate(payload)
 
 
-def test_all_nine_record_types_covered() -> None:
+def test_all_eight_record_types_covered() -> None:
     covered = {type(v).__name__ for v in ALL_VALID.values()}
     expected = {
         "FrameRef",

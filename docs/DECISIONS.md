@@ -410,3 +410,48 @@ record.
 **Reverses:** nothing in the hypotheses or stopping rules. Items 1–2 are correctness fixes to
 what the pipeline can even represent; item 3 is a labelling correction with no numeric change;
 item 4 is validator hardening. No experiment result is affected, since none has been run.
+
+## D032 — D031 was incomplete; a second independent audit caught what it missed
+
+D031 was committed (`ea75148`) claiming five validator gaps hardened and a clean rename. It was
+not fully true. A second, independent audit pass — a fresh review with no stake in D031's own
+narrative, told to be skeptical of the fix the same way the original three reviews were
+skeptical of the repo — found four real gaps in what D031 claimed to have closed:
+
+1. **`AgreementCI`'s validator was half-fixed.** D031 required `clusters` when `method ==
+   "cluster-bootstrap"`, but not `B`, and did not forbid either field when `method == "iid"`.
+   Confirmed live: `AgreementCI(method="cluster-bootstrap", clusters=10, B=None)` and
+   `AgreementCI(method="iid", clusters=10, B=10000)` both constructed successfully before this
+   fix. Now requires both `clusters` and `B` for `cluster-bootstrap`, and forbids both for `iid`.
+
+2. **A sibling gap in the same class of bug, named in the same review-3 paragraph as the
+   `AgreementCI` gap, was never touched.** `PPIBlock(clustered=True, cluster_by=None)` still
+   validated after D031 — the existing `why_not_clustered`-required-when-`False` validator had
+   no symmetric check that `cluster_by` is required when `True`. Fixed: the validator now
+   checks both directions.
+
+3. **The H8 relabel (D031 item 3) was applied to docs but not to code.**
+   `src/vernier/estimation/__init__.py` still defined `def effective_n(...)` with a docstring
+   calling it "H8: effective N per corpus," directly contradicting the just-corrected
+   `docs/BENCHMARK.md` ("Effective N is a distinct, not-yet-computed quantity"). Renamed to
+   `participant_count_disparity`, docstrings updated to match. `docs/COVERAGE.md`'s summary
+   table also still claimed E4 is unconditionally "cluster bootstrap over `worker_id`" — the
+   same clustering self-contradiction D031 item 2 fixed in `BENCHMARK.md`/`METHOD.md` but
+   missed in `COVERAGE.md`. Reworded to match.
+
+4. **`HANDOFF.md` was stale and, after `ea75148` landed, actively false**: it said "left
+   uncommitted pending review" after the commit had already happened, and cited pytest/fixture
+   counts (30 passed, 13+7 fixtures) that predated D031's own new tests (now 43 passed,
+   14+19 fixtures — several added by D031 and D032 themselves). Updated to the current, correct
+   numbers, and to point at both D031 and this entry.
+
+The pattern worth naming: **a self-audit's first pass is not the last word.** D031 was produced
+in the same context that wrote the code being fixed. This entry exists because that context was
+checked by a different one, per this project's own `AGENTS.md` doctrine on validator
+independence — and the check found real gaps, not just polish.
+
+`PRE-REGISTRATION.md`'s frozen text is unaffected; nothing here changes a hypothesis, stopping
+rule, or published number, since none exists yet.
+
+**Reverses:** nothing. All four items are completions of validator/naming work D031 claimed to
+have finished but had not.
