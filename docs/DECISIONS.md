@@ -1126,3 +1126,46 @@ not run).
 **Reverses if:** access to the raw Egocentric-10K corpus and an institutional EPIC-KITCHENS-100
 affiliation both materialise — then Result 2's kill-gate re-opens as originally pre-registered,
 per R9's own stated reversal condition.
+
+---
+
+## D049 — Pin the rung-3 guarantee mechanism (`docs/REVIEW.md` R7): Learn-then-Test / conformal risk control
+
+H6 promises "an agreement floor against human gold, at a stated coverage" — a finite-sample
+statistical guarantee. `distil/cascade.py`'s current `calibrate_threshold` does not deliver
+one: it finds the highest-coverage confidence threshold whose *empirical* accuracy on
+`held_out_gold` clears `target_floor`, with no correction for the finite size of that
+held-out set. The code's own docstring already flags this ("No safety margin... this can pick
+a threshold that clears `target_floor` on this particular sample by chance without reliably
+clearing it on new data"), caught by an earlier independent review pass before this one. R7's
+point is sharper: "reports a floor" is a promise, not yet a procedure, and naming the
+mechanism in advance is what makes a finite-sample guarantee at `n≈100-200` achievable at all
+— choosing it after seeing results would be exactly the kind of post-hoc analysis choice this
+project's own pre-registration discipline exists to prevent.
+
+**Pinned mechanism: Learn-then-Test (Angelopoulos, Bates, Candès, Jordan, Lei, 2110.01052) /
+conformal risk control**, the machinery Trust-or-Escalate (2407.18370, already cited in
+`MODEL_CARD.md`) itself builds on. Concretely: a grid of candidate confidence thresholds, a
+per-threshold p-value against the target error rate via a concentration inequality (Hoeffding-
+Bentkus), and a family-wise-valid procedure (e.g. fixed-sequence testing over the grid, ordered
+by increasing coverage) to select the threshold with the highest coverage whose bound still
+controls the true error rate at the stated confidence level (e.g. 90%) — not just the observed
+rate on `held_out_gold`.
+
+**Calibration/scoring split, pre-declared**: with 200 gold frames on `G200-ego`, threshold
+search uses Build AI's own stored labels (`docs/DECISIONS.md` D047's free, zero-live-call
+labels) wherever the diagnostic in `distil/linear_probe.py`'s `fidelity` needs a threshold
+sweep; `G200-ego`'s human gold is reserved *solely* for verifying the floor the mechanism
+selects, never for searching over candidate thresholds — the same held-out discipline
+`calibrate_threshold`'s own docstring already requires of its caller, now given a concrete
+split to follow rather than left to the caller's judgment alone.
+
+**Not done in this entry**: the actual Learn-then-Test implementation. `distil/cascade.py`'s
+current point-estimate `calibrate_threshold` is left as-is, with a docstring pointer added to
+this entry — rewriting the threshold-selection algorithm to a real finite-sample-valid
+procedure is a separate, real statistics-engineering task, not a naming exercise, and a rushed
+half-implementation risks a subtler bug than the current, honestly-flagged limitation.
+`docs/MODEL_CARD.md`'s rung-3 row updated to name the pinned mechanism.
+
+**Reverses if:** nothing. H6 as pre-registered needs a named, pre-declared mechanism to be
+checkable at all, and this is that mechanism.

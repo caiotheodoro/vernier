@@ -30,8 +30,8 @@ else.
 |---|---|
 | Rung 1 | Linear probe on frozen features. Backbone fixed by `SURVEY.md`. Laptop-runnable; the baseline that must be beaten to justify rung 2. |
 | Rung 2 | Qwen3-VL, 4-bit LoRA, Modal L4 24 GB. Recipe inherited from `suture`. |
-| Rung 3 | Confidence estimation + abstention cascade, escalating low-confidence frames. The guarantee, not the model, is the product. |
-| Targets | `gemini-2.5-flash`, prompt P0a, over `E10k-ego \ G200-ego` — the 200 held-out frames excluded by construction |
+| Rung 3 | Confidence estimation + abstention cascade, escalating low-confidence frames. The guarantee, not the model, is the product. Mechanism: Learn-then-Test / conformal risk control (`docs/DECISIONS.md` D049) — the calibration set is disjoint from the scoring set by construction, and the reported floor is a finite-sample statistical guarantee, not a point estimate. |
+| Targets | `gemini-2.5-flash`'s own stored labels (never a live call, `docs/DECISIONS.md` D047), prompt P0b (flagged: which P0 variant produced the published figures is not recoverable, `UPSTREAM-FINDINGS.md` F2), over all three evaluation arms minus their own `G200-*` holdouts — ~29,400 real frames, extended beyond `E10k-ego` alone per `docs/REVIEW.md` R1 |
 | Held out | Human gold `G200-ego` — never trained on, for either rung |
 | Seed | 777 |
 

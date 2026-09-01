@@ -190,6 +190,14 @@ would have to take on trust. Their result is the precedent: on Chatbot Arena, wh
 rarely reached 80% human agreement, a cascade guaranteed >80% at ~80% coverage using much
 cheaper models.
 
+**Threshold-selection mechanism, pinned before any label is written (`docs/DECISIONS.md`
+D049, `docs/REVIEW.md` R7): Learn-then-Test / conformal risk control** (2110.01052, the
+machinery Trust-or-Escalate itself builds on) — a finite-sample statistical guarantee on the
+true error rate, not a point estimate of it. Calibration set (threshold search) and scoring
+set (floor verification) are disjoint by pre-declared design: threshold search uses Build AI's
+own free, stored labels; `G200-ego`'s 200 human-gold frames are reserved solely for verifying
+the floor the mechanism selects, never for searching over candidate thresholds.
+
 Teacher fidelity is still measured and still reported, because the diagnostic question stands:
 does the distillate reproduce the judge's *errors* against human gold, or different ones? An
 instrument that accidentally got better has stopped measuring the thing. But fidelity is the

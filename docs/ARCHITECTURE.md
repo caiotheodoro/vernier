@@ -97,6 +97,9 @@ the model into an instrument with a stated floor (D026).
 **Seam:** the cascade's threshold is calibrated against held-out human gold and must never be
 tuned on the frames it will later score. The module exposes coverage and floor as a pair; a
 caller cannot obtain one without the other, because a floor at unstated coverage is meaningless.
+Mechanism pinned in advance (`docs/DECISIONS.md` D049): Learn-then-Test / conformal risk
+control, not a bare point-estimate threshold search — the current `distil/cascade.py`
+implementation is the pre-D049 version, not yet rewritten to match.
 
 Training targets are `gemini-2.5-flash` P0 labels — the judge, deliberately, not the human
 gold. Human gold is the **held-out** evaluation for both the judge and its distillate, which

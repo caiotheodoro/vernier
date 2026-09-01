@@ -102,6 +102,13 @@ class AbstentionCascade:
         eliminated by this implementation. Independent review flagged this explicitly --
         resolving it with an actual lower-confidence-bound (e.g. a Wilson-score interval on the
         prefix accuracy) is future work, not done here.
+
+        **The real fix is named, not yet implemented: `docs/DECISIONS.md` D049 pins
+        Learn-then-Test / conformal risk control (2110.01052, the machinery Trust-or-Escalate
+        itself builds on) as the mechanism that will replace this point-estimate search with a
+        finite-sample-valid threshold selection.** This function's current behaviour is the
+        pre-D049 naive version, kept because a rushed rewrite risks a subtler bug than this
+        honestly-flagged limitation.
         """
         features = [self._features_for(label.frame_id) for label in held_out_gold]
         predictions = self._distillate.predict(features)
