@@ -17,9 +17,11 @@ dependencies = [
 # distil  -- LoRA training path for the open instrument
 # space   -- the demo
 judges = [
-    # gemini-2.5-flash, the replication target. google-generativeai is deprecated
-    # (EOL 2025-11-30); google-genai is its replacement.
+    # gemini-2.5-flash (replication target) and claude-sonnet-5 (second frontier judge,
+    # docs/DECISIONS.md D041). google-generativeai is deprecated (EOL 2025-11-30); google-genai
+    # is its replacement. Qwen3-VL (open weights) needs no client SDK here.
     "google-genai>=1.0",
+    "anthropic>=0.40",
 ]
 data = [
     "pyarrow>=17",
@@ -61,3 +63,4 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["sklearn", "sklearn.*"]
 ignore_missing_imports = true
+

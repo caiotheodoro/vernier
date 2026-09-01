@@ -737,3 +737,26 @@ production logic — no unit reads `FrameRef.fps`/`.codec` today. This is a corr
 unimplementable-for-real-data Wave 0 field requirement, discovered the same way D031/D033/D037
 were: by actually trying to use the frozen interface against real inputs rather than trusting
 it was complete.
+
+## D041 — Second frontier judge pinned to `claude-sonnet-5`, not Opus
+
+`docs/PRE-REGISTRATION.md`'s judge panel table names "Claude (Opus/Sonnet 5)" without choosing
+between them — the same kind of open size choice D034 resolved for the DINOv3 backbone. Wiring
+`judges/claude.py`'s real API call (Wave 2 prep) forced the choice: pinned to
+**`claude-sonnet-5`**.
+
+**Why Sonnet over Opus:** cost. Public per-token list pricing at time of writing is $2/$10 per
+million input/output tokens for Sonnet 5 versus Opus's materially higher rate, and the panel's
+purpose ("second frontier judge, different lineage") is satisfied by either — this project has
+no stated reason to prefer Opus's extra capacity for a bounded classification task
+(hand-count/manipulation), and D008/METHOD.md's compute-cost discipline (Result 2's kill-gate,
+rung 1's "laptop-runnable" framing) favors the cheaper choice whenever nothing else forces the
+more expensive one.
+
+**Verified, not assumed:** the exact model literal `"claude-sonnet-5"` is a real, currently
+valid value in the installed `anthropic` SDK's own `Message.model` type (checked against the
+installed package's type definitions, not guessed from documentation prose).
+
+**Reverses if:** Sonnet 5 turns out to refuse or systematically mis-parse the response schema
+at a rate that makes it a worse "second opinion" than Opus would be — checkable only once real
+calls happen (Wave 2), not before.

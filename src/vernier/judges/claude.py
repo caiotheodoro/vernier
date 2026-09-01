@@ -4,9 +4,6 @@ Seam: confidence extraction. No confidence under P0a/P0b; verbalized under P7. C
 per judge and never pooled across kinds -- this adapter must report the `Confidence.kind` it
 actually has, not flatten it to a float.
 
-Seam: `_call_claude` is the Wave 2 API seam (real Anthropic call); it raises `NotImplementedError`
-here.
-
 Design note (both-tasks-in-one-response): `JudgeResponse` requires `hands_visible` and
 `manipulation` to be non-null together when `status == "ok"`, and both null otherwise
 (`vernier.models.JudgeResponse._hands_visible_and_manipulation_null_iff_unparseable_or_worse`).
@@ -18,11 +15,23 @@ null -- even if the other task's call actually succeeded. That is a real informa
 genuine, correctly parsed answer to one task is discarded whenever the other task's call fails,
 because the schema has no room to represent a partial result. Worth a future contract revision
 (e.g. a per-task status), not something to silently paper over here.
+
+`_call_claude` is wired to the real `anthropic` SDK (Wave 2), pinned to `claude-sonnet-5`
+(`docs/DECISIONS.md` D041 -- `PRE-REGISTRATION.md` left the Opus/Sonnet choice open). Verified
+against the installed package's own response types, not assumed: a base64-encoded `image`
+content block plus a `text` block, `message.content[0].text`, `message.usage.{input_tokens,
+output_tokens}`, `message.model` all confirmed present. Image bytes come from
+`_image_bytes_for`, a separate, still-unwired seam -- see `judges/gemini.py`'s identical seam
+for why it isn't duplicated here.
 """
 
 from __future__ import annotations
 
+import base64
+import time
 from typing import Literal, cast
+
+import anthropic
 
 from vernier.judges.base import (
     JudgeAdapter,
@@ -32,6 +41,15 @@ from vernier.judges.base import (
 )
 from vernier.judges.prompts import PromptVariant, load_prompt
 from vernier.models import FrameRef, JudgeResponse, JudgeStatus
+
+_MODEL = "claude-sonnet-5"
+
+# Public per-token list price, USD, at time of writing -- re-verify before relying on this for
+# a real cost figure if pricing has since changed. Image tokens are folded into
+# usage.input_tokens by the API; no separate image-token accounting is needed.
+_INPUT_USD_PER_TOKEN = 2.00 / 1_000_000
+_OUTPUT_USD_PER_TOKEN = 10.00 / 1_000_000
+_MAX_OUTPUT_TOKENS = 1024
 
 # Worst-to-best. An "error"/"timeout" from either call outranks any parse-level outcome, since
 # those mean the call itself didn't complete rather than that it completed with a bad answer.
@@ -51,10 +69,10 @@ def _combine_status(a: JudgeStatus, b: JudgeStatus) -> JudgeStatus:
     return a if _STATUS_SEVERITY[a] >= _STATUS_SEVERITY[b] else b
 
 
-# `judge_rev` placeholder: Wave 1 makes no live call, so there is no real model version string
-# to report. This sentinel is clearly not a version Anthropic would ever issue -- it must never
-# be mistaken for a fetched value.
-_JUDGE_REV_PLACEHOLDER = "unresolved-wave2-live-call-required"
+# `judge_rev` placeholder: reported before any real call has happened -- no live call means no
+# real model version to report yet. This sentinel is clearly not a version Anthropic would ever
+# issue -- it must never be mistaken for a fetched value.
+_JUDGE_REV_PLACEHOLDER = "unresolved-no-live-call-yet"
 
 
 class ClaudeJudge(JudgeAdapter):
@@ -62,8 +80,12 @@ class ClaudeJudge(JudgeAdapter):
 
     judge = "claude"
 
+    def __init__(self) -> None:
+        self._client = anthropic.Anthropic()
+        self._last_model_version = _JUDGE_REV_PLACEHOLDER
+
     def judge_rev(self) -> str:
-        return _JUDGE_REV_PLACEHOLDER
+        return self._last_model_version
 
     def judge_frame(self, frame: FrameRef, prompt_variant: PromptVariant) -> JudgeResponse:
         hand_count_prompt = load_prompt(prompt_variant, task="hand_count")
@@ -107,8 +129,62 @@ class ClaudeJudge(JudgeAdapter):
             cost_usd=hc_cost + man_cost,
         )
 
-    def _call_claude(self, frame: FrameRef, prompt_text: str) -> tuple[str, int, float]:
-        """Wave 2 seam: the real Anthropic API call. Returns `(raw_response_text, latency_ms,
-        cost_usd)` for one task's prompt against one frame.
+    def _image_bytes_for(self, frame: FrameRef) -> bytes:
+        """Wave 2 seam: resolve `frame` to its real JPEG bytes.
+
+        Not wired here -- needs the evaluation-parquet adapter
+        (`sampling.draw._candidate_frames`'s own still-unwired Wave 2 seam) to supply a
+        frame_id -> bytes lookup first, so the two seams aren't duplicated (see
+        `judges/gemini.py`'s identical seam).
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            "ClaudeJudge._image_bytes_for needs the evaluation-parquet adapter wired first"
+        )
+
+    def _call_claude(self, frame: FrameRef, prompt_text: str) -> tuple[str, int, float]:
+        """Issue one real `claude-sonnet-5` call for one task's prompt against `frame`'s image,
+        and return `(raw_response_text, latency_ms, cost_usd)`.
+
+        `latency_ms` is wall-clock time around the call -- the Messages API response carries no
+        latency/duration field of its own, confirmed against the installed `anthropic` package's
+        own response type. `cost_usd` is computed from `usage`'s real token counts against
+        `_INPUT_USD_PER_TOKEN`/`_OUTPUT_USD_PER_TOKEN` -- image tokens are already folded into
+        `usage.input_tokens` by the API. `judge_rev()` becomes resolvable after this call via
+        `message.model`.
+        """
+        image_bytes = self._image_bytes_for(frame)
+        image_b64 = base64.standard_b64encode(image_bytes).decode("ascii")
+
+        start = time.monotonic()
+        message = self._client.messages.create(
+            model=_MODEL,
+            max_tokens=_MAX_OUTPUT_TOKENS,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": image_b64,
+                            },
+                        },
+                        {"type": "text", "text": prompt_text},
+                    ],
+                }
+            ],
+        )
+        latency_ms = int((time.monotonic() - start) * 1000)
+
+        self._last_model_version = message.model
+        cost_usd = (
+            message.usage.input_tokens * _INPUT_USD_PER_TOKEN
+            + message.usage.output_tokens * _OUTPUT_USD_PER_TOKEN
+        )
+
+        text_blocks = [block.text for block in message.content if block.type == "text"]
+        raw_text = "\n".join(text_blocks)
+
+        return raw_text, latency_ms, cost_usd

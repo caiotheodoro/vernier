@@ -1,15 +1,18 @@
-"""Behavioural tests for `ClaudeJudge.judge_frame`/`judge_rev`.
+"""Behavioural tests for `ClaudeJudge.judge_frame`/`judge_rev`/`_call_claude`.
 
-`_call_claude` (the Wave 2 seam: real Anthropic API call) is monkeypatched with synthetic
-`(raw_response_text, latency_ms, cost_usd)` triples -- this unit does not touch a live API.
-`judge_frame` calls `_call_claude` twice per frame (once per task), so monkeypatches use a
-`side_effect` list to hand back one triple per call.
+Most tests here monkeypatch `_call_claude` itself with synthetic `(raw_response_text,
+latency_ms, cost_usd)` triples -- `judge_frame` calls it twice per frame (once per task), so
+monkeypatches use a `side_effect`-style iterator to hand back one triple per call. The tests
+near the bottom instead exercise `_call_claude`'s own real `anthropic` SDK wiring by mocking at
+the client boundary and constructing actual `anthropic.types.Message` instances -- no live API
+call is made or possible without an `ANTHROPIC_API_KEY`, but the request/response shape is
+checked against the real, installed SDK's own types. `_image_bytes_for` (resolving a `FrameRef`
+to real image bytes) is the one seam still unwired, pending the evaluation-parquet adapter.
 """
 
 from __future__ import annotations
 
-from typing import Iterator
-
+import anthropic
 import pytest
 
 from vernier.judges.claude import ClaudeJudge
@@ -179,3 +182,77 @@ def test_judge_frame_never_raises_on_garbage_input(monkeypatch: pytest.MonkeyPat
     assert result.status in ("unparseable", "refused", "error", "timeout")
     assert result.hands_visible is None
     assert result.manipulation is None
+
+
+# --- _image_bytes_for is the one seam still unwired (needs the evaluation-parquet adapter) -
+
+
+def test_image_bytes_for_seam_unwired_raises_not_implemented() -> None:
+    judge = ClaudeJudge()
+    with pytest.raises(NotImplementedError):
+        judge._image_bytes_for(_frame())
+
+
+def test_call_claude_propagates_the_unwired_image_seam() -> None:
+    judge = ClaudeJudge()
+    with pytest.raises(NotImplementedError, match="_image_bytes_for"):
+        judge._call_claude(_frame(), "some prompt text")
+
+
+# --- _call_claude: real SDK wiring, mocked at the client boundary --------------------------
+#
+# These construct actual `anthropic.types.Message` instances (the real SDK's own response
+# type) so a mismatch between this test's assumptions and the real SDK's shape would surface as
+# a pydantic validation error in the fixture itself, not a false-positive passing test.
+
+
+def _fake_message(
+    text: str, *, input_tokens: int, output_tokens: int, model: str = "claude-sonnet-5"
+) -> anthropic.types.Message:
+    return anthropic.types.Message(
+        id="msg_test",
+        type="message",
+        role="assistant",
+        model=model,
+        content=[anthropic.types.TextBlock(type="text", text=text)],
+        stop_reason="end_turn",
+        stop_sequence=None,
+        usage=anthropic.types.Usage(input_tokens=input_tokens, output_tokens=output_tokens),
+    )
+
+
+def test_call_claude_extracts_text_latency_and_cost_from_a_real_response_shape(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    judge = ClaudeJudge()
+    monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
+    message = _fake_message('{"hand_count": 2}', input_tokens=900, output_tokens=12)
+
+    class _FakeMessages:
+        def create(self, **kwargs: object) -> anthropic.types.Message:
+            assert kwargs["model"] == "claude-sonnet-5"
+            return message
+
+    monkeypatch.setattr(judge, "_client", type("FakeClient", (), {"messages": _FakeMessages()})())
+
+    raw, latency_ms, cost_usd = judge._call_claude(_frame(), "count the hands")
+
+    assert raw == '{"hand_count": 2}'
+    assert latency_ms >= 0
+    assert cost_usd == pytest.approx(900 * 2.00 / 1_000_000 + 12 * 10.00 / 1_000_000)
+
+
+def test_call_claude_updates_judge_rev_from_the_real_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    judge = ClaudeJudge()
+    monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
+    message = _fake_message('{"answer": "yes"}', input_tokens=500, output_tokens=5)
+
+    class _FakeMessages:
+        def create(self, **kwargs: object) -> anthropic.types.Message:
+            return message
+
+    monkeypatch.setattr(judge, "_client", type("FakeClient", (), {"messages": _FakeMessages()})())
+
+    assert judge.judge_rev() != "claude-sonnet-5"  # unresolved before any call, per the sentinel
+    judge._call_claude(_frame(), "did they touch it")
+    assert judge.judge_rev() == "claude-sonnet-5"
