@@ -17,11 +17,11 @@ dependencies = [
 # distil  -- LoRA training path for the open instrument
 # space   -- the demo
 judges = [
-    # gemini-2.5-flash (replication target) and claude-sonnet-5 (second frontier judge,
-    # docs/DECISIONS.md D041). google-generativeai is deprecated (EOL 2025-11-30); google-genai
-    # is its replacement. Qwen3-VL (open weights) needs no client SDK here.
-    "google-genai>=1.0",
-    "anthropic>=0.40",
+    # Qwen3-VL-8B-Instruct-FP8 (docs/DECISIONS.md D042), self-hosted via vLLM's
+    # OpenAI-compatible server mode (Modal, then AWS) -- the `openai` client works against any
+    # OpenAI-compatible endpoint via `base_url`, so no vLLM- or Modal-specific SDK is needed
+    # here. Gemini/Claude (google-genai/anthropic) are retired per D042.
+    "openai>=1.0",
 ]
 data = [
     "pyarrow>=17",

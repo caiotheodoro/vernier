@@ -1,15 +1,20 @@
-"""`Qwen3VLJudge` — the reproducibility anchor: open weights, no API keys required.
+"""`Qwen3VLJudge` — the sole judge in the panel (`docs/DECISIONS.md` D042): open weights,
+self-hosted (Modal, then AWS once Modal credits run out), no API key required.
 
-Seam: confidence extraction. Exposes logprob confidence (unlike the closed judges, which only
-expose verbalized confidence under P7, and only as free-text the model chooses to emit).
-Because this judge runs open weights, a per-token logprob-derived confidence can be computed
-directly from the model's own output distribution regardless of prompt variant -- it does not
-depend on the model volunteering a number in its answer text. Calibration is per judge and
-never pooled across kinds (ARCHITECTURE.md).
+`ClaudeJudge`/`GeminiJudge` (a second closed judge and the original replication target) are
+retired -- `gemini-2.5-flash` is deprecated for new API keys and Anthropic is out of the panel
+entirely, per D042. This module's own two-calls-per-frame merge pattern was originally
+independently re-implemented across all three adapters (D033's "no shared-file edits" rule);
+now it is simply the only one that remains.
 
-Two calls per frame, one per task (hand_count, manipulation), combined into one `JudgeResponse`
--- same shape as `ClaudeJudge`/`GeminiJudge`, independently re-implemented here since these are
-separate parallel units, not shared code.
+Seam: confidence extraction. Exposes logprob confidence -- unlike the retired closed judges,
+which only ever exposed verbalized confidence under P7, and only as free-text the model chose
+to emit. Because this judge runs open weights, a per-token logprob-derived confidence can be
+computed directly from the model's own output distribution regardless of prompt variant -- it
+does not depend on the model volunteering a number in its answer text. Calibration is per judge
+and never pooled across kinds (ARCHITECTURE.md).
+
+Two calls per frame, one per task (hand_count, manipulation), combined into one `JudgeResponse`.
 """
 
 from __future__ import annotations
@@ -99,8 +104,9 @@ class Qwen3VLJudge(JudgeAdapter):
             manipulation = None
 
         # Confidence sources from the hand-count call's token_logprob first, falling back to the
-        # manipulation call's -- mirrors ClaudeJudge's P7 convention of sourcing confidence from
-        # the hand-count call, applied here across both calls since either may expose one.
+        # manipulation call's -- the same hand-count-first convention the retired ClaudeJudge
+        # used for its P7 verbalized confidence, applied here across both calls since either may
+        # expose a logprob.
         confidence = _logprob_confidence(hc_logprob if hc_logprob is not None else am_logprob)
 
         return JudgeResponse(

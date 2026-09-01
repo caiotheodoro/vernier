@@ -85,6 +85,12 @@ Wave 1 gets the loop from the start rather than as a retrofit.
 | 8 | `labels` — annotation store | `labels/store.py` | 17 | `distil` — abstention cascade + agreement floor | `distil/cascade.py` |
 | 9 | `labels` — labelling tool, blind by construction | `labels/tool.py` | 18 | `card` — emitter, "what could not be checked", exit codes | `card/__init__.py` |
 
+**Units 4 and 5 (the Gemini and Claude adapters) were built, reviewed, and committed exactly as
+listed — then retired** (`docs/DECISIONS.md` D042): `gemini-2.5-flash` is deprecated for new API
+keys and Anthropic is out of the panel entirely. The table above is left as the historical
+record of what Wave 1 actually dispatched, not rewritten; `judges/gemini.py`/`judges/claude.py`
+no longer exist in the tree. `judges/qwen3vl.py` (unit 6) is the sole surviving judge.
+
 Every unit now maps to exactly one file (`docs/DECISIONS.md` D033) — the ownership rule below
 is enforceable, not just stated. `distil` rung 2 (`distil/lora.py`, Qwen3-VL LoRA on Modal) has
 no Wave 1 unit by design — it needs network/GPU, so it belongs to Wave 4, not an offline wave.

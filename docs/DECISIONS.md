@@ -760,3 +760,67 @@ installed package's type definitions, not guessed from documentation prose).
 **Reverses if:** Sonnet 5 turns out to refuse or systematically mis-parse the response schema
 at a rate that makes it a worse "second opinion" than Opus would be — checkable only once real
 calls happen (Wave 2), not before.
+
+## D042 — Judge panel reframed: `gemini-2.5-flash` is dead, Anthropic is out, one self-hosted judge remains
+
+Testing the real credentials Caio provided mid-Wave-2 surfaced a genuine, unforeseeable blocker,
+verified live against a fresh API key, not assumed: `models/gemini-2.5-flash` — the exact model
+Build AI's published quality metric is based on, and the literal subject of pre-registered H1 —
+returns `404 NOT_FOUND`:
+
+> "This model models/gemini-2.5-flash is no longer available to new users. Please update your
+> code to use models/gemini-3.6-flash for the latest features and improvements."
+
+Confirmed this wasn't a formatting fluke (tried both `gemini-2.5-flash` and the fully-qualified
+`models/gemini-2.5-flash`); the model still appears in `client.models.list()` but is closed to
+generation calls for a new key. Separately, Caio ruled out Anthropic entirely and judged
+auditing an already-obsolete model pointless now that "sota is at another bar" — asking to
+reframe the study rather than route around the outage.
+
+**What this means for H1/H1b.** A live replication of "does `gemini-2.5-flash` reproduce its
+own published figures" is now permanently impossible for a new key, and would be scientifically
+invalid to fake with a substitute model (measuring model Y and calling it a replication of
+model X's claim is a category error, not a workaround). **H1 and H1b are redefined from a live
+replication to a comparison**: the "old" side uses Build AI's own already-published numbers —
+legitimate here specifically because it is never presented as an independent replication of
+those numbers, only as the historical record being compared against (this was independently
+verified live to exactly match the evaluation parquet's own `hand_count`/`active_labor` columns,
+to two decimal places, across all three corpora — see D040's live cross-check). The "new" side
+is a live call to the current judge on the same frames. This is a materially different, weaker
+claim than the original H1 — reported as such, not dressed up as the original replication.
+
+**Judge panel: three judges down to one.** Options considered and rejected, in order:
+- **GPT-5.4-mini (OpenAI)** — the first recommendation: no data-residency question, cheap
+  (~$0.75/$4.50 per 1M tokens), actively maintained. Rejected only because Caio preferred an
+  open-weights, self-hosted judge over any paid API.
+- **DeepSeek v4-pro / v4-flash-vision-exp, GLM-4.6V (Zhipu)** — cheaper still, and genuinely
+  competitive vision models, OpenAI-API-compatible. Rejected on a real flag, not benchmarks:
+  both route to China-hosted infrastructure with no confirmed non-China data-residency option,
+  which intersects with corpus-licensing questions this project already tracks (`ETHICS.md`,
+  Ego4D's redistribution restriction to research/academic contexts) — a compliance question
+  worth resolving before wiring, not a latency/cost tradeoff, and it was never resolved because
+  Caio chose self-hosting instead of forcing that resolution.
+- **Qwen3-VL-30B-A3B (MoE, 4-bit) / Qwen3-VL-32B (dense, 4-bit)** — both fit a single L4's 24GB
+  only via aggressive quantization with no first-party checkpoint, a real accuracy risk on
+  exactly the subtle visual judgment calls (glove occlusion, partial hands) this task lives on.
+
+**Pinned: `Qwen/Qwen3-VL-8B-Instruct-FP8`**, self-hosted. The only option with a first-party
+(not community) quantization and comfortable L4 headroom; this bounded classification task
+doesn't need the larger variants' extra capacity enough to justify the quantization-accuracy
+gamble. Served via vLLM's OpenAI-compatible mode — Modal first (~$0.80/hr for an L4, verified
+live, `min_containers`/`scaledown_window` per Modal 1.0's naming for warm serving), AWS once
+Modal credits run out, same client code either way (the point of the OpenAI-compatible-server
+choice: swapping backends is a deployment change, not a code rewrite).
+
+`src/vernier/judges/gemini.py` and `judges/claude.py` (real `google-genai`/`anthropic` SDK
+wiring, built and independently reviewed earlier the same session per `docs/WAVES.md`'s loop)
+are retired along with their tests — real, working code, but no longer part of the design, and
+this project's own minimalism rule doesn't keep unused code around "just in case."
+
+**Reverses D041** (`claude-sonnet-5` pinned as the second frontier judge) — moot now that
+Anthropic is out of the panel entirely, not merely deprioritized.
+
+**Reverses if:** access to `gemini-2.5-flash` reappears for this account (e.g. a grandfathered
+path) — this alone does NOT license silently reverting to the original three-judge design
+without checking with Caio first, since the reframe was also a deliberate judgment call about
+SOTA having moved on, not purely a forced-by-unavailability decision.

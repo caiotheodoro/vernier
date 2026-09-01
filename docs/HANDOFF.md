@@ -59,20 +59,23 @@ read live, carries no video-level column at all; both fields now join the existi
 group). `compute_j`/`compute_delta_j` (calibration) are honestly flagged as placeholders rather
 than guessing arXiv 2605.06939's exact formula.
 
-**Wave 2 prep beyond the blocked parts: both closed judges' real API wiring is written and
-tested, not just designed.** `judges/gemini.py`'s and `judges/claude.py`'s `_call_gemini`/
-`_call_claude` now call the real `google-genai`/`anthropic` SDKs — request shape, response
-attribute paths (`.text`/`.content[0].text`, `.usage_metadata`/`.usage`, `.model_version`/
-`.model`), and cost/latency computation were all verified against the **installed packages'
-own response types**, not assumed from documentation prose (`google.genai.types.
-GenerateContentResponse`, `anthropic.types.Message` — constructing these directly in tests
-means a shape mismatch fails as a pydantic validation error in the test fixture, not a silent
-false pass). Neither can be exercised against a live call without a key, which this environment
-does not have. **D041** pins the second frontier judge to `claude-sonnet-5` (not Opus —
-`PRE-REGISTRATION.md` left this open, cost is the reason, same shape as D034's backbone pin).
-Both adapters gained a new `_image_bytes_for` seam (frame_id → real JPEG bytes) — still
-unwired, since it needs the evaluation-parquet adapter (`sampling.draw._candidate_frames`'s own
-still-unwired seam) to land first, and the two seams are deliberately not duplicated.
+**The judge panel was reframed — see `docs/DECISIONS.md` D042 for the full record.** Real
+credentials (`.env`, gitignored) surfaced that `gemini-2.5-flash` — the exact model Build AI's
+published metric is based on, and H1's literal subject — is deprecated for new API keys
+(confirmed live, 404). Caio separately ruled out Anthropic and judged auditing an obsolete model
+pointless given how far SOTA has moved. **`judges/gemini.py` and `judges/claude.py` (real
+`google-genai`/`anthropic` SDK wiring, built and independently reviewed earlier the same
+session) are deleted, not kept as dead code** — D041 (the `claude-sonnet-5` pin) is explicitly
+reversed. H1/H1b are redefined from a live replication to a comparison: Build AI's own
+already-published numbers (never presented as an independent replication of themselves) vs. a
+live call to the new judge. **The panel is now one self-hosted judge, `Qwen/Qwen3-VL-8B-
+Instruct-FP8`**, served via vLLM's OpenAI-compatible mode — Modal first (~$0.80/hr for an L4,
+verified live), AWS once Modal credits run out, same client code either way.
+`judges/qwen3vl.py`'s `_call_qwen3vl` seam (already built and reviewed in Wave 1 as unit 6) is
+where this lands, alongside a new `infra/modal_qwen3vl.py` serving the model. `_image_bytes_for`
+(frame_id → real JPEG bytes) is still unwired regardless of judge choice, since it needs the
+evaluation-parquet adapter (`sampling.draw._candidate_frames`'s own still-unwired seam) to land
+first.
 
 Also fixed while starting this: `scripts/check_eval_parquets.py --parquet` used `type=Path`,
 which silently collapses a `hf://...` URI's `//` and breaks pyarrow's filesystem resolution --

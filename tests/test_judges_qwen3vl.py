@@ -6,9 +6,9 @@ does not touch live weights. `judge_frame` calls `_call_qwen3vl` twice per frame
 task, hand-count then manipulation), so monkeypatches use a `side_effect` list to hand back one
 quadruple per call, in that order.
 
-Unlike the closed judges (`ClaudeJudge`, `GeminiJudge`), the seam here can expose a per-token
-logprob-derived confidence directly, so `Confidence(kind="logprob", ...)` is built by this
-adapter itself, bypassing `base.build_confidence` (which explicitly does not handle
+Unlike the closed judges retired in `docs/DECISIONS.md` D042, the seam here can expose a
+per-token logprob-derived confidence directly, so `Confidence(kind="logprob", ...)` is built by
+this adapter itself, bypassing `base.build_confidence` (which explicitly does not handle
 `kind="logprob"` -- see its docstring).
 """
 
@@ -201,8 +201,7 @@ def test_hand_count_unparseable_manipulation_ok_combines_to_unparseable(
 
 def test_worse_status_wins_error_beats_refused() -> None:
     # Severity order documented on qwen3vl._combine_status: error > timeout > refused >
-    # unparseable > ok -- same order as ClaudeJudge's, independently re-declared here since
-    # these are separate parallel units.
+    # unparseable > ok.
     from vernier.judges.qwen3vl import _combine_status
 
     assert _combine_status("error", "refused") == "error"
