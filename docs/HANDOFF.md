@@ -44,6 +44,31 @@ read live, carries no video-level column at all; both fields now join the existi
 group). `compute_j`/`compute_delta_j` (calibration) are honestly flagged as placeholders rather
 than guessing arXiv 2605.06939's exact formula.
 
+**Wave 2 prep beyond the blocked parts: both closed judges' real API wiring is written and
+tested, not just designed.** `judges/gemini.py`'s and `judges/claude.py`'s `_call_gemini`/
+`_call_claude` now call the real `google-genai`/`anthropic` SDKs — request shape, response
+attribute paths (`.text`/`.content[0].text`, `.usage_metadata`/`.usage`, `.model_version`/
+`.model`), and cost/latency computation were all verified against the **installed packages'
+own response types**, not assumed from documentation prose (`google.genai.types.
+GenerateContentResponse`, `anthropic.types.Message` — constructing these directly in tests
+means a shape mismatch fails as a pydantic validation error in the test fixture, not a silent
+false pass). Neither can be exercised against a live call without a key, which this environment
+does not have. **D041** pins the second frontier judge to `claude-sonnet-5` (not Opus —
+`PRE-REGISTRATION.md` left this open, cost is the reason, same shape as D034's backbone pin).
+Both adapters gained a new `_image_bytes_for` seam (frame_id → real JPEG bytes) — still
+unwired, since it needs the evaluation-parquet adapter (`sampling.draw._candidate_frames`'s own
+still-unwired seam) to land first, and the two seams are deliberately not duplicated.
+
+Also fixed while starting this: `scripts/check_eval_parquets.py --parquet` used `type=Path`,
+which silently collapses a `hf://...` URI's `//` and breaks pyarrow's filesystem resolution --
+caught only by actually running the CLI against the real, ungated evaluation release, not by
+its existing (pure-function-only) test suite. Fixed, and now has its own regression test at the
+CLI-argument-parsing boundary. Separately noted, not fixed (an operational point, not a bug):
+checking membership against a parquet via repeated `hf://` fsspec reads pulls the full ~1.8GB
+`image` column regardless of how few frames are being checked, since a random UUID4 `frame_id`
+ordering touches nearly every row group — Wave 2's real usage should download each parquet once
+locally (`hf_hub_download`) and check against that, not re-stream it remotely per check.
+
 `SURVEY.md` returned **PROCEED, narrowed**: the contribution is H5 (cross-corpus judge
 confound) plus judge-as-instrument, not judge validation, which is prior-arted. The survey also
 caught four methodological errors in `PRE-REGISTRATION.md` v1.1.0, all fixed in v1.2.0 —
@@ -93,7 +118,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D040 |
+| Decisions | `DECISIONS.md`, D001–D041 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py` |
@@ -119,11 +144,15 @@ environment. Before Wave 2 can do anything real:
   both be built and run with no token at all. This was not obvious from `.env.example`'s
   wording alone (it only names the corpus datasets as gated) and is worth not re-discovering.
 
-**Once credentials exist**, `sampling/draw.py`'s `_candidate_frames`/`_factory_worker_hours`
-seams and each judge adapter's `_call_gemini`/`_call_claude`/`_call_qwen3vl` seams are exactly
-where Wave 2's real wiring lands — every one of them already raises a clearly-labelled
-`NotImplementedError` naming itself as the Wave 2 seam, per `WAVES.md`'s Wave 1 table. Follow
-`WAVES.md`'s Wave 2 section (evaluation-parquet adapter, live judge harness with cost/latency
+**`_call_gemini`/`_call_claude` are no longer stubs — they call the real SDKs** (see above);
+what's left unwired is `sampling/draw.py`'s `_candidate_frames`/`_factory_worker_hours`, each
+judge adapter's new `_image_bytes_for` (frame_id → real bytes; both need the evaluation-parquet
+adapter), and `judges/qwen3vl.py`'s `_call_qwen3vl` (open weights, no API key, but needs local
+or Modal inference wiring — a different kind of setup than an env var). The evaluation-parquet
+adapter is the one piece of this list buildable and runnable right now with no credential at
+all (see above) — it just wasn't done this session, since `_candidate_frames` is a Wave-1-owned,
+already-reviewed file and deserved its own careful pass rather than a rushed addition here.
+Follow `WAVES.md`'s Wave 2 section (evaluation-parquet adapter, live judge harness with cost/latency
 accounting, E2 replication runner, E5 prompt-sweep runner) and its own added safeguard: smoke-
 test at small N before any full-scale judge run, since no dollar cap is pre-registered for judge-
 panel spend (only Modal/distillation compute is, per D008).
