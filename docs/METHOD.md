@@ -78,7 +78,7 @@ goes away.
 
 ## E3 — Human gold
 
-600 primary labels against `RUBRIC.md` v1.1.0: `G200-ego`, `G200-ego4d` and `G200-epic`, all
+600 primary labels against `RUBRIC.md` v1.2.0: `G200-ego`, `G200-ego4d` and `G200-epic`, all
 drawn from Build AI's own judged frames.
 Random order, blind to judge output, both tasks per frame, tags and difficulty recorded at
 label time.

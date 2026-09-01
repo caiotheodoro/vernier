@@ -162,7 +162,7 @@ enforcement | Failure-handling realism | Overall accept/reject.
 
 ## Wave 3 — the serial spine (no fan-out; the review loop above does not apply)
 
-600 primary labels, one rater, against `RUBRIC.md` v1.1.0 — then a ≥7-day gap — then the blind
+600 primary labels, one rater, against `RUBRIC.md` v1.2.0 — then a ≥7-day gap — then the blind
 `R100` retest. Intra-rater agreement is computed first and gates everything.
 
 **Acceptance:** intra-rater AC1 on `R100` ≥ 0.70 — the existing binding stopping rule; below

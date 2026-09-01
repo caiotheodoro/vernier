@@ -566,3 +566,36 @@ amendment, and neither finding here is a discovered error in the original sizing
 quantification of the power/precision it actually carries. Recorded so the limitation is
 visible before Wave 3 spends the labelling budget, and so H5/R100 results are reported with
 this context rather than read as more decisive than the sample size supports.
+
+## D036 — Rubric pilot (offline self-check) found an orphan tag; fixed in RUBRIC.md 1.2.0
+
+Run in place of a human pilot-labelling pass, per `docs/HANDOFF.md`'s P1 tier and Caio's own
+call on scope (offline check, no labelling time spent). `scripts/rubric_pilot_check.py` parses
+`RUBRIC.md`'s closed tag list and cross-checks it against every rule's `` tag `x` ``/``
+tagged `x` ``/`` Tagged `x` `` annotation, in both directions: a tag in the closed list that no
+rule ever attaches ("orphan"), and a tag a rule attaches that isn't in the closed list
+("undeclared").
+
+**Found:** `dark` was an orphan. The closed tag list (`## Tag list, closed`) includes it, but
+the only mention of darkness anywhere in the rubric was Rule 9's "ambiguous ownership,
+unidentifiable blur, darkness" as one of three example causes routed to the single
+`undecidable` tag — no rule ever told a rater when to use `dark` on its own, as opposed to
+`undecidable`. A rater hitting a dim-but-still-judgeable frame had no instruction at all.
+
+**Fixed, `RUBRIC.md` → 1.2.0:** a new Rule 9 ("Low light") tags `dark` when illumination is
+poor but a judgement is still reachable, and reserves `undecidable` (renumbered Rule 10) for
+when it genuinely is not — "`dark` and `undecidable` are never the same frame's tag for the
+same reason." `find_undeclared_tags` found nothing in the other direction; every other
+`Tagged`/`tag`/`tagged` annotation in the rubric already matched a closed-list tag.
+`tests/fixtures.py`'s three `rubric_rev` values and every cross-reference to the rubric's
+revision (`METHOD.md`, `WAVES.md`, `HANDOFF.md`) are updated to 1.2.0 alongside this entry, per
+`AGENTS.md` rule 2 — a stale revision string is exactly the "no transcribed numbers" bug that
+rule exists to catch.
+
+`tests/test_rubric_pilot_check.py::test_real_rubric_is_internally_consistent` locks in the
+fixed state against the real file, so a future rubric revision that reintroduces an orphan or
+undeclared tag fails a test rather than shipping silently.
+
+**Reverses:** nothing pre-registered. `PRE-REGISTRATION.md`'s frozen text and every hypothesis
+are unaffected — this corrects a gap in the rubric's own internal completeness, the same class
+of fix `RUBRIC.md`'s own text names as the reason it went from 1.0.0 to 1.1.0.

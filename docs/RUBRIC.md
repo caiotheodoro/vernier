@@ -1,6 +1,6 @@
 # Annotation rubric
 
-Revision `1.1.0`. Frozen with `PRE-REGISTRATION.md`; the revision is recorded on every
+Revision `1.2.0`. Frozen with `PRE-REGISTRATION.md`; the revision is recorded on every
 `HumanLabel`.
 
 Revised from `1.0.0` after reading Build AI's shipped prompts directly rather than the press
@@ -9,6 +9,11 @@ five explicit rules each. **Four of the nine ambiguities `1.0.0` claimed to reso
 already resolved upstream**, and this revision follows their rules instead of restating them
 as vernier's own. That correction is recorded rather than quietly absorbed; it is the same
 discipline this project applies to the thing it audits.
+
+Revised again to `1.2.0` after an offline rubric-pilot self-check (`docs/DECISIONS.md` D036)
+found `dark` in the closed tag list with no rule ever instructing a rater to apply it — Rule 9
+mentioned darkness only as one cause of `undecidable`, never as its own distinct case. Rule 9
+below is new; the former Rule 9 (`undecidable`) is renumbered Rule 10.
 
 **What remains is still a finding.** Five questions are genuinely undefined by their prompts,
 and each is a place where the published number could move without the data changing at all.
@@ -45,10 +50,15 @@ Answer ∈ {0, 1, 2}.
    identified as one. Where it cannot, Rule 9. Tagged `blur`.
 8. **Frame edge.** A hand partly outside the frame counts if the in-frame part is
    identifiable as a hand. Tagged `edge`.
-9. **Undecidable.** If a rule cannot be applied — ambiguous ownership, unidentifiable blur,
-   darkness — record the best judgement, tag `undecidable`, and set `difficulty: hard`. The
-   `undecidable` rate is published; it is the honest measure of how much of the metric is
-   guesswork, and Build AI's judge has no equivalent.
+9. **Low light.** Tag `dark` when illumination is poor but a judgement is still reachable
+   under the rules above; set `difficulty` to at least `medium`. Escalate to Rule 10 only when
+   darkness makes no judgement reachable at all — `dark` and `undecidable` are never the same
+   frame's tag for the same reason.
+10. **Undecidable.** If a rule cannot be applied — ambiguous ownership, unidentifiable blur,
+    darkness too severe to judge even under Rule 9 — record the best judgement, tag
+    `undecidable`, and set `difficulty: hard`. The `undecidable` rate is published; it is the
+    honest measure of how much of the metric is guesswork, and Build AI's judge has no
+    equivalent.
 
 ## Task 2 — active manipulation
 

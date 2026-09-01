@@ -14,7 +14,7 @@
     }
   ],
   "sample_definition": "G200-ego, n=200, seed 777",
-  "rubric_rev": "1.1.0",
+  "rubric_rev": "1.2.0",
   "judge_revisions": {
     "gemini-2.5-flash": "2025-06-01"
   },

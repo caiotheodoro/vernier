@@ -53,7 +53,7 @@ finding.
 | | |
 |---|---|
 | Root | `README.md`, `CONTRACTS.md`, `AGENTS.md`, `Makefile`, `llms.txt`, `pyproject.toml` skeleton, `.env.example`, `.gitignore`, `LICENSE` |
-| Protocol | `PRE-REGISTRATION.md` (rev 1.3.0, **frozen by commit**), `RUBRIC.md` (rev 1.1.0), `METHOD.md` |
+| Protocol | `PRE-REGISTRATION.md` (rev 1.3.0, **frozen by commit**), `RUBRIC.md` (rev 1.2.0), `METHOD.md` |
 | Framing | `README.md`, `methodology.md`, `LINEAGE.md`, `COVERAGE.md`, `ETHICS.md` |
 | Self-criticism | `RED-TEAM.md`, fourteen attacks, opened before any result |
 | Design | `ARCHITECTURE.md`, `CONTRACTS.md` |
