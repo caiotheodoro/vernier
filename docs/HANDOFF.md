@@ -202,13 +202,16 @@ Egocentric-10K corpus is a different dataset whose real schema hasn't been inspe
 tested, and smoke-tested live** — the live judge harness with cost/latency accounting
 `WAVES.md`'s Wave 2 section calls for is these two scripts plus the `JudgeResponse.cost_usd`/
 `latency_ms` accounting already built into `qwen3vl.py`, not a separate third artifact. Real
-smoke runs at n=5/n=20 both completed with every response `status: "ok"`; per-frame agreement
-against Build AI's own published labels was 95% (hand count) / 95% (active labor) at n=20 —
-informative on its own terms, but **too small an n for the pre-registered H1 (±2pp) or H3
-(≥5pp spread) tests to mean anything yet** — those numbers were far outside tolerance at n=5/
-n=20, which is expected sampling noise at that scale, not a real finding. IPR/PAR
-(`e5_prompt_sweep.py`) is a flagged, faithful-but-not-pinned construction of 2604.16413's
-definition — the paper's exact formula isn't in hand, only `SURVEY.md`'s excerpt of it.
+runs at n=5/n=20/n=100 all completed with every response `status: "ok"` (300/300 real calls
+across the three E2 runs). At **n=100** (the largest run so far, `data/e2_n100.json`,
+gitignored): per-frame agreement against Build AI's own published labels was 90% (hand count
+exact) / 95% (active labor); real cost was ~$0.09 total, ~213s/198s latency for the P0a/P0b
+passes; H1's `>=1 hand` figure landed within tolerance (1.42pp), `2 hands` and `active
+manipulation` did not (5.66pp, 2.34pp) — genuinely informative now, but **still far short of
+the pre-registered N=10,000 for a real confidence interval**, and P0a/P0b showed zero
+disagreement at this n (H1b). IPR/PAR (`e5_prompt_sweep.py`) is a flagged, faithful-but-not-
+pinned construction of 2604.16413's definition — the paper's exact formula isn't in hand, only
+`SURVEY.md`'s excerpt of it.
 
 **No known gap is left before running a real smoke batch at a more statistically meaningful N
 (e.g. a few hundred) across E10k-* frames** — both runners already default small (20 and 5
