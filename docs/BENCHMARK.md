@@ -6,13 +6,18 @@ vernier exists to document.
 
 Its structure is fixed now so that results land in a shape decided before anyone saw them.
 
-## R0 — Effective N (H8, no experiment required)
+## R0 — Participant-count precision disparity (H8, no experiment required)
 
 | Corpus | Frames sampled | Participants | Effective N |
 |---|---|---|---|
 | Egocentric-10K | 10,000 | 2,153 | — |
 | Ego4D | 10,000 | 923 | — |
 | EPIC-KITCHENS-100 | 10,000 | 37 | — |
+
+**Effective N is a distinct, not-yet-computed quantity** (D031). H8 is a raw participant-count
+lookup, not an ICC-adjusted effective sample size — computing the latter needs cluster-size and
+outcome-variance data that only exist once R100/primary labelling has run; `estimation`'s
+`design_effect` is where that computation belongs. The `Effective N` column stays `—` until then.
 
 Published as three estimates of equal precision. They are not. Participant counts confirmed
 against each corpus's own primary documentation (D024, corrected D030): Egocentric-10K from the vendor's own
@@ -63,8 +68,13 @@ glove counts moves the ≥1-hand figure by ≥ 2 pp on its own.
 
 ## R4 — Domain bias (E6)
 
-`judge_correct ~ domain + task`, cluster-robust by participant. H5: judge error rate on
-manipulation differs by ≥ 5 pp across domains, higher on EPIC-KITCHENS-100.
+`judge_correct ~ domain + task`, cluster-robust where a grouping variable exists. H5: judge
+error rate on manipulation differs by ≥ 5 pp across domains, higher on EPIC-KITCHENS-100.
+
+The `G200-*` draws are subsets of Build AI's evaluation-parquet frames, which carry no
+participant identifier (`FrameRef.why_no_provenance`, `docs/UPSTREAM-FINDINGS.md` F9) — this
+model reports an **iid interval labelled as a lower bound**, not a clustered one, for those
+arms. "Cluster-robust by participant" only applies where `FrameRef.worker_id` is present.
 
 Read against the published margins, which is the whole point:
 

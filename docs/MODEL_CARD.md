@@ -31,7 +31,7 @@ else.
 | Rung 1 | Linear probe on frozen features. Backbone fixed by `SURVEY.md`. Laptop-runnable; the baseline that must be beaten to justify rung 2. |
 | Rung 2 | Qwen3-VL, 4-bit LoRA, Modal L4 24 GB. Recipe inherited from `suture`. |
 | Rung 3 | Confidence estimation + abstention cascade, escalating low-confidence frames. The guarantee, not the model, is the product. |
-| Targets | `gemini-2.5-flash`, prompt P0, over `S10k-S` |
+| Targets | `gemini-2.5-flash`, prompt P0a, over `E10k-ego \ G200-ego` — the 200 held-out frames excluded by construction |
 | Held out | Human gold `G200-ego` — never trained on, for either rung |
 | Seed | 777 |
 

@@ -1,0 +1,16 @@
+{
+  "frame_id": "ego10k/f0051/w00243/v0007/000418",
+  "judge": "gemini-2.5-flash",
+  "judge_rev": "2025-06-01",
+  "prompt_variant": "P0",
+  "hands_visible": 2,
+  "manipulation": null,
+  "confidence": {
+    "kind": "none",
+    "value": null
+  },
+  "raw": "2",
+  "status": "ok",
+  "latency_ms": 412,
+  "cost_usd": 0.00031
+}

@@ -1,0 +1,24 @@
+{
+  "judge": "gemini-2.5-flash",
+  "task": "manipulation",
+  "subset": "G200-ego",
+  "confidence_kind": "verbalized",
+  "ece": 0.083,
+  "bins": [
+    {
+      "lo": 0.0,
+      "hi": 0.1,
+      "n": 0,
+      "mean_conf": null,
+      "accuracy": null
+    },
+    {
+      "lo": 0.9,
+      "hi": 1.0,
+      "n": 180,
+      "mean_conf": 0.94,
+      "accuracy": 0.91
+    }
+  ],
+  "note": "empty bins are reported as empty, never merged away"
+}

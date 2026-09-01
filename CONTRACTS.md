@@ -29,14 +29,36 @@ Two rules apply to all of them:
   "height":        1080,
   "fps":           30.0,
   "codec":         "hevc",
-  "sample":        "S10k",
-  "stratum":       "<stratum label from the pre-registered frame>"
+  "sample":        "S10k-U",
+  "stratum":       "<stratum label from the pre-registered frame>",
+  "why_no_provenance": null
+}
+```
+
+An evaluation-arm frame (`E10k-ego`, `P2k`, `G200-ego`, ...) instead carries:
+
+```json
+{
+  "factory_id":    null,
+  "worker_id":     null,
+  "clip_id":       null,
+  "timestamp_s":   null,
+  "why_no_provenance": "bare UUID4 frame_id, no provenance columns in Build AI's evaluation parquet -- docs/UPSTREAM-FINDINGS.md F9"
 }
 ```
 
 `worker_id` is load-bearing: it is the **cluster unit** for every interval vernier reports.
 For Ego4D and EPIC-KITCHENS-100 the cluster unit is that corpus's participant identifier,
 recorded in the same field with `corpus` disambiguating it.
+
+**`factory_id`, `worker_id`, `clip_id`, and `timestamp_s` are nullable, and null together, not
+individually.** Build AI's evaluation parquets (the `E10k-*`, `P2k`, and `G200-*` samples) ship
+`frame_id` as a bare UUID4 with none of these four fields recoverable
+(`docs/UPSTREAM-FINDINGS.md` F9) — a validator enforces that either all four are present or all
+four are null, never a partial mix, and requires `why_no_provenance` to be set whenever they
+are null. Corpus draws (`S10k-U`, `S10k-S`) carry full provenance and leave
+`why_no_provenance` null. Any analysis over a frame with null provenance fields has no cluster
+unit and must report an iid interval labelled as a lower bound, never a clustered one.
 
 ## `JudgeResponse` — one judge, one prompt variant, one frame
 

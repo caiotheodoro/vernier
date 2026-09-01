@@ -1,0 +1,26 @@
+{
+  "corpus": "egocentric-10k",
+  "task": "manipulation",
+  "prompt_variant": "P0a",
+  "judge": "gemini-2.5-flash",
+  "naive": {
+    "value": 0.9166,
+    "n": 10000
+  },
+  "ppi": {
+    "value": 0.8931,
+    "ci": {
+      "lo": 0.8612,
+      "hi": 0.925,
+      "level": 0.95
+    },
+    "n_gold": 200,
+    "n_unlabelled": 10000,
+    "rectifier": -0.0235,
+    "method": "ppi++",
+    "clustered": true,
+    "cluster_by": "worker_id",
+    "why_not_clustered": null
+  },
+  "published": 0.9166
+}

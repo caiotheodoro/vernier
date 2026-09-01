@@ -19,11 +19,13 @@ SURVEY (gate) → freeze PRE-REGISTRATION → sample → replicate → human-lab
 seen any judge output. `prompt-sweep` runs after replication so that P0 is established as a
 reference point rather than one arm among eight.
 
-## E-1 — Effective N (H8)
+## E-1 — Participant-count precision disparity (H8)
 
 No experiment. Participant counts for the three corpora, confirmed against each corpus's own
-documentation, and the resulting effective-N comparison. "10,000 frames each" conceals a
-near-order-of-magnitude difference in precision.
+documentation, and the resulting precision-disparity comparison — a raw participant-count
+lookup, not an ICC-adjusted effective N (D031; a true effective N needs cluster-size and
+outcome-variance data that don't exist pre-labelling). "10,000 frames each" conceals a
+near-two-orders-of-magnitude difference in precision.
 
 Published first because it is free, it is checkable by anyone, and it needs no cooperation
 from anybody.
@@ -126,10 +128,13 @@ The decisive experiment. Same panel, same prompts, human-labelled draws from all
 Build AI's own evaluation arms — so the domains are exactly the ones their comparative claim
 ranks, with no access negotiation and no re-draw.
 
-Model: `judge_correct ~ domain + task`, cluster-robust by participant. The question is not
-whether the judge scores the corpora differently — Build AI's claim is that it should. The
-question is whether the judge is **equally accurate** across them. If it is not, part of the
-published gap measures the judge.
+Model: `judge_correct ~ domain + task`, cluster-robust where a grouping variable exists. The
+`G200-*` draws come from Build AI's evaluation-parquet frames, which carry no participant
+identifier (`docs/UPSTREAM-FINDINGS.md` F9) — this model reports an iid interval labelled as a
+lower bound for those arms, not a clustered one; see `PRE-REGISTRATION.md`'s cluster-problem
+section. The question is not whether the judge scores the corpora differently — Build AI's
+claim is that it should. The question is whether the judge is **equally accurate** across them.
+If it is not, part of the published gap measures the judge.
 
 This is the one experiment whose result changes what the published comparative claim means,
 in either direction. It is aimed at the EPIC-KITCHENS margins specifically — 6.05 pp and
@@ -142,8 +147,11 @@ the reader over-generalise.
 ## E7 — Distillation
 
 Rung 1: linear probe on frozen features, trained on `gemini-2.5-flash` `P0a` labels over
-`E10k-ego`, evaluated against human gold on `G200-ego`. Laptop-runnable. This is the baseline that
-must be beaten before anything more expensive is justified.
+`E10k-ego \ G200-ego` (the 200 human-gold evaluation frames excluded from training by
+construction, not just by convention — `G200-ego` is a subset of `E10k-ego`, and training on
+the unfiltered set would leak the evaluation frames into training), evaluated against human
+gold on `G200-ego`. Laptop-runnable. This is the baseline that must be beaten before anything
+more expensive is justified.
 
 Rung 2: Qwen3-VL LoRA, 4-bit, on Modal L4 24 GB, same targets, same held-out evaluation.
 

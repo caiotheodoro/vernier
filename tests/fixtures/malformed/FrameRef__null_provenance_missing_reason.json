@@ -1,0 +1,17 @@
+{
+  "frame_id": "ego10k/f0051/w00243/v0007/000418",
+  "corpus": "egocentric-10k",
+  "corpus_rev": "abc",
+  "factory_id": null,
+  "worker_id": null,
+  "clip_id": null,
+  "frame_index": 418,
+  "timestamp_s": null,
+  "width": 1920,
+  "height": 1080,
+  "fps": 30.0,
+  "codec": "hevc",
+  "sample": "E10k-ego",
+  "stratum": "unstratified",
+  "why_no_provenance": null
+}

@@ -170,8 +170,9 @@ what the gate was for.
 3. **H5's estimand is an interaction, not a main effect** — P(judge *error* | domain).
    It requires **balanced** human gold across all three domains or it is unidentified. The
    `1.1.0` split of 300/150/150 would not have identified it. Now 200/200/200.
-4. **Equal frame counts are not equal precision.** Effective N differs across the three
-   corpora by close to two orders of magnitude — EPIC-KITCHENS-100 has **37 participants**
+4. **Equal frame counts are not equal precision.** Participant counts differ across the three
+   corpora by close to two orders of magnitude — a precision disparity, not yet an ICC-adjusted
+   effective N (D031) — EPIC-KITCHENS-100 has **37 participants**
    (confirmed against the primary source, arXiv 2006.13256: "increasing the total number of
    subjects and kitchen environments to 37 and 45 respectively" — the "45" figure previously
    used here was the kitchen/environment count, not the participant count) against Ego4D's

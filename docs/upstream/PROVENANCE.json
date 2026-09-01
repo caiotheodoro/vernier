@@ -9,5 +9,6 @@
     "P0b-active_manipulation.txt": "prompts/active_manipulation.txt",
     "dataset-card-snapshot.md": "README.md"
   },
-  "note": "P0a is the prompt text embedded in the dataset card (dataset-card-snapshot.md); P0b is the prompt shipped in prompts/. They differ. See docs/DECISIONS.md D014."
+  "note": "P0a is the prompt text embedded in the dataset card (dataset-card-snapshot.md); P0b is the prompt shipped in prompts/. They differ. See docs/DECISIONS.md D014.",
+  "retrieved_utc_note": "retrieved_utc is UTC and lands 2026-09-01 because the retrieval happened after midnight UTC on the evening of 2026-08-31 US Eastern -- consistent with every other dated artifact in this repo, not a stale or drifted snapshot."
 }

@@ -1,0 +1,39 @@
+{
+  "verdict": "VERIFIED",
+  "claims": [
+    {
+      "statement": "gemini-2.5-flash replicates the published manipulation figure within +/-2pp on E10k-ego.",
+      "record_type": "PrevalenceEstimate",
+      "record_ref": "egocentric-10k/manipulation/P0a/gemini-2.5-flash"
+    }
+  ],
+  "what_could_not_be_checked": [
+    {
+      "item": "Calibration under P0a/P0b",
+      "reason": "published schema exposes no confidence (H7)"
+    }
+  ],
+  "sample_definition": "G200-ego, n=200, seed 777",
+  "rubric_rev": "1.1.0",
+  "judge_revisions": {
+    "gemini-2.5-flash": "2025-06-01"
+  },
+  "prompt_variants": [
+    "P0a",
+    "P0b"
+  ],
+  "intervals": [
+    {
+      "label": "manipulation AC1, human vs gemini-2.5-flash, G200-ego",
+      "ci": {
+        "lo": 0.501,
+        "hi": 0.714,
+        "method": "cluster-bootstrap",
+        "clusters": 61,
+        "B": 10000
+      },
+      "design_effect": 2.31
+    }
+  ],
+  "content_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+}

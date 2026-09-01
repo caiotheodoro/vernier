@@ -1,0 +1,17 @@
+{
+  "frame_id": "ego10k/f0051/w00243/v0007/000418",
+  "corpus": "egocentric-10k",
+  "corpus_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
+  "factory_id": "0051",
+  "worker_id": "00243",
+  "clip_id": "0007",
+  "frame_index": 418,
+  "timestamp_s": 13.933,
+  "width": 1920,
+  "height": 1080,
+  "fps": 30.0,
+  "codec": "hevc",
+  "sample": "S10k-U",
+  "stratum": "factory-0051",
+  "why_no_provenance": null
+}

@@ -358,3 +358,55 @@ is the amendment record for the participant-count and PPI-citation corrections t
 
 **Reverses:** nothing — all four are corrections to citation fidelity, not to the hypotheses,
 protocol, or stopping rules. No experiment result is affected, since none has been run.
+
+## D031 — Refinement-plan corrections: a real leak, a contract gap, and a mislabelled statistic
+
+Three independent AI audit reviews of this repo (`docs/private/reviews.txt`) were cross-checked
+against the actual files rather than trusted from their prose. Every claim checked came back
+confirmed. Recorded here per this document's own amendment rule, before Wave 0 is committed.
+
+1. **Distillation had a real train/eval leak, not just a doc typo.** `METHOD.md` E7 said train
+   on `E10k-ego`, evaluate on `G200-ego`; `MODEL_CARD.md` said train on `S10k-S` — the two
+   already disagreed. Worse: `G200-ego ⊆ P2k ⊆ E10k-ego` by construction
+   (`PRE-REGISTRATION.md`'s own sample definitions), so METHOD.md's literal protocol had all
+   200 held-out evaluation frames already inside the 10,000-frame training set. Fixed: both
+   docs now specify training on `E10k-ego \ G200-ego`, keeping the instrument distilling from
+   Build AI's own audited evaluation set with the overlap explicitly excluded, rather than
+   switching to an unrelated corpus draw.
+
+2. **`FrameRef` could not represent an evaluation-arm frame.** `worker_id` (and `factory_id`,
+   `clip_id`, `timestamp_s`) were typed as required non-null fields, but Build AI's evaluation
+   parquets ship none of them — bare UUID4 `frame_id` only (`UPSTREAM-FINDINGS.md` F9). Nothing
+   stopped a fabricated placeholder from silently satisfying the type, which would have violated
+   `CONTRACTS.md` rule 1 ("a number whose origin cannot be reconstructed is not publishable").
+   Fixed: all four fields are now nullable, null together (never partially), with a required
+   `why_no_provenance` reason — mirroring the existing `PPIBlock.why_not_clustered` pattern.
+   `BENCHMARK.md` R4 and `METHOD.md` E6 previously stated their domain-bias model is
+   "cluster-robust by participant" unconditionally, for analyses that run on exactly these
+   provenance-null `G200-*` frames — also fixed, now hedged to match
+   `PRE-REGISTRATION.md`'s already-correct "cluster-robust where a grouping variable exists."
+
+3. **H8's "effective N" was a raw participant-count comparison, not an effective N.** D024/D030
+   and `SURVEY.md`/`BENCHMARK.md` labelled the 37/923/2,153 participant-count comparison
+   "effective N" — no ICC or design-effect-adjusted computation exists anywhere in the repo to
+   justify that term (`grep` for `kish|ICC|intraclass` returns nothing). `BENCHMARK.md`'s own
+   R0 table already has separate `Participants` and `Effective N` columns with the latter
+   marked `—`, which was the tell. Renamed throughout to "participant-count precision
+   disparity" — a true ICC-adjusted effective N is only computable once R100/primary labelling
+   produces real cluster-size and outcome-variance data, and belongs to `estimation`'s existing
+   post-data `design_effect` computation, not to H8's pre-labelling arithmetic.
+
+4. **Five contract validators had gaps, all empirically confirmed live** (constructing the
+   "should be rejected" case succeeded before this fix): `JudgeResponse` only nulled
+   `hands_visible` on non-`ok`, not `manipulation`; `Confidence` had no `kind`/`value`
+   coupling or range check; `AgreementCI` allowed `cluster-bootstrap` with `clusters=None`;
+   `HumanLabel.pass_` serialized as `"pass_"` against `CONTRACTS.md`'s own `"pass"` example;
+   frozen records allowed in-place mutation of nested `list`/`dict` fields. All five hardened,
+   each with a new malformed fixture proving the rejection is real.
+
+`PRE-REGISTRATION.md`'s frozen text is left as originally frozen; this entry is the amendment
+record.
+
+**Reverses:** nothing in the hypotheses or stopping rules. Items 1–2 are correctness fixes to
+what the pipeline can even represent; item 3 is a labelling correction with no numeric change;
+item 4 is validator hardening. No experiment result is affected, since none has been run.

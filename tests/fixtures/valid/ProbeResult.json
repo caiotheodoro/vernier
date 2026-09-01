@@ -1,0 +1,19 @@
+{
+  "source_corpus": "egocentric-10k",
+  "n_frames": 2000,
+  "backbone": "dinov2-large",
+  "downstream": "ego4d-fho-noun",
+  "metric": "top1_accuracy",
+  "value": 0.63,
+  "ci": {
+    "lo": 0.6,
+    "hi": 0.66,
+    "method": "cluster-bootstrap"
+  },
+  "seed": 777,
+  "matched_on": [
+    "n_frames",
+    "n_clusters",
+    "training_steps"
+  ]
+}

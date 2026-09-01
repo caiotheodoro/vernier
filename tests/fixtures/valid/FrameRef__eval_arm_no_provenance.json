@@ -1,0 +1,17 @@
+{
+  "frame_id": "ego10k/f0051/w00243/v0007/000418",
+  "corpus": "egocentric-10k",
+  "corpus_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
+  "factory_id": null,
+  "worker_id": null,
+  "clip_id": null,
+  "frame_index": 418,
+  "timestamp_s": null,
+  "width": 1920,
+  "height": 1080,
+  "fps": 30.0,
+  "codec": "hevc",
+  "sample": "E10k-ego",
+  "stratum": "factory-0051",
+  "why_no_provenance": "Build AI's evaluation parquet ships frame_id as a bare UUID4 with no factory, worker, clip, or timestamp component (docs/UPSTREAM-FINDINGS.md F9)"
+}

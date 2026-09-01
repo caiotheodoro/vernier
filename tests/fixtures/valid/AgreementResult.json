@@ -1,0 +1,25 @@
+{
+  "comparison": {
+    "a": "human:R1",
+    "b": "gemini-2.5-flash:P0"
+  },
+  "task": "manipulation",
+  "subset": "G200-ego",
+  "n": 300,
+  "n_excluded": 4,
+  "excluded_why": {
+    "unparseable": 3,
+    "timeout": 1
+  },
+  "raw_agreement": 0.9067,
+  "ac1": 0.727,
+  "kappa": 0.612,
+  "ci": {
+    "lo": 0.501,
+    "hi": 0.714,
+    "method": "cluster-bootstrap",
+    "clusters": 61,
+    "B": 10000
+  },
+  "design_effect": 2.31
+}

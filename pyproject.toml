@@ -1,19 +1,26 @@
-# Skeleton. Dependencies are named, not resolved: no code exists yet, and pinning
-# versions before the survey fixes the backbone would be a guess presented as a decision.
+# Wave 0: the interface freeze. `pydantic` is load-bearing for CONTRACTS.md and pinned;
+# everything downstream of a backbone choice (judges/probes/distil) is still unresolved on
+# purpose -- pinning those before the survey fixes the backbone would be a guess presented
+# as a decision.
 [project]
 name = "vernier"
 version = "0.0.0"
 description = "Putting error bars on a dataset vendor's quality claim, and distilling the judge into an instrument anyone can re-run."
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
-dependencies = []
+dependencies = [
+    "pydantic>=2.7",
+]
 
 [project.optional-dependencies]
 # judges  -- the panel: one closed replication target, one second frontier judge, one open model
 # probes  -- frozen-feature backbones for the transfer probe
 # distil  -- LoRA training path for the open instrument
 # space   -- the demo
-# dev     -- tests, lint
+dev = [
+    "pytest>=8.0",
+    "mypy>=1.10",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -21,3 +28,14 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vernier"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "src"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+packages = ["vernier"]
+strict = true
+
