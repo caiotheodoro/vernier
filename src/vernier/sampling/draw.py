@@ -8,21 +8,34 @@ Seam: corpus-specific identifier mapping. Ego4D and EPIC-KITCHENS-100 name their
 field differently; `normalize_worker_id` normalises into `worker_id` and records the original
 in `corpus`.
 
-Wave 1 is offline by design: this module never touches the network, `huggingface_hub`, or the
-`datasets` library. `_candidate_frames` and `_factory_worker_hours` are the seams Wave 2
-replaces with real HF/parquet wiring; everything else here -- stratification, the worker-hours
-weighting, the per-clip cap, seeded determinism, the P2k/G200/R100 subset relationships, and
-the revision-pin check -- is real and unit-tested against synthetic pools.
+Wave 1 was offline by design: stratification, the worker-hours weighting, the per-clip cap,
+seeded determinism, the P2k/G200/R100 subset relationships, and the revision-pin check are all
+real and unit-tested against synthetic pools, independent of `_candidate_frames`'s own wiring.
+
+`_candidate_frames` is now real for the `E10k-*` evaluation-release arms (`docs/DECISIONS.md`
+D043's follow-on): the actual HF repo (`builddotai/Egocentric-10K-Evaluation`) ships one
+parquet file per sub-corpus, not one file filtered by a column (verified live via
+`HfApi().list_repo_files` -- `_EVAL_PARQUET_FILENAME` records the real mapping).
+`_frames_from_eval_parquet` is the offline-testable half (a local parquet path in, a `FrameRef`
+pool out); `_candidate_frames` itself is the thin real-network wrapper
+(`huggingface_hub.hf_hub_download`) around it. `S10k-U`/`S10k-S` (the raw, contact-gated
+Egocentric-10K corpus, with real factory/worker/clip/timestamp/fps/codec) and
+`_factory_worker_hours` remain unwired -- a different, still-ungated-in-this-repo dataset whose
+real schema hasn't been inspected yet.
 """
 
 from __future__ import annotations
 
+import io
 import random
 from pathlib import Path
 from typing import Literal
 
+import pyarrow.parquet as pq
+from PIL import Image
+
 from vernier.models import FrameRef
-from vernier.sampling.revisions import assert_pinned_revision
+from vernier.sampling.revisions import PINNED_REVISIONS, assert_pinned_revision
 
 SampleName = Literal[
     "E10k-ego",
@@ -88,14 +101,108 @@ def _rng(seed: int, sample: SampleName) -> random.Random:
     return random.Random(f"{seed}:{sample}")
 
 
+# Each `E10k-*` sample draws from its own file within the one pinned evaluation-release repo
+# (`_EVAL_HF_REPO`) -- confirmed live via `HfApi().list_repo_files`, not assumed from the
+# single-file example `docs/UPSTREAM-FINDINGS.md` F9 happened to inspect.
+_EVAL_PARQUET_FILENAME: dict[SampleName, str] = {
+    "E10k-ego": "egocentric_10k.parquet",
+    "E10k-ego4d": "ego4d.parquet",
+    "E10k-epic": "epic_kitchens.parquet",
+}
+
+# Every E10k-* frame is null-together on the same six fields for the same reason (F9/D040): a
+# bare-UUID4 evaluation release with no factory/worker/clip/timestamp/fps/codec at all.
+_EVAL_ARM_WHY_NO_PROVENANCE = (
+    "Build AI's evaluation parquet ships frame_id as a bare UUID4 with no factory, worker, "
+    "clip, or timestamp component, and no source-video fps/codec at all "
+    "(docs/UPSTREAM-FINDINGS.md F9, docs/DECISIONS.md D040)"
+)
+
+
+def _decode_dimensions(image_bytes: bytes) -> tuple[int, int]:
+    """Real width/height for one frame's JPEG bytes. The parquet carries neither (F9's schema
+    is `frame_id`/`image`/`source_dataset`/`hand_count`/`active_labor` only), but `FrameRef`
+    requires both regardless of provenance -- they're always recoverable from the image itself.
+    """
+    with Image.open(io.BytesIO(image_bytes)) as img:
+        return img.width, img.height
+
+
+def _frames_from_eval_parquet(path: str, sample: SampleName, corpus_rev: str) -> list[FrameRef]:
+    """Read one already-local evaluation parquet and build its `FrameRef` pool.
+
+    Offline-testable against a synthetic local parquet (see `tests/test_sampling_draw.py`) --
+    `_candidate_frames` is the thin real-network wrapper around this, so the network/HF part
+    stays untested-by-unit-test the same way every other real-I/O seam in this project is.
+
+    A frame with empty/absent image bytes is silently excluded from the pool, not raised on --
+    `scripts/check_eval_parquets.py` (D016) is the dedicated, explicit check for exactly that
+    absence against a drawn sample's membership; this function's job is only to build a pool of
+    frames that are actually usable.
+
+    `corpus="egocentric-10k"` for every `E10k-*` arm, not a per-sub-corpus value: it names the
+    one published collection all three files come from, matching the existing, reviewed
+    `FrameRef__eval_arm_no_provenance` fixture -- `sample` (`E10k-ego`/`E10k-ego4d`/`E10k-epic`)
+    already carries the actual sub-corpus distinction machine-readably, so `corpus` doesn't
+    need to duplicate it. Flagged here as a judgment call, not a pinned convention found
+    elsewhere.
+    """
+    table = pq.read_table(path, columns=["frame_id", "image"])
+    frame_ids = table.column("frame_id").to_pylist()
+    images = table.column("image").to_pylist()
+
+    frames: list[FrameRef] = []
+    for frame_index, (frame_id, image) in enumerate(zip(frame_ids, images, strict=True)):
+        image_bytes = image.get("bytes") if isinstance(image, dict) else None
+        if not image_bytes:
+            continue
+        width, height = _decode_dimensions(image_bytes)
+        frames.append(
+            FrameRef(
+                frame_id=frame_id,
+                corpus="egocentric-10k",
+                corpus_rev=corpus_rev,
+                factory_id=None,
+                worker_id=None,
+                clip_id=None,
+                frame_index=frame_index,
+                timestamp_s=None,
+                width=width,
+                height=height,
+                fps=None,
+                codec=None,
+                sample=sample,
+                stratum="unstratified",
+                why_no_provenance=_EVAL_ARM_WHY_NO_PROVENANCE,
+            )
+        )
+    return frames
+
+
 def _candidate_frames(sample: SampleName) -> list[FrameRef]:
     """Wave 2 seam: the pool `draw_sample` samples from.
 
-    For `S10k-U`/`S10k-S` this is fresh Egocentric-10K corpus metadata; for the `E10k-*`
-    family it is Build AI's evaluation-release frame list. Real HF/parquet wiring is Wave 2's
-    job -- Wave 1 unit tests monkeypatch this with synthetic in-memory `FrameRef` pools.
+    Real for the `E10k-*` family (Build AI's evaluation-release frame list) -- see
+    `_frames_from_eval_parquet` for the actual parsing. `S10k-U`/`S10k-S` (fresh Egocentric-10K
+    corpus metadata) remain unwired: a different, contact-gated dataset whose real schema
+    hasn't been inspected yet. Wave 1 unit tests monkeypatch this whole function with
+    synthetic in-memory `FrameRef` pools, independent of either path.
     """
-    raise NotImplementedError
+    if sample not in _EVAL_PARQUET_FILENAME:
+        raise NotImplementedError(
+            f"_candidate_frames for {sample!r} needs the raw Egocentric-10K corpus adapter "
+            "(S10k-U/S10k-S) -- a different, still-unwired dataset, see docs/HANDOFF.md"
+        )
+    from huggingface_hub import hf_hub_download
+
+    revision = PINNED_REVISIONS[_EVAL_HF_REPO]
+    path = hf_hub_download(
+        repo_id=_EVAL_HF_REPO,
+        repo_type="dataset",
+        revision=revision,
+        filename=_EVAL_PARQUET_FILENAME[sample],
+    )
+    return _frames_from_eval_parquet(path, sample, revision)
 
 
 def _factory_worker_hours(sample: SampleName) -> dict[str, float]:

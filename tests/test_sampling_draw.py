@@ -8,6 +8,8 @@ touch the network or any real corpus file.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from vernier.models import FrameRef
@@ -326,3 +328,91 @@ def test_normalize_worker_id_preserves_the_raw_value() -> None:
     # not yet inspected); the corpus argument disambiguates downstream per CONTRACTS.md.
     assert normalize_worker_id("ego4d", "some-raw-field-value") == "some-raw-field-value"
     assert normalize_worker_id("epic-kitchens-100", "P01_01") == "P01_01"
+
+
+# --- _frames_from_eval_parquet: real parquet + real image decode, no network ----------------
+
+
+def _write_eval_parquet(path: Path, rows: list[tuple[str, bytes | None]]) -> None:
+    """Build a real local parquet matching the real evaluation release's schema (F9): just
+    `frame_id`/`image`, since `_frames_from_eval_parquet` never reads the other two columns."""
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    table = pa.table(
+        {
+            "frame_id": pa.array([r[0] for r in rows], type=pa.string()),
+            "image": pa.array(
+                [{"bytes": r[1], "path": None} for r in rows],
+                type=pa.struct([("bytes", pa.binary()), ("path", pa.string())]),
+            ),
+        }
+    )
+    pq.write_table(table, str(path))
+
+
+def _real_jpeg_bytes(width: int, height: int) -> bytes:
+    import io
+
+    from PIL import Image
+
+    buf = io.BytesIO()
+    Image.new("RGB", (width, height), color="red").save(buf, format="JPEG")
+    return buf.getvalue()
+
+
+def test_frames_from_eval_parquet_decodes_real_dimensions(tmp_path: Path) -> None:
+    from vernier.sampling.draw import _frames_from_eval_parquet
+
+    path = tmp_path / "eval.parquet"
+    frame_a = _real_jpeg_bytes(64, 48)
+    frame_b = _real_jpeg_bytes(32, 32)
+    _write_eval_parquet(path, [("frame-a", frame_a), ("frame-b", frame_b)])
+
+    frames = _frames_from_eval_parquet(str(path), "E10k-ego", PINNED_REV)
+
+    assert [f.frame_id for f in frames] == ["frame-a", "frame-b"]
+    assert (frames[0].width, frames[0].height) == (64, 48)
+    assert (frames[1].width, frames[1].height) == (32, 32)
+    for f in frames:
+        assert f.corpus == "egocentric-10k"
+        assert f.corpus_rev == PINNED_REV
+        assert f.sample == "E10k-ego"
+        assert f.factory_id is None
+        assert f.worker_id is None
+        assert f.clip_id is None
+        assert f.timestamp_s is None
+        assert f.fps is None
+        assert f.codec is None
+        assert f.why_no_provenance is not None
+
+
+def test_frames_from_eval_parquet_frame_index_is_row_position(tmp_path: Path) -> None:
+    from vernier.sampling.draw import _frames_from_eval_parquet
+
+    path = tmp_path / "eval.parquet"
+    jpeg = _real_jpeg_bytes(16, 16)
+    _write_eval_parquet(path, [("f0", jpeg), ("f1", jpeg), ("f2", jpeg)])
+
+    frames = _frames_from_eval_parquet(str(path), "E10k-ego4d", PINNED_REV)
+
+    assert [f.frame_index for f in frames] == [0, 1, 2]
+
+
+def test_frames_from_eval_parquet_excludes_empty_image_bytes(tmp_path: Path) -> None:
+    from vernier.sampling.draw import _frames_from_eval_parquet
+
+    path = tmp_path / "eval.parquet"
+    jpeg = _real_jpeg_bytes(16, 16)
+    _write_eval_parquet(path, [("has-image", jpeg), ("no-image", None), ("empty-image", b"")])
+
+    frames = _frames_from_eval_parquet(str(path), "E10k-epic", PINNED_REV)
+
+    assert [f.frame_id for f in frames] == ["has-image"]
+
+
+def test_candidate_frames_raises_not_implemented_for_unwired_corpus_samples() -> None:
+    from vernier.sampling.draw import _candidate_frames
+
+    with pytest.raises(NotImplementedError, match="S10k-U"):
+        _candidate_frames("S10k-U")

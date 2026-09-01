@@ -25,6 +25,13 @@ judges = [
 ]
 data = [
     "pyarrow>=17",
+    # sampling/draw.py's real `_candidate_frames` wiring for the E10k-* evaluation-release arms
+    # (docs/DECISIONS.md D043's follow-on): huggingface_hub.hf_hub_download pulls each pinned
+    # parquet locally once (never streamed row-by-row over `hf://` -- verified live this session
+    # that a single-row remote read against a ~1.8GB file is unworkably slow), pillow decodes
+    # each frame's real width/height (FrameRef requires both; the parquet carries neither).
+    "huggingface_hub>=0.35",
+    "pillow>=10",
 ]
 stats = [
     "numpy>=1.26",
