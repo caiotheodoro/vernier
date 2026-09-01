@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D050 |
+| Decisions | `DECISIONS.md`, D001–D051 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -297,10 +297,22 @@ rewrite is separate, real statistics work, not done here), and `make validate` n
 by hand. Running it live caught two more real hits this session's own D048/D049 prose had just
 introduced, fixed by rewording, not by adding exemptions.
 
+**R2 was attempted and is blocked (`docs/DECISIONS.md` D051) — a real, third access wall found
+this session, not a hypothetical one.** `facebook/dinov3-vits16-pretrain-lvd1689m` (D034's
+pinned backbone) is gated, and this account is not authorized for it — a real `hf_hub_download`
+returns `GatedRepoError`, the same pattern as `S10k-U`/`S10k-S` (D044) and now a *third* gated
+resource this session found blocked only by actually trying to download it (`HfApi`'s own
+metadata said "not gated" for this exact repo; the real download disagreed). `torch`/
+`transformers` are added to the `probes` extra regardless — the real, already-decided
+dependency, not a new one. Unofficial third-party mirrors of the same weights exist and aren't
+gated, but are **not used** without a real checksum verification against the official
+release, which nothing here has done. **Worth surfacing to Caio as a pattern, not three
+separate one-offs**: this HF account's gated-content access appears narrower than its
+metadata-read access across at least three unrelated resources now.
+
 **Still open from `docs/REVIEW.md`, genuinely requiring either real spend, real time, or
-Caio's own action — tracked in D048/D049, not lost:** R2 (pseudo-cluster design effect,
-laptop-runnable, no live cost — the next natural pick), R3 (a second `R100` rater, ~35 min of
-someone else's time), R4 (judge test-retest, a few real dollars), R6 (a pre-data gold-size
+Caio's own action — tracked in D048/D049/D051, not lost:** R3 (a second `R100` rater, ~35 min
+of someone else's time), R4 (judge test-retest, a few real dollars), R6 (a pre-data gold-size
 amendment for H5 — **time-critical, must land before the first label is written**), R8
 (authorize the full-N E2/E5 run — the same "explicit decision from Caio" boundary this file has
 held throughout), and R5's own live contamination probe.
