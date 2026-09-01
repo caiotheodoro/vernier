@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D046 |
+| Decisions | `DECISIONS.md`, D001–D047 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -255,6 +255,33 @@ real, decodable image.
 
 **The 600+100 human labels themselves are still entirely Caio's own work — nothing here does
 that — but there is no more code standing between "start labelling" and actually doing it.**
+
+**`docs/REVIEW.md` (independent, fresh-context review, dated 2026-09-01) caught a real, costly
+design mistake in rung-1 distillation before it finished running — `docs/DECISIONS.md` D047.**
+`scripts/generate_rung1_labels.py` was calling the live Qwen3-VL judge to generate rung-1
+training labels; `docs/METHOD.md` E7 actually specifies training on `gemini-2.5-flash`'s own
+labels (the judge behind the published number), which are not missing — they're the
+`hand_count`/`active_labor` columns already shipped in the evaluation parquets, verified to
+reproduce the published figures exactly (D040, D042). The flawed run was killed after ~31 real
+minutes (~$0.40 spent) rather than the full ~$5/~5.8hr it would have cost for the wrong target.
+**Fixed and re-run for real**: the corrected script reads the real stored labels directly —
+zero live calls, ~1 second runtime, 29,400 real labels across all three corpora (extended
+beyond `E10k-ego` alone per the review's own recommendation, since it's free either way). The
+live-calling mechanism wasn't discarded — repurposed into `scripts/generate_qwen_comparison_labels.py`
+as the live comparison-judge arm for E4/E6, which is what it's actually for.
+
+Also recorded from that same work: real smoke data shows naive client-side concurrency
+(`scripts/judge_concurrency.py`) measurably **hurts** throughput on the current single-container
+Modal deployment (sequential ~0.47 frames/sec vs. ~0.36 at 4 workers vs. ~0.26 at 8 workers) —
+single-GPU contention on short bursts, not the hoped-for speedup. `--max-workers` defaults to 1
+in the comparison-judge script for this reason; revisit only with real evidence at a run long
+enough for Modal's autoscaling to actually add containers.
+
+**`docs/REVIEW.md`'s other nine recommendations (R2–R10) are real, well-reasoned, and not yet
+acted on** — tracked in D047, not lost. Worth a dedicated pass: R9 (explicitly kill Result 2),
+R5 (contamination confound on H5), and the stale-prose sweep (11 files still describe the
+pre-D042 three-judge design) are flagged as cheap and pre-data, bundled as the natural next
+documentation pass before Wave 3 labelling starts.
 
 Note for whoever runs this next: `scripts/draw_all_samples.py`'s `ego4d.parquet`/
 `epic_kitchens.parquet` downloads twice hung indefinitely at a fixed byte count via HF's
