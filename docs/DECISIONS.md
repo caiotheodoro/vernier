@@ -455,3 +455,35 @@ rule, or published number, since none exists yet.
 
 **Reverses:** nothing. All four items are completions of validator/naming work D031 claimed to
 have finished but had not.
+
+## D033 — Wave 1's file-ownership rule was unenforceable against the built layout; fixed
+
+The unpublished Wave 1 plan (18 units, one agent per module directory, "no agent edits a shared
+file") was checked against the actual Wave 0 file layout and found unenforceable: four module
+groups had multiple planned units sharing one physical file.
+
+- `judges` — the Gemini, Claude, and Qwen3-VL adapters (three separate units) all lived in one
+  `adapters.py`. Split into `judges/gemini.py`, `judges/claude.py`, `judges/qwen3vl.py`.
+- `sampling` — the draw unit and the reserves/membership unit shared `sampling/__init__.py`.
+  Split into `sampling/draw.py` (draw + the `normalize_worker_id` corpus-adapter seam, since
+  draw is what calls it) and `sampling/membership.py` (write/load/replace-undecodable).
+- `agreement` — the AC1/κ/Fleiss unit and the error-dependence unit shared
+  `agreement/__init__.py`. Split into `agreement/core.py` and `agreement/dependence.py`.
+- `estimation` — the PPI unit, the cluster-bootstrap unit, and the H8 unit shared
+  `estimation/__init__.py`. Split into `estimation/ppi.py`, `estimation/bootstrap.py`, and
+  `estimation/disparity.py`.
+
+Each package's `__init__.py` is now a thin re-export shim, mirroring the pattern
+`judges/__init__.py` already used correctly for `base.py`/`prompts.py`. This is a pure move —
+`pytest` (43 passed) and `mypy --strict` (clean, 32 source files) are unchanged before and
+after.
+
+`estimation/disparity.py`'s `participant_count_disparity` function keeps the D032 rename; no
+file in this split reintroduces "effective N" as a function or module name.
+
+Recorded per this document's own amendment rule, same tier as Wave 0 itself: the whole point of
+an interface freeze is that the fan-out that depends on it doesn't collide, and this is that
+freeze catching up to its own stated rule before Wave 1 is dispatched rather than after.
+
+**Reverses:** nothing. Pure file reorganization; no hypothesis, contract, or public function
+signature changed — only which file each lives in.

@@ -1,6 +1,8 @@
-from vernier.judges.adapters import ClaudeJudge, GeminiJudge, Qwen3VLJudge
 from vernier.judges.base import JudgeAdapter
+from vernier.judges.claude import ClaudeJudge
+from vernier.judges.gemini import GeminiJudge
 from vernier.judges.prompts import PromptVariant, load_prompt
+from vernier.judges.qwen3vl import Qwen3VLJudge
 
 __all__ = [
     "ClaudeJudge",
