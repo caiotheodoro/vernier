@@ -75,7 +75,16 @@ app = modal.App("vernier-qwen3vl-judge")
     # No HF secret: Qwen/Qwen3-VL-8B-Instruct-FP8 is confirmed not gated (live HfApi() check),
     # so there is nothing an HF_TOKEN would unblock here -- adding one would be a credential
     # dependency for a scenario that can't happen with this model.
-    unauthenticated=False,  # judge calls carry no reason to be publicly reachable
+    #
+    # unauthenticated=True: caught by actually running the smoke test, not assumed --
+    # unauthenticated=False makes MODAL's own proxy require Modal-workspace auth headers on
+    # every request, which the plain `openai` client (judges/qwen3vl.py's caller) has no way to
+    # supply -- it only ever sends an OpenAI-shaped Bearer token, not Modal's own auth scheme.
+    # TODO before any unattended production run (not needed for this smoke test): add vLLM's
+    # own `--api-key <secret>` so the application layer, not Modal's proxy, controls access --
+    # that IS compatible with a plain openai-client caller, since vLLM validates whatever
+    # Bearer token the client sends against its own configured value.
+    unauthenticated=True,
     target_concurrency=4,  # a single-judge audit run, not a public-traffic service
 )
 class Server:
@@ -102,6 +111,13 @@ class Server:
             # never a multi-image batch in a single request.
             "--limit-mm-per-prompt",
             json.dumps({"image": 1, "video": 0, "audio": 0}),
+            # Caught by actually deploying, not assumed: Qwen3-VL-8B's default max_model_len
+            # (262144) needs 36GB of KV cache for even one request -- the L4 only has ~7GB free
+            # after model weights. vernier's real prompts are one image (a few hundred to ~2000
+            # tokens depending on tiling) plus a short rubric prompt and a tiny JSON answer --
+            # nowhere near this model's max context. 8192 is generous headroom, not a tight fit.
+            "--max-model-len",
+            "8192",
         ]
         print(*cmd)
         self.process = subprocess.Popen(cmd)
