@@ -627,3 +627,35 @@ Wave 1's file-ownership plan, applied here to a signature gap in the same interf
 correction to an unimplementable Wave 0 stub signature, not a change to what any statistic
 means or how it's computed. No other Wave 1 unit called these functions before this fix, so
 the blast radius is contained to `agreement/core.py` itself and its own tests.
+
+## D038 — `card`'s verdict-derivation conventions, named here so they're not implicit
+
+Wave 1 unit 18 (`docs/WAVES.md`) had to invent how `build_card` derives `MeasurementCard.verdict`
+(`verdict: str` is unconstrained in `models.py` — a plain string field, not a `Literal` — so
+its meaning lives entirely in convention, not the schema) since the frozen signature carries no
+`verdict` parameter. The independent `opencode` review confirmed the logic itself sound but
+flagged, correctly, that two project-level conventions were buried in one unit's private helper
+rather than recorded where a future caller would find them. Recorded here per that finding.
+
+**The rule:** `verdict = "VERIFIED"` iff (a) every `PrevalenceEstimate` passed to `build_card`
+has a matching `Claim` with `record_type == "PrevalenceEstimate"` and `record_ref` equal to
+that estimate's natural key, and (b) no `UncheckedItem` in `what_could_not_be_checked` is a
+hard blocker. Otherwise `"NOT_VERIFIED"`. An extra `Claim` with no matching estimate is ignored
+(the contract is "every estimate has a claim," not "every claim has an estimate") — ties
+naming a check that was actually run to a real estimate, without requiring the reverse.
+
+**Two conventions, now named:**
+1. **The `record_ref` natural key** for a `PrevalenceEstimate`:
+   `f"{corpus}/{task}/{prompt_variant}/{judge}"`. Any `Claim` tying itself to a
+   `PrevalenceEstimate` must use this exact format for `_derive_verdict` to recognize it — a
+   differently-formatted but semantically-equivalent `record_ref` silently reads as unclaimed
+   and fails the card toward `NOT_VERIFIED` (fail-safe, but uninformatively so).
+2. **The `"BLOCKER:"` prefix** on an `UncheckedItem.reason` (case-insensitive, leading
+   whitespace tolerated) marks it a hard blocker — sufficient on its own to force
+   `NOT_VERIFIED` regardless of claim coverage. Every other `UncheckedItem` is informational:
+   named per `CONTRACTS.md`'s "what could not be checked" rule, but does not itself fail the
+   card. Any code constructing an `UncheckedItem` for a genuinely fatal gap must use this
+   prefix, or `_derive_verdict` will not see it as one.
+
+**Reverses:** nothing pre-registered — this names conventions the implementation already
+carried; no verdict any card would have produced changes as a result of writing this down.
