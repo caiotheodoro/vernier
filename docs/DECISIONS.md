@@ -508,3 +508,61 @@ inconsistency, not a deliberate choice) are both corrected to this pin.
 **Reverses if:** rung 1's linear probe fails to beat the naive-judge-proportion baseline and a
 capacity-limited failure mode is suspected — then re-run rung 1 against
 `facebook/dinov3-vitb16-pretrain-lvd1689m` before concluding the rung itself doesn't work.
+
+## D035 — H5 is underpowered at the pre-registered n; R100's 0.70 gate has real boundary noise
+
+Run before Wave 3 commits any labelling time, per `docs/HANDOFF.md`'s P1 tier ("H5/R100 power
+simulation"). `scripts/power_simulation.py`, seed 777, 20,000 Monte Carlo reps per cell. Both
+findings are real and neither changes a frozen number — see "Reverses," below.
+
+**H5.** A two-proportion test for the pre-registered ≥5pp domain-bias effect
+(`PRE-REGISTRATION.md` line 197), at `n=200`/arm (the balanced-gold size fixed by D023), α=0.05:
+
+| baseline judge-error rate | power |
+|---|---|
+| 0.05 | 0.48 |
+| 0.10 | 0.33 |
+| 0.15 | 0.27 |
+| 0.20 | 0.23 |
+| 0.25 | 0.20 |
+| 0.30 | 0.19 |
+
+Power stays well under the conventional 0.80 target across every plausible baseline — it is
+*never* better than roughly a coin flip, and falls to ~1-in-5 at higher baseline error rates.
+**This means a null H5 result at n=200 is genuinely ambiguous between "no domain-bias effect
+at the pre-registered ≥5pp threshold" and "an effect that size exists but this sample can't
+reliably surface it."** H5's actual pre-registered analysis is a point estimate with an
+interval, not a significance test against a power target — so this does not invalidate the
+plan — but the ambiguity above must be stated plainly if H5 comes back null, not glossed over
+as if a clean negative result had been obtained.
+
+**R100.** For a grid of "true" intra-rater AC1 values, the probability that a single n=100
+retest clears the pre-registered 0.70 gate (assuming 90% label prevalence, stated as an
+assumption per `docs/HANDOFF.md`'s own high-published-proportion figures, not measured):
+
+| true AC1 | P(measured AC1 ≥ 0.70) |
+|---|---|
+| 0.60 | 0.10 |
+| 0.65 | 0.25 |
+| 0.70 | 0.50 |
+| 0.75 | 0.79 |
+| 0.80 | 0.95 |
+| 0.85 | 1.00 |
+| 0.90 | 1.00 |
+
+**At exactly the pre-registered threshold, the gate is a coin flip by construction** — a rater
+whose true reliability is exactly 0.70 has ~50% odds of measuring below it and deferring the
+audit unnecessarily, or (symmetrically) a rater at 0.65 has a nontrivial ~25% chance of
+appearing to clear 0.70 by sampling noise alone. This is inherent to `n=100` and not a flaw in
+the stopping rule itself; it means a measured AC1 landing within roughly ±0.05 of 0.70 should
+be read as "near the boundary, not decisively on either side of it" when the result is reported,
+rather than treated as a clean pass/fail.
+
+Both tables are reproducible: `python3 scripts/power_simulation.py --n-sims 20000`.
+
+**Reverses:** nothing. `PRE-REGISTRATION.md`'s n=200/arm and R100's n=100 are frozen and are
+not changed by this entry, per `AGENTS.md` rule 1 — a size change would need its own dated
+amendment, and neither finding here is a discovered error in the original sizing, only a
+quantification of the power/precision it actually carries. Recorded so the limitation is
+visible before Wave 3 spends the labelling budget, and so H5/R100 results are reported with
+this context rather than read as more decisive than the sample size supports.

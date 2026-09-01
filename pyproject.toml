@@ -17,6 +17,13 @@ dependencies = [
 # probes  -- frozen-feature backbones for the transfer probe
 # distil  -- LoRA training path for the open instrument
 # space   -- the demo
+data = [
+    "pyarrow>=17",
+]
+stats = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+]
 dev = [
     "pytest>=8.0",
     "mypy>=1.10",
@@ -38,4 +45,8 @@ python_version = "3.11"
 mypy_path = "src"
 packages = ["vernier"]
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*"]
+ignore_missing_imports = true
 
