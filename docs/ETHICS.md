@@ -46,7 +46,12 @@ is absent:
 4. **No frames are republished.** Human labelling happens locally. The released artifacts
    contain frame *identifiers* and labels, never image content, so no worker's likeness is
    redistributed by this project. Anyone reproducing the work obtains the frames from the
-   vendor under the vendor's own terms.
+   vendor under the vendor's own terms. For Ego4D specifically this is not just policy but a
+   licence requirement: its terms restrict redistribution to "a research publication(s), an
+   academic publication(s), or any website through which such publication(s) is made
+   available" (`SURVEY.md`, Wave S) — a standalone repository redistributing raw frames would
+   violate it. EPIC-KITCHENS-100's CC BY-NC 4.0 is more permissive but is held to the same
+   no-republish policy here regardless.
 5. **No attempt to identify anyone.** No face recognition, no re-identification across clips,
    no linkage to any external source. The rubric's `other-person` tag exists to *exclude*
    third parties from the hand count, not to study them.

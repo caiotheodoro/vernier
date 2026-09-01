@@ -3,17 +3,28 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-08-31, after the survey gate and the paper verification pass.**
+**Last updated: 2026-08-31, after Wave S (full citation audit) and Wave 0 (interface freeze).**
 
 ## Where this stands
 
-**Documentation complete. Survey gate passed. No code, no experiments, no judge called.**
+**Documentation and interface freeze complete. Survey gate passed. Wave S and Wave 0 done.
+No experiments, no judge called, no code beyond typed stubs and contract models.**
 
 `SURVEY.md` returned **PROCEED, narrowed**: the contribution is H5 (cross-corpus judge
 confound) plus judge-as-instrument, not judge validation, which is prior-arted. The survey also
 caught four methodological errors in `PRE-REGISTRATION.md` v1.1.0, all fixed in v1.2.0 —
 PPI over cluster-bootstrap-alone, Gwet's AC1 over Cohen's κ, balanced gold for H5's
 interaction, and H8. Catching those is what the gate was for.
+
+**Wave S (8 dispatched audit workers, `agentgraph dispatch`) closed all six remaining "must be
+closed before publication" items and caught three further mis-citations**: D021's PPI citation
+was wrong (2408.15204 is Confidence-Driven Inference, not PPI — the real PPI paper is 2301.09633),
+D024's EPIC-KITCHENS-100 participant count was wrong (37, not ~45 — that was the kitchen count),
+and a working-table citation (2503.05965) claimed to support H3 but does not. See `DECISIONS.md`
+D030 for the full record. **Wave 0 landed and its gate passed, independently verified**: pydantic
+models for every `CONTRACTS.md` record, typed stubs for the nine `ARCHITECTURE.md` units, pytest
+(30 passed), mypy --strict (clean), and a fixture generator (13 valid + 7 malformed/refused
+cases) — `make validate` green end to end. Left uncommitted pending review.
 
 A direct read of Build AI's published artifacts produced eleven findings, several of which
 corrected this repository's own earlier claims. See `UPSTREAM-FINDINGS.md`.
@@ -37,32 +48,27 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D029 |
+| Decisions | `DECISIONS.md`, D001–D030 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft |
+| Interface | `src/vernier/` — pydantic models (`models.py`) + nine typed stub units, `tests/fixtures/` |
 
-## The next three actions, in order
+## The next action
 
-1. ~~Open LIME.~~ **Done — refuted (D029).** ~~Freeze the pre-registration.~~ **Done.**
-2. **Wave S**, which blocks nothing and starts immediately: full audit of every remaining
-   citation, the two unresolved figures (EgoSafetyBench's agreement value, Miller's clustered-SE
-   figure — full text or dropped), H8's participant counts confirmed against primary
-   documentation, and the Ego4D / EPIC licence terms on frame redistribution.
-3. **Wave 0**, the interface freeze, which gates everything else: pydantic models from
-   `CONTRACTS.md`, typed stubs for the nine `ARCHITECTURE.md` modules, and a fixture generator
-   so Wave 1 runs entirely offline.
-
-Then Wave 1: eighteen units, one directory and one test file each, TDD against fixtures.
+**Wave 1**: eighteen units, one directory and one test file each, TDD against Wave 0's
+fixtures, offline, no network. Ownership rule: one agent per module, no shared-file edits. Not
+yet dispatched — a separate decision from this resume.
 
 ## Open questions
 
-- **LIME (2607.02417), unopened.** Action 1 above.
-- **The five other items in `SURVEY.md` "must be closed before publication"** — EgoSafetyBench's
-  agreement value, EPIC-KITCHENS-100's unverified-absence of an IAA figure, the Ego4D and
-  EPIC licence terms on frame redistribution, two refused figures, and two unconfirmed author
-  attributions.
-- **Participant counts for H8** are secondary-sourced and must be confirmed.
+- **Item 5 of `SURVEY.md`'s "must be closed" list is the one still open**: the "16.8 pp
+  prevalence spread" and "19%→54% neutral" figures remain unsourced after an extensive Wave S
+  search. Drop them entirely if nothing surfaces by publication. All five other items closed —
+  see `SURVEY.md`'s verification pass and `DECISIONS.md` D030.
 - **EPIC-KITCHENS-100 registration requires an institutional email**, which an unaffiliated
   researcher does not have. A Result-2 risk, not a Result-1 blocker.
+- **Ego4D frame redistribution is licence-restricted** to research/academic-publication
+  contexts (Wave S, `SURVEY.md`); consistent with `ETHICS.md`'s existing no-republish policy,
+  now with a concrete legal basis.
 - **Whether the evaluation parquets contain the frames the published labels refer to.** The
   first thing `make sample` verifies (D016).
 

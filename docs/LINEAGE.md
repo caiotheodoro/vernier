@@ -59,7 +59,7 @@ is the strongest evidence the gate was worth running.
 
 | Adopted | Replaces | Source |
 |---|---|---|
-| Prediction-powered inference | A cluster bootstrap used as the primary estimator, which fixes variance and leaves bias | 2408.15204 |
+| Prediction-powered inference | A cluster bootstrap used as the primary estimator, which fixes variance and leaves bias | 2301.09633 (corrected — Wave S caught 2408.15204 mis-cited as this paper; that id is Confidence-Driven Inference, a related refinement, see `DECISIONS.md` D030) |
 | Gwet's AC1 | Cohen's κ as headline, unusable at 96% prevalence | 2606.00093 |
 | Clustered standard errors, framed as design effect | An informal argument that frames are not independent | Miller 2411.00640 |
 | IPR / PAR | An ad-hoc prompt-sweep summary | 2604.16413 |

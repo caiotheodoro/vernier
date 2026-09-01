@@ -187,6 +187,9 @@ fine-grained action timing. It is the field's one rigorous IAA precedent and mus
 distinguished, not ignored: it validates *annotation*, not a model-produced corpus-level
 quality statistic.
 
+**Amended by D030** — the best-2 merge has a condition Wave S found in the appendix, not
+previously recorded here.
+
 EgoCross (arXiv 2508.10729) shows MLLM performance is domain-sensitive across egocentric
 domains. It is adjacent supporting evidence for H5, not a test of it, and must be positioned
 that way.
@@ -218,6 +221,8 @@ Prediction-powered inference (2408.15204) uses the small human-gold sample to de
 judge-labelled sample and returns a valid interval for the *true* prevalence. Clustered
 resampling runs **with** it, not instead of it.
 
+**Amended by D030** — the 2408.15204 citation was wrong; see D030 for the correction.
+
 **Reverses if:** the gold sample proves too small for PPI to beat the naive estimator, in which
 case the naive estimate is reported with the bias direction named and unquantified.
 
@@ -247,6 +252,8 @@ the cheapest real finding in the project and the first thing to publish.
 
 **Reverses if:** the participant counts are wrong. They are secondary-sourced in the survey and
 must be confirmed against each corpus's own documentation before publication.
+
+**Amended by D030** — participant counts confirmed against primary sources and corrected.
 
 ## D025 — The panel needs an error-dependence estimate
 
@@ -307,3 +314,47 @@ void**, and the narrowed contribution stands on stronger ground than when it was
 
 One mis-attribution means the base rate is not zero, so every remaining citation is audited
 before publication rather than after. That audit is Wave S of the implementation plan.
+
+## D030 — Wave S corrections: three mis-citations and a stale figure
+
+Wave S (2026-08-31, dispatched as 8 independent citation-audit workers) is the audit D029
+promised. It caught three further mis-citations and one stale figure, each verified against
+the primary source, each recorded here per this document's own amendment rule rather than
+silently edited into the entries above.
+
+1. **D021's PPI citation was wrong.** `2408.15204` was cited as "Prediction-powered inference."
+   It is not — it is *"Can Unconfident LLM Annotations Be Used for Confident Conclusions?"*
+   (Gligorić, Zrnic, Lee, Candès, Jurafsky), which introduces **Confidence-Driven Inference**, a
+   refinement built on top of PPI, not PPI itself. The actual PPI paper is **arXiv 2301.09633**
+   (Angelopoulos, Bates, Fannjiang, Jordan, Zrnic). D021's valid-interval property still holds
+   under either paper; the citation is corrected to 2301.09633, and 2408.15204 is now cited
+   separately as CDI, an alternative estimator worth evaluating on its own terms. `LINEAGE.md`
+   updated to match.
+
+2. **D024's participant counts were wrong.** EPIC-KITCHENS-100 was recorded as "roughly 45
+   participants," secondary-sourced. The primary source (arXiv 2006.13256, full text) states
+   *"increasing the total number of subjects and kitchen environments to 37 and 45
+   respectively"* — 45 is the kitchen/environment count, 37 is the participant count. Ego4D was
+   recorded as "~931"; Ego4D's own site states *"collected from 923 unique participants."*
+   Egocentric-10K's 2,153 was already primary-sourced and is unchanged. Corrected figures: **37
+   / 923 / 2,153**, close to two orders of magnitude of spread rather than one. `BENCHMARK.md`
+   and `SURVEY.md` updated to match.
+
+3. **D019's HD-EPIC description was incomplete, not wrong.** The ≥3-annotator, temporal-IoU,
+   best-2-merge pipeline is confirmed verbatim in the appendix, with one condition not
+   previously recorded: best-two merging applies only when pairwise IoU exceeds 0.5; below
+   that threshold only the single best annotator's label is kept.
+
+4. **A citation in `SURVEY.md`'s working table, not load-bearing in any decision here, was
+   refuted.** `2503.05965` was listed as supporting H3's "active manipulation is a
+   rating-indeterminate rubric" framing. It does not discuss active manipulation, hand-counting,
+   or any egocentric-video task — its actual rating-indeterminacy examples are toxic language,
+   factuality, helpfulness, and relevance. D027, which is what actually grounds H3, already
+   cites only IPR/PAR (2604.16413) and required no change. `SURVEY.md` corrected to remove the
+   false attribution.
+
+`PRE-REGISTRATION.md`'s frozen text is left as originally frozen, per its own rule; this entry
+is the amendment record for the participant-count and PPI-citation corrections that affect it.
+
+**Reverses:** nothing — all four are corrections to citation fidelity, not to the hypotheses,
+protocol, or stopping rules. No experiment result is affected, since none has been run.

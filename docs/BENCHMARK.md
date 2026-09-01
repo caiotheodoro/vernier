@@ -11,11 +11,14 @@ Its structure is fixed now so that results land in a shape decided before anyone
 | Corpus | Frames sampled | Participants | Effective N |
 |---|---|---|---|
 | Egocentric-10K | 10,000 | 2,153 | — |
-| Ego4D | 10,000 | ~931 | — |
-| EPIC-KITCHENS-100 | 10,000 | ~45 | — |
+| Ego4D | 10,000 | 923 | — |
+| EPIC-KITCHENS-100 | 10,000 | 37 | — |
 
 Published as three estimates of equal precision. They are not. Participant counts confirmed
-against each corpus's own documentation before publication (D024).
+against each corpus's own primary documentation (D024, corrected D030): Egocentric-10K from the vendor's own
+card, Ego4D from ego4d-data.org, EPIC-KITCHENS-100 from arXiv 2006.13256's full text (the
+"~45" previously used here was the kitchen/environment count, not participants — the paper's
+own figure is 37 subjects across 45 kitchen environments).
 
 ## R1 — Replication (E2)
 
