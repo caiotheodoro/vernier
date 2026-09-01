@@ -9,9 +9,9 @@
   "timestamp_s": null,
   "width": 1920,
   "height": 1080,
-  "fps": 30.0,
-  "codec": "hevc",
+  "fps": null,
+  "codec": null,
   "sample": "E10k-ego",
   "stratum": "factory-0051",
-  "why_no_provenance": "Build AI's evaluation parquet ships frame_id as a bare UUID4 with no factory, worker, clip, or timestamp component (docs/UPSTREAM-FINDINGS.md F9)"
+  "why_no_provenance": "Build AI's evaluation parquet ships frame_id as a bare UUID4 with no factory, worker, clip, or timestamp component, and no source-video fps/codec at all (docs/UPSTREAM-FINDINGS.md F9, docs/DECISIONS.md D040)"
 }

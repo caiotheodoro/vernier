@@ -43,6 +43,8 @@ An evaluation-arm frame (`E10k-ego`, `P2k`, `G200-ego`, ...) instead carries:
   "worker_id":     null,
   "clip_id":       null,
   "timestamp_s":   null,
+  "fps":           null,
+  "codec":         null,
   "why_no_provenance": "bare UUID4 frame_id, no provenance columns in Build AI's evaluation parquet -- docs/UPSTREAM-FINDINGS.md F9"
 }
 ```
@@ -51,14 +53,18 @@ An evaluation-arm frame (`E10k-ego`, `P2k`, `G200-ego`, ...) instead carries:
 For Ego4D and EPIC-KITCHENS-100 the cluster unit is that corpus's participant identifier,
 recorded in the same field with `corpus` disambiguating it.
 
-**`factory_id`, `worker_id`, `clip_id`, and `timestamp_s` are nullable, and null together, not
-individually.** Build AI's evaluation parquets (the `E10k-*`, `P2k`, and `G200-*` samples) ship
-`frame_id` as a bare UUID4 with none of these four fields recoverable
-(`docs/UPSTREAM-FINDINGS.md` F9) — a validator enforces that either all four are present or all
-four are null, never a partial mix, and requires `why_no_provenance` to be set whenever they
-are null. Corpus draws (`S10k-U`, `S10k-S`) carry full provenance and leave
-`why_no_provenance` null. Any analysis over a frame with null provenance fields has no cluster
-unit and must report an iid interval labelled as a lower bound, never a clustered one.
+**`factory_id`, `worker_id`, `clip_id`, `timestamp_s`, `fps`, and `codec` are nullable, and
+null together, not individually.** Build AI's evaluation parquets (the `E10k-*`, `P2k`, and
+`G200-*` samples) ship `frame_id` as a bare UUID4 with none of the first four fields
+recoverable (`docs/UPSTREAM-FINDINGS.md` F9), and ship extracted still frames with no source
+video referenced at all, so `fps`/`codec` have nothing to report either (`docs/DECISIONS.md`
+D040 — the real parquet schema was verified live and carries no video-level column). A
+validator enforces that either all six are present or all six are null, never a partial mix,
+and requires `why_no_provenance` to be set whenever they are null. Corpus draws (`S10k-U`,
+`S10k-S`) carry full provenance and leave `why_no_provenance` null. `width`/`height` are never
+null — they are always recoverable by decoding the frame image itself, independent of source
+video metadata. Any analysis over a frame with null provenance fields has no cluster unit and
+must report an iid interval labelled as a lower bound, never a clustered one.
 
 ## `JudgeResponse` — one judge, one prompt variant, one frame
 

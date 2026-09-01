@@ -106,6 +106,14 @@ class FrameRef(Record):
     clip, or timestamp component (docs/UPSTREAM-FINDINGS.md F9) -- these four fields are null
     together for every E10k-*/P2k/G200-* frame, and ``why_no_provenance`` records why. Corpus
     draws (S10k-U, S10k-S) carry full provenance and leave ``why_no_provenance`` null.
+
+    ``fps``/``codec`` join that same null-together group (D040): the evaluation parquets ship
+    extracted still frames with no reference to a source video at all -- verified live against
+    the real parquet schema (``frame_id``, ``image``, ``source_dataset``, ``hand_count``,
+    ``active_labor``, nothing video-level) -- so there is no real fps/codec to report for an
+    eval-arm frame, the identical root cause as the missing factory/worker/clip/timestamp
+    fields. ``width``/``height`` stay required for every frame regardless, since they are
+    always recoverable by decoding the frame image itself, independent of any video context.
     """
 
     frame_id: str
@@ -118,26 +126,34 @@ class FrameRef(Record):
     timestamp_s: float | None
     width: int
     height: int
-    fps: float
-    codec: str
+    fps: float | None
+    codec: str | None
     sample: str
     stratum: str
     why_no_provenance: str | None
 
     @model_validator(mode="after")
     def _why_no_provenance_required_when_fields_null(self) -> "FrameRef":
-        provenance_fields = (self.factory_id, self.worker_id, self.clip_id, self.timestamp_s)
+        provenance_fields = (
+            self.factory_id,
+            self.worker_id,
+            self.clip_id,
+            self.timestamp_s,
+            self.fps,
+            self.codec,
+        )
         any_null = any(f is None for f in provenance_fields)
         all_null = all(f is None for f in provenance_fields)
         if any_null and not all_null:
             raise ValueError(
-                "factory_id, worker_id, clip_id, and timestamp_s must be null together, "
-                "never partially -- a frame either has full corpus provenance or none"
+                "factory_id, worker_id, clip_id, timestamp_s, fps, and codec must be null "
+                "together, never partially -- a frame either has full corpus/source-video "
+                "provenance or none"
             )
         if all_null and not self.why_no_provenance:
             raise ValueError(
-                "why_no_provenance is required when factory_id/worker_id/clip_id/timestamp_s "
-                "are null"
+                "why_no_provenance is required when factory_id/worker_id/clip_id/timestamp_s/"
+                "fps/codec are null"
             )
         if not all_null and self.why_no_provenance is not None:
             raise ValueError("why_no_provenance must be null when provenance fields are present")

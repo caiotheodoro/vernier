@@ -65,11 +65,11 @@ def _eval_frame(
         timestamp_s=None,
         width=1920,
         height=1080,
-        fps=30.0,
-        codec="hevc",
+        fps=None,
+        codec=None,
         sample=sample,
         stratum="unstratified",
-        why_no_provenance="bare UUID4 frame_id, no provenance columns (F9)",
+        why_no_provenance="bare UUID4 frame_id, no provenance columns, no source-video fps/codec (F9, D040)",
     )
 
 

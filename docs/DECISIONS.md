@@ -691,3 +691,49 @@ estimator specifically must read this entry, not just the field, before treating
 **Reverses if:** Wave 2 gives the unlabelled judge pool a `worker_id` join (via `FrameRef`),
 at which point both variance terms can be clustered and `clustered=True` becomes fully honest
 again — a follow-up decision at that point, not before.
+
+## D040 — `FrameRef.fps`/`codec` join the eval-arm null-together group
+
+Starting Wave 2's real evaluation-parquet adapter (`docs/WAVES.md`) surfaced a genuine gap in
+the Wave 0 `FrameRef` freeze: `fps: float` and `codec: str` were required, non-nullable fields,
+but the real evaluation parquet schema — read live, not assumed —
+(`hf://datasets/builddotai/Egocentric-10K-Evaluation@d74b7883.../egocentric_10k.parquet`, and
+confirmed identical on the `ego4d`/`epic_kitchens` siblings) is exactly `frame_id: string,
+image: struct<bytes, path>, source_dataset: string, hand_count: int32, active_labor: string`
+— no video-level column at all. There is no real fps or codec to report for an `E10k-*`/
+`P2k`/`G200-*`/`R100` frame, the identical root cause `docs/UPSTREAM-FINDINGS.md` F9 already
+gives for the missing `factory_id`/`worker_id`/`clip_id`/`timestamp_s`: the evaluation release
+ships extracted stills with no source-video reference, full stop.
+
+**Fixed:** `fps`/`codec` are now `float | None`/`str | None` and join the existing
+null-together group, now six fields, sharing the same `why_no_provenance` requirement.
+`width`/`height` stay required for every frame — unlike fps/codec, they are always recoverable
+by decoding the frame's own image bytes (verified the evaluation parquet's `image` struct
+carries standard decodable image bytes), independent of any source-video metadata.
+
+**Verified live**, without any HF credential (the evaluation release is `gated: False`,
+`private: False` — unlike the contact-gated `Egocentric-10K`/`Egocentric-100K` corpus
+datasets `.env.example` warns about): aggregating each evaluation parquet's own
+`hand_count`/`active_labor` columns exactly reproduces every published headline figure
+(Egocentric-10K 3.58/96.42/76.34/91.66%, Ego4D 32.67/67.33/36.95/50.07%, EPIC-KITCHENS-100
+9.63/90.37/61.05/85.04% — all matched to two decimal places). This is a data-integrity
+cross-check, not H1's replication: H1 requires vernier's own independent `gemini-2.5-flash`
+call, and reading Build AI's own recorded per-frame answers back out of their own published
+parquet would be circular if presented as a replication — it is not used as one anywhere.
+
+**Blast radius, checked directly:** exactly two files constructed an eval-arm-style `FrameRef`
+before this fix (`tests/fixtures.py`'s `FrameRef.eval_arm_no_provenance`, and Wave 1 unit 1's
+own `tests/test_sampling_draw.py::_eval_frame`, used across six of that unit's tests) — both
+updated to null `fps`/`codec` alongside the existing four fields. Every malformed-fixture case
+that already tested partial-null rejection (`FrameRef__missing_worker_id`,
+`FrameRef__partial_provenance_null`, `FrameRef__null_provenance_missing_reason`) still
+constructs frames with non-null `fps`/`codec`, so they remain valid violations under the
+6-field validator without needing any change. `python3 -m pytest` (278 passed) and `mypy
+--strict` (clean) confirmed after the fix; `make fixtures` regenerated exactly one file
+(`FrameRef__eval_arm_no_provenance.json`).
+
+**Reverses:** nothing pre-registered, and nothing in any already-committed Wave 1 unit's
+production logic — no unit reads `FrameRef.fps`/`.codec` today. This is a correction to an
+unimplementable-for-real-data Wave 0 field requirement, discovered the same way D031/D033/D037
+were: by actually trying to use the frozen interface against real inputs rather than trusting
+it was complete.

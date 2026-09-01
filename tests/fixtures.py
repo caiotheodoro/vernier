@@ -217,10 +217,13 @@ ALL_VALID = {
         worker_id=None,
         clip_id=None,
         timestamp_s=None,
+        fps=None,
+        codec=None,
         sample="E10k-ego",
         why_no_provenance=(
             "Build AI's evaluation parquet ships frame_id as a bare UUID4 with no factory, "
-            "worker, clip, or timestamp component (docs/UPSTREAM-FINDINGS.md F9)"
+            "worker, clip, or timestamp component, and no source-video fps/codec at all "
+            "(docs/UPSTREAM-FINDINGS.md F9, docs/DECISIONS.md D040)"
         ),
     ),
     "JudgeResponse.ok": make_judge_response(status="ok"),
