@@ -659,3 +659,35 @@ naming a check that was actually run to a real estimate, without requiring the r
 
 **Reverses:** nothing pre-registered — this names conventions the implementation already
 carried; no verdict any card would have produced changes as a result of writing this down.
+
+## D039 — PPI's `clustered=True` overstates what's actually clustered; recorded as a known gap
+
+Wave 1 unit 12's `estimation/ppi.py` (`docs/WAVES.md`) only clusters HALF of the PPI variance
+it reports. `cluster_by` (when set) sends the gold-residual term through
+`estimation.bootstrap.cluster_bootstrap_ci`, but the unlabelled-pool term stays an unclustered
+analytic plug-in (`Var(f)/N`) regardless — `HumanLabel`/`JudgeResponse` carry no shared
+participant identifier today, and joining to `FrameRef.worker_id` for the unlabelled pool is
+out of this module's reach. The module's own docstring flags this as "a known scope gap, not a
+silent guess." The independent `opencode` review agreed the disclosure was honest but flagged,
+correctly, that the returned `PPIBlock.clustered = True` does not say so: per `CONTRACTS.md`'s
+"absence is explicit" rule, a reader of the record alone — without the module's source comment
+— has no way to know only one of the interval's two variance terms is actually cluster-robust.
+
+**Not fixed here.** `PPIBlock.clustered` is a plain `bool` in the already-frozen `CONTRACTS.md`/
+`models.py` schema; there is no vocabulary for "partially clustered" (`CONTRACTS.md`'s own
+`PrevalenceEstimate` example only shows `clustered: false` with a `why_not_clustered` reason,
+the opposite gap). Giving this its own state — a three-way `"none" | "gold-only" | "full"`
+field, or a `clustered_note` alongside the bool — is a schema change, and schema changes belong
+to a scoped decision with the actual affected callers in view (Wave 2's live judge harness,
+which is what would finally supply a real `worker_id` join for the unlabelled pool), not a
+Wave-1 unit fixing its own frozen contract mid-implementation.
+
+**Until then:** any code or writeup consuming `PrevalenceEstimate.ppi.clustered` for the PPI
+estimator specifically must read this entry, not just the field, before treating `True` as
+"the whole interval is cluster-robust." The naive/cluster-bootstrap `AgreementCI` path
+(`estimation.bootstrap.cluster_bootstrap_ci`, used directly by `agreement.core`) is unaffected
+— this gap is specific to `ppi_estimate`'s two-term variance decomposition.
+
+**Reverses if:** Wave 2 gives the unlabelled judge pool a `worker_id` join (via `FrameRef`),
+at which point both variance terms can be clustered and `clustered=True` becomes fully honest
+again — a follow-up decision at that point, not before.
