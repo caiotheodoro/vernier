@@ -278,15 +278,12 @@ resolved, not an extension of the E10k-* adapter's pattern.
 - **Ego4D frame redistribution is licence-restricted** to research/academic-publication
   contexts (Wave S, `SURVEY.md`); consistent with `ETHICS.md`'s existing no-republish policy,
   now with a concrete legal basis.
-- **Whether the evaluation parquets contain the frames the published labels refer to** (D016)
-  — partially answered, not closed: the real schema was verified live
-  (`frame_id, image, source_dataset, hand_count, active_labor`, matching `UPSTREAM-FINDINGS.md`
-  F9 exactly) and aggregating `hand_count`/`active_labor` reproduces every published headline
-  figure exactly on all three parquets. What is NOT yet verified is per-frame decodability of
-  every `image.bytes` value at scale — `scripts/check_eval_parquets.py` exists and is unit-
-  tested against synthetic data (Phase 1) but has not yet been run against the real ~5.5GB
-  files, since that is properly a Wave 2 "make sample" step, not something to do ad hoc outside
-  the wave's own loop.
+- ~~**Whether the evaluation parquets contain the frames the published labels refer to**
+  (D016)~~ — **closed, real, run at scale.** `scripts/check_eval_parquets.py` run for real
+  against all three evaluation parquets and the real membership `scripts/draw_all_samples.py`
+  wrote: `E10k-ego` (10,000), `E10k-ego4d` (10,000), `E10k-epic` (10,000), and `G200-ego`
+  (200) all report "all N frames present and decodable" — real assertion, not a manual step,
+  matching `WAVES.md`'s Wave 2 acceptance criterion exactly.
 
 Settled since the last update: there is no public `builddotai/Egocentric-1M` (404), so no
 public release could make the MPJPE guarantee checkable; and Ego4D/EPIC access is off Result
