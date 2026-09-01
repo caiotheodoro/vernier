@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D052 |
+| Decisions | `DECISIONS.md`, D001–D053 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -313,10 +313,16 @@ metadata-read access across at least three unrelated resources now.
 **R4 is done at smoke scale (`docs/DECISIONS.md` D052): 100% judge self-agreement**, 20 real
 frames × 3 repeats, on both tasks. Real and reassuring, but `n=20` cannot rule out rare
 disagreement — re-run against the real 600 gold frames once Wave 3 exists, for the actual R4
-result this is a preliminary version of. Also recorded as a real finding: this project's own
-client code (`judges/qwen3vl.py`) does not pin `temperature`/`top_p`/seed at all — the server's
-default sampling applies, unpinned, which is itself worth fixing regardless of what a
-larger-scale retest finds.
+result this is a preliminary version of.
+
+**The real gap D052 found is now fixed (`docs/DECISIONS.md` D053): `temperature=0.0`/`seed=777`
+are pinned on every real judge call.** `judges/qwen3vl.py` previously left sampling entirely
+at the server's own defaults, unpinned — the one place this project's own "seed 777,
+everywhere" convention (`REPRODUCTION.md`) didn't reach. Verified live: vLLM accepts both, and
+a real post-fix call returned the same correct answer for a frame checked earlier this session,
+now with `confidence.value == 1.0`. **D052's 100%-agreement result predates this fix** and
+measured the previously-unpinned configuration — real and valid on its own terms, just not the
+same setup real calls run under now.
 
 **Still open from `docs/REVIEW.md`, genuinely requiring either real spend, real time, or
 Caio's own action — tracked in D048/D049/D051/D052, not lost:** R3 (a second `R100` rater,
