@@ -198,13 +198,31 @@ frames tried**. `S10k-U`/`S10k-S` still raise `NotImplementedError` — the raw,
 Egocentric-10K corpus is a different dataset whose real schema hasn't been inspected yet;
 `_factory_worker_hours` is unwired for the same reason.
 
-**No known gap is left before running a small real smoke batch across many E10k-* frames.**
-Follow `WAVES.md`'s Wave 2 section (live judge harness with cost/latency accounting, E2
-replication runner, E5 prompt-sweep runner) and its own added safeguard: smoke-test at small N
-before any full-scale judge run, since no dollar cap is pre-registered for judge-panel spend
-(only Modal/distillation compute is, per D008). **Do not scale toward the pre-registered sample
-sizes without a separate, explicit decision from Caio** — the approved reframe plan scoped only
-"deploy, smoke-test, report real cost/latency," not a production run.
+**`scripts/e2_replication.py` (H1/H1b) and `scripts/e5_prompt_sweep.py` (H3) are both real,
+tested, and smoke-tested live** — the live judge harness with cost/latency accounting
+`WAVES.md`'s Wave 2 section calls for is these two scripts plus the `JudgeResponse.cost_usd`/
+`latency_ms` accounting already built into `qwen3vl.py`, not a separate third artifact. Real
+smoke runs at n=5/n=20 both completed with every response `status: "ok"`; per-frame agreement
+against Build AI's own published labels was 95% (hand count) / 95% (active labor) at n=20 —
+informative on its own terms, but **too small an n for the pre-registered H1 (±2pp) or H3
+(≥5pp spread) tests to mean anything yet** — those numbers were far outside tolerance at n=5/
+n=20, which is expected sampling noise at that scale, not a real finding. IPR/PAR
+(`e5_prompt_sweep.py`) is a flagged, faithful-but-not-pinned construction of 2604.16413's
+definition — the paper's exact formula isn't in hand, only `SURVEY.md`'s excerpt of it.
+
+**No known gap is left before running a real smoke batch at a more statistically meaningful N
+(e.g. a few hundred) across E10k-* frames** — both runners already default small (20 and 5
+respectively) specifically so a larger run is `--n <bigger>`, not new code. **Do not scale
+toward the pre-registered sample sizes (10,000) without a separate, explicit decision from
+Caio** — the approved reframe plan scoped only "deploy, smoke-test, report real cost/latency,"
+not a production run, and that boundary hasn't been revisited.
+
+Still unwired, a distinctly separate task: **`S10k-U`/`S10k-S`** (the sampling-design
+sensitivity arm) needs the raw, contact-gated Egocentric-10K corpus adapter — a different
+dataset from the evaluation release, real schema not yet inspected (`HF_TOKEN` is confirmed to
+unblock access to it, per earlier `.env` testing, but nothing has read its actual parquet
+schema yet). `_factory_worker_hours` is the same gap. `WAVES.md`'s "Egocentric-10K streaming
+draw for the sampling-design arm" line item is this.
 
 ## Open questions
 
