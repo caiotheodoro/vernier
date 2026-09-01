@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D047 |
+| Decisions | `DECISIONS.md`, D001–D048 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -277,11 +277,26 @@ single-GPU contention on short bursts, not the hoped-for speedup. `--max-workers
 in the comparison-judge script for this reason; revisit only with real evidence at a run long
 enough for Modal's autoscaling to actually add containers.
 
-**`docs/REVIEW.md`'s other nine recommendations (R2–R10) are real, well-reasoned, and not yet
-acted on** — tracked in D047, not lost. Worth a dedicated pass: R9 (explicitly kill Result 2),
-R5 (contamination confound on H5), and the stale-prose sweep (11 files still describe the
-pre-D042 three-judge design) are flagged as cheap and pre-data, bundled as the natural next
-documentation pass before Wave 3 labelling starts.
+**`docs/REVIEW.md`'s cheap, pre-data recommendations are done — `docs/DECISIONS.md` D048.** R9
+(Result 2 is now explicitly dropped everywhere, not "kill-gated"/"pending"), R5's disclosure
+half (a new `RED-TEAM.md` A15 and `COVERAGE.md` row for the pretraining-contamination confound
+on H5), and the full stale-prose sweep across 13 files (all still describing the pre-D042
+three-judge design) are all committed. Two real factual bugs caught in the same pass:
+`RUBRIC.md` had gloves attributed to the wrong prompt variant (P3, not P4); `RED-TEAM.md` had a
+variant-count typo. `PRE-REGISTRATION.md` gained an `## Amendments` section (frozen text
+untouched, appended-only, pointing at D042/D044/D047/D048). Also corrected: `METHOD.md` E8's
+"calibration restricted to P7" was only ever true for Build AI's own closed-API measurement —
+the self-hosted judge's real logprob confidence works under the published bare-value format
+too, confirmed live.
+
+**Still open from `docs/REVIEW.md`, genuinely requiring either real spend, real time, or
+Caio's own action — tracked in D048, not lost:** R2 (pseudo-cluster design effect, laptop-
+runnable, no live cost — the next natural pick), R3 (a second `R100` rater, ~35 min of someone
+else's time), R4 (judge test-retest, a few real dollars), R6 (a pre-data gold-size amendment
+for H5 — **time-critical, must land before the first label is written**), R7 (pin the rung-3
+guarantee mechanism, documentation-only, also a good next pick), R8 (authorize the full-N
+E2/E5 run — the same "explicit decision from Caio" boundary this file has held throughout),
+R10 (a drift-lint script), and R5's own live contamination probe.
 
 Note for whoever runs this next: `scripts/draw_all_samples.py`'s `ego4d.parquet`/
 `epic_kitchens.parquet` downloads twice hung indefinitely at a fixed byte count via HF's
