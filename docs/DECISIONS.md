@@ -1280,3 +1280,35 @@ downstream in `judge_rev` and this test-retest number.
 
 **Reverses if:** nothing. A real, positive result at the scale attempted; the full-scale
 re-run is separately tracked, not a reversal of this one.
+
+---
+
+## D053 — Pin `temperature`/`seed` on every real judge call, closing the reproducibility gap D052 found
+
+`judges/qwen3vl.py`'s `_call_qwen3vl` set `max_tokens`/`logprobs` explicitly but never
+`temperature`, `top_p`, or a seed -- every real call ran at whatever the vLLM server's own
+default sampling happened to be, unpinned. Found while writing up D052's test-retest result,
+not by a separate audit: this project's own convention is "seed 777, everywhere, including the
+bootstrap" (`REPRODUCTION.md`), and the judge call was the one real place that convention did
+not reach.
+
+**Fixed**: `temperature=0.0` (greedy decoding -- the task is closed-form classification with
+one correct bare-value answer, not open-ended generation, so there is no reason to sample) and
+`seed=777` (the project's own universal seed), both passed on every real call. Verified live:
+vLLM's OpenAI-compatible server accepts both with no error, and a real call after the fix
+returned the same correct answer (`hands_visible=0`, `manipulation=false`) for the same frame
+checked earlier in this session, now with `confidence.value == 1.0` -- greedy decoding
+producing a maximally-confident single token, consistent with temperature 0.
+
+Regression test added asserting both params are actually sent on every real call, not just
+documented as intended. D052's own 100%-self-agreement result predates this fix (real
+sampling was unpinned when that test ran) -- a re-run after this fix would be measuring a
+different, more controlled configuration, not validating the same one twice.
+
+**Not fully closed**: per D052's own note, this reduces but does not eliminate real
+non-determinism (post-training iron law 8: a served model is not fully deterministic across
+batch compositions even at temperature 0, without batch-invariant inference). That residual
+gap is a real, separate, larger engineering question (server-side batch-invariant inference
+support), not addressed here.
+
+**Reverses if:** nothing. A real gap, closed as far as client-side pinning can close it.

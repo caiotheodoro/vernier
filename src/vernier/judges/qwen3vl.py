@@ -60,6 +60,19 @@ _STATUS_SEVERITY: dict[JudgeStatus, int] = {
 _MODEL = "Qwen/Qwen3-VL-8B-Instruct-FP8"
 _MAX_OUTPUT_TOKENS = 64  # the answer is always a short JSON object, never free-form prose
 
+# Caught by a real test-retest run, not assumed (docs/DECISIONS.md D052): this client never
+# pinned sampling parameters at all, so every real call ran at whatever the server's own default
+# temperature/top_p/seed happened to be -- unpinned, and itself a reproducibility gap on a
+# project whose own convention is "seed 777, everywhere" (REPRODUCTION.md). Pinned here:
+# temperature 0.0 (greedy decoding -- the task is a closed-form classification with one correct
+# bare-value answer, not open-ended generation, so there is no reason to sample), and the
+# project's own universal seed. vLLM's OpenAI-compatible server accepts both; post-training iron
+# law 8 still applies (a served model is not fully deterministic across batch compositions even
+# at temperature 0 without batch-invariant inference) -- this reduces, not eliminates, real
+# run-to-run variance, and D052's real test-retest result predates this fix.
+_TEMPERATURE = 0.0
+_SEED = 777
+
 # Modal L4 pricing at time of writing (docs/DECISIONS.md D042, verified live) -- a rough
 # per-call attribution (this call's own wall-clock share of warm-container time), not an
 # invoice. Deliberately excludes idle warm-time between calls, which is a real cost this number
@@ -180,6 +193,8 @@ class Qwen3VLJudge(JudgeAdapter):
             ],
             max_tokens=_MAX_OUTPUT_TOKENS,
             logprobs=True,
+            temperature=_TEMPERATURE,
+            seed=_SEED,
         )
         latency_ms = int((time.monotonic() - start) * 1000)
 

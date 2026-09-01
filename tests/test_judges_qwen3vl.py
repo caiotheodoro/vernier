@@ -345,6 +345,11 @@ def test_call_qwen3vl_extracts_text_latency_and_mean_token_probability(
         def create(self, **kwargs: object) -> ChatCompletion:
             assert kwargs["model"] == "Qwen/Qwen3-VL-8B-Instruct-FP8"
             assert kwargs["logprobs"] is True
+            # Regression guard for D052: sampling params must be pinned, not left to the
+            # server's own defaults -- a real reproducibility gap this project's own test-retest
+            # run surfaced.
+            assert kwargs["temperature"] == 0.0
+            assert kwargs["seed"] == 777
             return completion
 
     fake_client = type("FakeClient", (), {"chat": type("Chat", (), {"completions": _FakeCompletions()})()})()
