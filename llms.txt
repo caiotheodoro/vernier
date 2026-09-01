@@ -1,0 +1,25 @@
+# vernier
+
+Putting error bars on a dataset vendor's quality claim.
+
+Build AI sells egocentric factory video with published guarantees on quality. The
+number behind the headline claim -- 96.42% of frames contain a hand, 91.66% show
+active manipulation, "SOTA in hand visibility and active manipulation density" -- comes
+from 10,000 frames labelled once by gemini-2.5-flash. The prompts are structured and
+reasonably careful -- explicit rules, a constrained JSON schema -- but there is no human
+gold, no agreement statistic, no confidence interval, no prompt-sensitivity analysis, and no
+test that the judge scores factory floors and home kitchens on the same scale, which is the
+assumption the cross-dataset comparison rests on entirely. The dataset card and the shipped
+prompt file also carry two different versions of the manipulation prompt.
+
+vernier measures that judge, then distils it into a small open model so the measurement
+becomes an instrument anyone can re-run on any egocentric corpus, rather than a number
+published once.
+
+Status: documentation only. No data downloaded, no experiment run.
+
+Start at README.md. Then docs/PRE-REGISTRATION.md (what is committed before any result
+is seen), docs/RUBRIC.md (the annotation rules Build AI's prompt leaves undefined), and
+docs/COVERAGE.md (what this does not measure).
+
+Apache-2.0.

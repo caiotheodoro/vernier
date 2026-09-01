@@ -1,0 +1,13 @@
+{
+  "repo": "builddotai/Egocentric-10K-Evaluation",
+  "repo_type": "dataset",
+  "revision": "d74b7883c998dd360e3f051830fcc792a83985e6",
+  "license": "apache-2.0",
+  "retrieved_utc": "2026-09-01T01:35:23.155589Z",
+  "files": {
+    "P0b-hand_count.txt": "prompts/hand_count.txt",
+    "P0b-active_manipulation.txt": "prompts/active_manipulation.txt",
+    "dataset-card-snapshot.md": "README.md"
+  },
+  "note": "P0a is the prompt text embedded in the dataset card (dataset-card-snapshot.md); P0b is the prompt shipped in prompts/. They differ. See docs/DECISIONS.md D014."
+}

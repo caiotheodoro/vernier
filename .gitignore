@@ -1,0 +1,28 @@
+# --- private material: outreach strategy, never published ---
+docs/private/
+
+# --- data: never committed, always streamed ---
+data/
+frames/
+cache/
+*.mp4
+*.parquet
+
+# --- results are committed; scratch is not ---
+scratch/
+.tmp/
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- secrets ---
+.env
+.env.local
+
+# --- os ---
+.DS_Store

@@ -1,0 +1,53 @@
+# Dataset card — `vernier-labels`
+
+The published dataset is **labels and frame identifiers only**. No image content is
+redistributed: frames are obtained from the vendor under the vendor's own terms, and
+`ETHICS.md` explains why this project does not republish recordings of identifiable people.
+
+Card shape is fixed now so the eventual Hugging Face release has a settled structure. Values
+marked *produced by* name the experiment that fills them; none is filled yet, because no
+experiment has run.
+
+## Contents
+
+| Config | What it is | n | Produced by |
+|---|---|---|---|
+| `sample` | Frame membership for `P2k`, `G200-ego`, `G200-ego4d`, `G200-epic`, `R100` (from Build AI's evaluation frames) and `S10k-U`, `S10k-S` (from the corpus), with strata and cluster assignment | 2k + 600 + 100 + 10k + 10k | E1 |
+| `human` | Human labels: both tasks, edge-case tags, difficulty, seconds spent, rubric revision, pass | 700 records | E3 |
+| `judge` | Every `JudgeResponse`: 3 judges × 9 prompt variants (`P0a`, `P0b`, `P1`–`P7`), verbatim `raw`, status, latency, cost | E2 + E4 + E5 volumes | E2, E4, E5 |
+| `agreement` | `AgreementResult` records with cluster-bootstrap intervals and design effects | one per comparison | E4 |
+| `calibration` | `CalibrationReport` per judge per task | one per judge-task | E8 |
+
+Schemas: `CONTRACTS.md`.
+
+## Source corpora
+
+| | Release | Access |
+|---|---|---|
+| `builddotai/Egocentric-10K` | Apache-2.0, contact-gated | Primary |
+| `builddotai/Egocentric-100K` | Apache-2.0, contact-gated | Secondary |
+| `builddotai/Egocentric-10K-Evaluation` | Apache-2.0, **ungated** | **The audited artifact.** Ships the judged frames for all three corpora plus both prompts |
+| `builddotai/Egocentric-1M` | Does not exist on the Hub (404) | `UPSTREAM-FINDINGS.md` F6 |
+| Ego4D | Frames arrive inside the evaluation release | Comparison arm, E6 — no separate access needed |
+| EPIC-KITCHENS-100 | Frames arrive inside the evaluation release | Comparison arm, E6 — no separate access needed |
+
+## Intended use
+
+Re-running the audit; supplying inter-rater agreement this project cannot produce alone
+(re-label `G200-ego` and contribute κ against `R1`, per `REPRODUCTION.md`); training or
+evaluating a quality-measurement instrument.
+
+## Out of scope
+
+Identifying, characterising or comparing individual workers. `worker_id` appears solely as a
+statistical cluster and no per-worker result is published.
+
+## Known limitations
+
+One rater, no inter-rater agreement; the rater read the audited prompt before writing the
+rubric; three judges with correlated lineage; closed-judge responses not re-callable once the
+endpoint moves. `RED-TEAM.md` carries all of these in full.
+
+## License
+
+Apache-2.0 for the labels and code. Source video remains under its own release terms.
