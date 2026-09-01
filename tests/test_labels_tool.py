@@ -1,8 +1,11 @@
 """Behavioural tests for `next_frame`/`record_label`.
 
-`_pending_frames` (the Wave 2 seam: real sample membership + `HumanLabelStore.has_label`) is
-monkeypatched with synthetic in-memory `FrameRef` pools -- this unit does not touch the store
-or sampling modules.
+`_pending_frames` is monkeypatched with synthetic in-memory `FrameRef` pools for `next_frame`'s
+own tests -- those only exercise the random-order/pool-shrinking logic. `_pending_frames`
+itself (real sample membership + `HumanLabelStore.has_label`) has its own tests further down,
+against a real `write_membership`'d `tmp_path` and a real `HumanLabelStore`, not mocks --
+`sampling/draw.py`'s D045 was a wiring bug that only mocked tests, none of which checked a real
+`path` argument, let through.
 """
 
 from __future__ import annotations
@@ -167,3 +170,131 @@ def test_tool_module_never_imports_vernier_judges() -> None:
         if line.startswith("import ") or line.startswith("from ")
     ]
     assert not any("judges" in line for line in import_lines)
+
+
+# --- _pending_frames: real membership + real HumanLabelStore, no mocks ----------------------
+
+
+def _eval_frame(sample: str, uid: str) -> FrameRef:
+    return FrameRef(
+        frame_id=f"uuid-{sample}-{uid}",
+        corpus="egocentric-10k",
+        corpus_rev="deadbeef",
+        factory_id=None,
+        worker_id=None,
+        clip_id=None,
+        frame_index=0,
+        timestamp_s=None,
+        width=1920,
+        height=1080,
+        fps=None,
+        codec=None,
+        sample=sample,
+        stratum="unstratified",
+        why_no_provenance="test fixture",
+    )
+
+
+def test_pending_frames_primary_pass_pools_all_three_g200_sets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from vernier.sampling.membership import write_membership
+
+    monkeypatch.setattr(tool_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(tool_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+
+    write_membership("G200-ego", [_eval_frame("G200-ego", "0")], tmp_path / "membership")
+    write_membership("G200-ego4d", [_eval_frame("G200-ego4d", "0")], tmp_path / "membership")
+    write_membership("G200-epic", [_eval_frame("G200-epic", "0")], tmp_path / "membership")
+    write_membership("R100", [_eval_frame("R100", "0")], tmp_path / "membership")
+
+    pending = tool_mod._pending_frames("primary", rater="R1")
+
+    assert {f.frame_id for f in pending} == {
+        "uuid-G200-ego-0",
+        "uuid-G200-ego4d-0",
+        "uuid-G200-epic-0",
+    }
+
+
+def test_pending_frames_retest_pass_pools_only_r100(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from vernier.sampling.membership import write_membership
+
+    monkeypatch.setattr(tool_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(tool_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+
+    write_membership("G200-ego", [_eval_frame("G200-ego", "0")], tmp_path / "membership")
+    write_membership("R100", [_eval_frame("R100", "0")], tmp_path / "membership")
+
+    pending = tool_mod._pending_frames("retest", rater="R1")
+
+    assert {f.frame_id for f in pending} == {"uuid-R100-0"}
+
+
+def test_pending_frames_excludes_already_labelled_frames(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from vernier.sampling.membership import write_membership
+
+    monkeypatch.setattr(tool_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(tool_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+
+    write_membership(
+        "G200-ego",
+        [_eval_frame("G200-ego", "0"), _eval_frame("G200-ego", "1")],
+        tmp_path / "membership",
+    )
+    write_membership("G200-ego4d", [], tmp_path / "membership")
+    write_membership("G200-epic", [], tmp_path / "membership")
+
+    label = record_label(
+        frame=_eval_frame("G200-ego", "0"),
+        rater="R1",
+        pass_="primary",
+        rubric_rev="1.2.0",
+        hands_visible=1,
+        manipulation=False,
+        edge_case=[],
+        difficulty="easy",
+        note="",
+        seconds_spent=10,
+    )
+    tool_mod._label_store("R1").write(label)
+
+    pending = tool_mod._pending_frames("primary", rater="R1")
+
+    assert {f.frame_id for f in pending} == {"uuid-G200-ego-1"}
+
+
+def test_pending_frames_scopes_labels_by_rater(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from vernier.sampling.membership import write_membership
+
+    monkeypatch.setattr(tool_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(tool_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+
+    write_membership("G200-ego", [_eval_frame("G200-ego", "0")], tmp_path / "membership")
+    write_membership("G200-ego4d", [], tmp_path / "membership")
+    write_membership("G200-epic", [], tmp_path / "membership")
+
+    label = record_label(
+        frame=_eval_frame("G200-ego", "0"),
+        rater="R1",
+        pass_="primary",
+        rubric_rev="1.2.0",
+        hands_visible=1,
+        manipulation=False,
+        edge_case=[],
+        difficulty="easy",
+        note="",
+        seconds_spent=10,
+    )
+    tool_mod._label_store("R1").write(label)
+
+    # R1's own pool is empty (already labelled); a different rater's pool is untouched -- each
+    # rater gets their own HumanLabelStore, per store.py's own "one store per rater" contract.
+    assert tool_mod._pending_frames("primary", rater="R1") == []
+    assert len(tool_mod._pending_frames("primary", rater="R2")) == 1
