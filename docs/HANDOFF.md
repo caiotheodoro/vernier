@@ -136,7 +136,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D044 |
+| Decisions | `DECISIONS.md`, D001–D045 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -216,6 +216,34 @@ respectively) specifically so a larger run is `--n <bigger>`, not new code. **Do
 toward the pre-registered sample sizes (10,000) without a separate, explicit decision from
 Caio** — the approved reframe plan scoped only "deploy, smoke-test, report real cost/latency,"
 not a production run, and that boundary hasn't been revisited.
+
+**`scripts/draw_all_samples.py` is new, real, and closes a gap that would otherwise have
+silently blocked Wave 3: nothing previously ran the sample-drawing DAG end to end and persisted
+it.** `sampling.membership.py`'s own docstring says membership is written to disk before any
+judge or labelling happens; nothing had actually done that. Running it the first time
+immediately surfaced a real, pre-existing bug (**`docs/DECISIONS.md` D045**):
+`_load_parent_membership` passed a pre-built `<root>/<sample>.json` file path where
+`load_membership` expects the root directory, so every real subset draw (`P2k`, `G200-*`,
+`R100`) would have raised `MembershipNotFoundError` 100% of the time — hidden until now because
+every existing test monkeypatches `load_membership` without checking its `path` argument.
+Fixed, regression-tested, and verified live: all eight currently-unblocked samples now draw and
+persist with the exact pre-registered counts (`E10k-ego`/`E10k-ego4d`/`E10k-epic` 10,000 each,
+`P2k` 2,000, `G200-*` 200 each, `R100` 100) and zero duplicate `frame_id`s.
+
+**`labels/tool.py`'s `_pending_frames` is now real too, and Wave 3 has no remaining engineering
+blocker.** Reads the real, just-persisted membership (`G200-ego`/`G200-ego4d`/`G200-epic` for
+the 600 primary labels, `R100` for the 100 blind retest) through a real, per-rater
+`HumanLabelStore`. Verified live: `next_frame(pass_="primary", rater=...)` and
+`next_frame(pass_="retest", rater=...)` both return a real frame with zero manual glue. **The
+600+100 human labels themselves are still entirely Caio's own work — nothing here does that —
+but there is no more code standing between "start labelling" and actually doing it.**
+
+Note for whoever runs this next: `scripts/draw_all_samples.py`'s `ego4d.parquet`/
+`epic_kitchens.parquet` downloads twice hung indefinitely at a fixed byte count via HF's
+default Xet transfer backend (confirmed reproducible, not a one-off) — set
+`HF_HUB_DISABLE_XET=1` before running it (or any fresh `hf_hub_download` of a large file in
+this environment) to force the plain HTTP path, which completed both downloads reliably
+(with its own automatic resume-on-timeout, observed working).
 
 Still unwired, and a materially bigger task than the evaluation-parquet adapter was — **two
 real findings from checking, not assuming, this session**:
