@@ -7,6 +7,7 @@
         test typecheck fixtures check-eval-parquets install-hooks
 
 NOT_YET = @echo "not yet implemented -- see docs/HANDOFF.md for which wave lands this" >&2 && exit 1
+PASS ?= primary
 
 help:
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -15,18 +16,26 @@ effective-n:   ## H8: participant-count precision disparity per corpus (not ICC-
 	$(NOT_YET)
 survey:        ## docs/SURVEY.md -- novelty gate. Nothing downstream runs until this passes.
 	$(NOT_YET)
-sample:        ## Draw the stratified frame sample fixed in docs/PRE-REGISTRATION.md.
-	$(NOT_YET)
+sample:        ## Draw every sample in docs/PRE-REGISTRATION.md's dependency order and persist it.
+	python3 scripts/draw_all_samples.py
+# replicate/judge predate docs/DECISIONS.md D042's reframe (gemini-2.5-flash is deprecated;
+# the panel is now the self-hosted Qwen3-VL judge alone) -- scripts/e2_replication.py is the
+# real post-reframe equivalent (a comparison against Build AI's own published labels, not a
+# replication) but doesn't share these targets' pre-reframe description, so it is run directly
+# rather than wired here. Requires QWEN3VL_BASE_URL pointed at a live deployment.
 replicate:     ## Reproduce Build AI's own protocol: 10k frames, gemini-2.5-flash, their prompt.
 	$(NOT_YET)
 judge:         ## Run the full judge panel over the sample.
 	$(NOT_YET)
-human-labels:  ## Collect human gold against docs/RUBRIC.md. Never automated.
-	$(NOT_YET)
+human-labels:  ## Collect human gold against docs/RUBRIC.md. Never automated. Usage: make human-labels RATER=caio [PASS=primary|retest]
+ifndef RATER
+	$(error RATER is required, e.g. make human-labels RATER=caio)
+endif
+	python3 scripts/human_labels_cli.py --rater "$(RATER)" --pass "$(PASS)"
 agreement:     ## Judge-vs-human and judge-vs-judge agreement, with intervals.
 	$(NOT_YET)
-prompt-sweep:  ## Prompt-sensitivity sweep over the paraphrases fixed in pre-registration.
-	$(NOT_YET)
+prompt-sweep:  ## Prompt-sensitivity sweep (H3) over E10k-ego. Requires QWEN3VL_BASE_URL live.
+	python3 scripts/e5_prompt_sweep.py
 domain-bias:   ## The decisive experiment: same panel, matched Ego4D / EPIC-KITCHENS samples.
 	$(NOT_YET)
 distil:        ## Train the open instrument (linear probe, then Qwen3-VL LoRA).
