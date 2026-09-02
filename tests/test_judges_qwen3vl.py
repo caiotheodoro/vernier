@@ -20,6 +20,7 @@ this adapter itself, bypassing `base.build_confidence` (which explicitly does no
 
 from __future__ import annotations
 
+import openai
 import pytest
 from openai.types.chat import ChatCompletion
 from openai.types.chat.chat_completion import Choice, ChoiceLogprobs
@@ -398,6 +399,105 @@ def test_client_base_url_handles_a_trailing_slash(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("QWEN3VL_BASE_URL", "https://example.modal.direct/")
     judge = Qwen3VLJudge()
     assert str(judge._client.base_url) == "https://example.modal.direct/v1/"
+
+
+# --- _call_qwen3vl: retry/backoff on transient errors ---------------------------------------
+#
+# Real incident, not hypothetical (docs/DECISIONS.md D054/D055): the full-scale E2/E5 runs died
+# outright on a single transient `openai.InternalServerError: Error code: 503`, mid-run, because
+# `_call_qwen3vl` had no retry logic at all. These tests exercise the fix using the real `openai`
+# exception types (constructed against a real `httpx.Response`), not a stand-in.
+
+
+def _fake_internal_server_error() -> openai.InternalServerError:
+    import httpx
+
+    request = httpx.Request("POST", "https://example.modal.direct/v1/chat/completions")
+    response = httpx.Response(status_code=503, request=request, json={"error": "no upstreams available"})
+    return openai.InternalServerError("Error code: 503", response=response, body=None)
+
+
+def test_call_qwen3vl_retries_transient_500_and_then_succeeds(monkeypatch: pytest.MonkeyPatch) -> None:
+    judge = Qwen3VLJudge()
+    monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
+    monkeypatch.setattr("time.sleep", lambda seconds: None)  # don't actually wait in tests
+    completion = _fake_completion("2", token_logprobs=[-0.1])
+
+    attempts = {"n": 0}
+
+    class _FlakyCompletions:
+        def create(self, **kwargs: object) -> ChatCompletion:
+            attempts["n"] += 1
+            if attempts["n"] < 3:
+                raise _fake_internal_server_error()
+            return completion
+
+    fake_client = type("FakeClient", (), {"chat": type("Chat", (), {"completions": _FlakyCompletions()})()})()
+    monkeypatch.setattr(Qwen3VLJudge, "_client", property(lambda self: fake_client))
+
+    raw, _, _, _ = judge._call_qwen3vl(_frame(), "count the hands")
+
+    assert raw == "2"
+    assert attempts["n"] == 3  # two failures, then a real success -- proves the retry loop ran
+
+
+def test_call_qwen3vl_raises_after_exhausting_retries(monkeypatch: pytest.MonkeyPatch) -> None:
+    judge = Qwen3VLJudge()
+    monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
+    monkeypatch.setattr("time.sleep", lambda seconds: None)
+
+    class _AlwaysFailsCompletions:
+        def create(self, **kwargs: object) -> ChatCompletion:
+            raise _fake_internal_server_error()
+
+    fake_client = type(
+        "FakeClient", (), {"chat": type("Chat", (), {"completions": _AlwaysFailsCompletions()})()}
+    )()
+    monkeypatch.setattr(Qwen3VLJudge, "_client", property(lambda self: fake_client))
+
+    with pytest.raises(openai.InternalServerError):
+        judge._call_qwen3vl(_frame(), "count the hands")
+
+
+def test_call_qwen3vl_retry_budget_outlasts_a_cold_start(monkeypatch: pytest.MonkeyPatch) -> None:
+    """D055: a crashed Modal container cold-starts in ~11 min. The retry budget (sum of the
+    backoff delays) must exceed that, or a mid-run crash still kills the job -- which is exactly
+    what happened at frame 3,000 of the first resumed P0b run with the original ~126s budget.
+    """
+    from vernier.judges import qwen3vl
+
+    total_budget_s = sum(
+        min(qwen3vl._RETRY_MAX_DELAY_S, qwen3vl._RETRY_BASE_DELAY_S * (2**attempt))
+        for attempt in range(qwen3vl._MAX_RETRIES)
+    )
+    assert total_budget_s >= 15 * 60
+
+
+def test_call_qwen3vl_backoff_delay_is_capped(monkeypatch: pytest.MonkeyPatch) -> None:
+    judge = Qwen3VLJudge()
+    monkeypatch.setattr(judge, "_image_bytes_for", lambda frame: b"\xff\xd8\xff fake jpeg")
+    slept: list[float] = []
+    monkeypatch.setattr("time.sleep", lambda seconds: slept.append(seconds))
+
+    calls = {"n": 0}
+    completion = _fake_completion("1", token_logprobs=[-0.1])
+
+    class _FailsTenTimes:
+        def create(self, **kwargs: object) -> ChatCompletion:
+            calls["n"] += 1
+            if calls["n"] <= 10:
+                raise _fake_internal_server_error()
+            return completion
+
+    fake_client = type("FakeClient", (), {"chat": type("Chat", (), {"completions": _FailsTenTimes()})()})()
+    monkeypatch.setattr(Qwen3VLJudge, "_client", property(lambda self: fake_client))
+
+    judge._call_qwen3vl(_frame(), "count the hands")
+
+    from vernier.judges import qwen3vl
+
+    assert max(slept) <= qwen3vl._RETRY_MAX_DELAY_S
+    assert slept[-1] == qwen3vl._RETRY_MAX_DELAY_S  # later attempts are all at the cap
 
 
 def test_call_qwen3vl_updates_judge_rev_from_the_real_response(monkeypatch: pytest.MonkeyPatch) -> None:

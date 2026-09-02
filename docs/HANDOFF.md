@@ -3,9 +3,10 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-01, after Wave S, Wave 0, the P1 hygiene tier, Wave 1's full 18-unit
-fan-out (all committed, all independently reviewed), real Wave 2 judge-SDK wiring, and a real,
-committed `MEASUREMENT_CARD.json` — `verdict=NOT_VERIFIED`, honestly, naming every unmet claim.**
+**Last updated: 2026-09-02 — full-N E2/E5 run authorized and resumed after a crash (D054);
+retry + `--resume` added. Prior baseline (2026-09-01): Wave S, Wave 0, the P1 hygiene tier,
+Wave 1's full 18-unit fan-out (all committed, all independently reviewed), real Wave 2
+judge-SDK wiring, and a real, committed `MEASUREMENT_CARD.json` — `verdict=NOT_VERIFIED`.**
 
 ## Where this stands
 
@@ -136,7 +137,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D053 |
+| Decisions | `DECISIONS.md`, D001–D054 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -215,10 +216,23 @@ pinned construction of 2604.16413's definition — the paper's exact formula isn
 
 **No known gap is left before running a real smoke batch at a more statistically meaningful N
 (e.g. a few hundred) across E10k-* frames** — both runners already default small (20 and 5
-respectively) specifically so a larger run is `--n <bigger>`, not new code. **Do not scale
-toward the pre-registered sample sizes (10,000) without a separate, explicit decision from
-Caio** — the approved reframe plan scoped only "deploy, smoke-test, report real cost/latency,"
-not a production run, and that boundary hasn't been revisited.
+respectively) specifically so a larger run is `--n <bigger>`, not new code.
+
+**UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
+Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`
+95.45% within ±2pp, `2 hands` 82.66% **outside**, `active manipulation` 91.28% within);
+**P0b crashed at 2,800** on an uncaught transient 503 (`_call_qwen3vl` had no retry). Fixed:
+retry/backoff in `_call_qwen3vl`, `--resume` in `e2_replication.py` (complete checkpoint →
+reconstructed with no judge calls; partial → resumed), per-variant checkpoint+resume in
+`e5_prompt_sweep.py`. Re-run harness: **`scripts/run_full_e2_e5.sh`** (idempotent, `--resume`
+both steps) — **launch it detached in `tmux`** (`tmux new-session -d -s vernier_run "…"`); a
+plain `&` / agent background shell gets reaped on parent exit (observed twice). D055 widened
+the in-call retry budget to ~19 min after a second death, this one from a **Modal preemption**
+(the L4 is preemptible) whose ~11-min cold-start outran D054's 126s budget. The deployed judge URL is now persisted in `.env` as `QWEN3VL_BASE_URL`
+(recover with `python3 -m modal run cloud/modal_qwen3vl.py` — note: needs modal ≥1.5, i.e.
+`python3 -m modal`, not the older `modal` on PATH). P0a's 3 supplementary per-published-label
+agreement fields were lost in the crash and come back `null` with
+`reconstructed_from_checkpoint: true` — a deliberate call (not a hypothesis input), see D054.
 
 **`scripts/draw_all_samples.py` is new, real, and closes a gap that would otherwise have
 silently blocked Wave 3: nothing previously ran the sample-drawing DAG end to end and persisted

@@ -1312,3 +1312,85 @@ gap is a real, separate, larger engineering question (server-side batch-invarian
 support), not addressed here.
 
 **Reverses if:** nothing. A real gap, closed as far as client-side pinning can close it.
+
+---
+
+## D054 — Full-N (10,000-frame) E2/E5 run authorized; crash-hardened with retry + resume
+
+Caio authorized running `scripts/e2_replication.py` (H1/H1b) and `scripts/e5_prompt_sweep.py`
+(H3) at the pre-registered N=10,000, past the smoke-test guardrail both scripts' docstrings
+carry. The run is against the deployed Modal judge (`cloud/modal_qwen3vl.py`, D042).
+
+**What the first attempt produced, and where it broke:**
+
+- **P0a: complete** -- 10,000/10,000, 9,999 `ok`, 1 `unparseable`. Real H1:
+  `>=1 hand` 95.45% (published 96.42%, diff 0.97pp, **within** ±2pp);
+  `2 hands` 82.66% (published 76.34%, diff 6.32pp, **outside** ±2pp);
+  `active manipulation` 91.28% (published 91.66%, diff 0.38pp, **within** ±2pp).
+  Two of the three headline figures reproduce within the pre-registered band; `2 hands` does
+  not. Substantive, and the reason H1b/H3 matter.
+- **P0b: died at 2,800/10,000** on a single transient `openai.InternalServerError: 503 no
+  upstreams available` from Modal's proxy, mid-run. `_call_qwen3vl` had zero retry logic, so
+  one transient 5xx on call N killed a multi-hour process. Root cause confirmed by log
+  inspection: no infra failure -- the uncaught exception killed both chained processes, and
+  Modal then correctly scaled to zero because nothing hit the endpoint again.
+
+**Fixes (this session):**
+
+1. **Retry/backoff in `_call_qwen3vl`** (`src/vernier/judges/qwen3vl.py`): up to 5 retries
+   (6 attempts), exponential backoff 2/4/8/16/32/64s, only on the genuinely transient
+   `(APIConnectionError, APITimeoutError, RateLimitError, InternalServerError)` -- a 4xx is
+   never retried. Regression-tested (retry-then-succeed, exhaust-then-raise).
+2. **Resume-from-checkpoint in `e2_replication.py`**: `--resume` reads the per-variant
+   checkpoints next to `--out`. A complete checkpoint (`n_processed == n_total`) is
+   reconstructed with **no judge calls**; a partial one resumes `_run_variant` from its last
+   frame via `resume_state`. A checkpoint written for a different `n_total` than the current
+   `--n` is refused.
+3. **Per-variant checkpoint + resume in `e5_prompt_sweep.py`** (it had none): each prompt
+   variant's rate and per-frame answers are written as it finishes; `--resume` skips any
+   variant already recorded. A crash mid-sweep now costs one variant's calls, not all eight.
+
+**P0a's 3 supplementary agreement fields are lost, by decision.**
+`n_comparable_to_published`, `hand_count_exact_agreement_rate`, and
+`active_labor_agreement_rate` (per-frame agreement against Build AI's own published labels)
+were never part of the periodic checkpoint payload, and P0a's full result dict was never
+persisted before the crash. These are **not** a hypothesis test -- H1 reads only the three
+aggregate rates, H1b only `active_manipulation_rate`, all of which survived. Re-running P0a
+from zero to recover them would cost ~5.5h and ~$4.50 of judge calls. Caio's call:
+reconstruct P0a from its checkpoint, carry those three as `null` with
+`reconstructed_from_checkpoint: true` in the results JSON, and report them as P0b-only in the
+card. The re-run stays P0b (frames 2,800→10,000) + E5 only.
+
+**Reverses if:** nothing about the design. If the `2 hands` non-reproduction turns out to be
+a prompt-parsing artifact rather than a real judge/label disagreement, that is an H1b/H3
+finding recorded there, not a reversal of this entry.
+
+---
+
+## D055 — The Modal judge runs on preemptible capacity; retry budget and harness widened to absorb it
+
+The first resumed P0b run (D054's fix) died again at frame 3,000. Cause, from the deployed
+app's own logs: **`Container terminated due to preemption`** -- the L4 backing
+`cloud/modal_qwen3vl.py`'s `@app.server` is preemptible, and Modal reclaimed it mid-run. Its
+replacement cold-starts in ~11 min (measured: vLLM engine init ~165s, torch.compile, CUDA-graph
+capture, weight load). D054's retry budget was 5 retries / ~126s -- nowhere near an 11 min
+gap, so the first preemption after the retry logic still killed the job.
+
+`min_containers=1` would **not** fix this: that setting prevents idle scaledown, not
+preemption -- a preempted container cold-starts regardless.
+
+**Fixed, two layers:**
+
+1. **`_call_qwen3vl` retry budget widened to ~19 min** (`_MAX_RETRIES=40`, delay capped at
+   `_RETRY_MAX_DELAY_S=30s`) -- comfortably past the observed ~11 min cold start, so a single
+   preemption is absorbed inside one call rather than crashing the process. Regression-tested
+   (the test asserts `sum(delays) >= 15 min`, so the budget can't silently regress).
+2. **`scripts/run_full_e2_e5.sh` re-invokes each step up to 6 times** with `--resume` between
+   attempts. If a preemption lands during an unusually slow restart and even the 19 min of
+   in-call retries exhaust, the script just resumes from the last checkpoint -- costing only
+   the frames since the last checkpoint write, not the whole pass.
+
+**Reverses if:** Modal is moved to non-preemptible / reserved GPU capacity for this workload,
+or the judge is redeployed on AWS (D042's stated fallback) -- at which point the wide retry
+budget becomes belt-and-suspenders rather than load-bearing, but there's no reason to narrow
+it back.

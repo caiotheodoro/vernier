@@ -84,6 +84,30 @@ _MODAL_L4_USD_PER_HOUR = 0.80
 # "revision" is only meaningful once something has actually loaded and answered.
 _JUDGE_REV_UNRESOLVED = "unresolved (no live call yet)"
 
+# Real incident, not hypothetical: the full-scale E2/E5 runs (docs/DECISIONS.md D054) died
+# outright on a single transient `openai.InternalServerError: Error code: 503` from the Modal
+# server, mid-run, with zero retry logic here -- an uncaught exception on call N killed a
+# multi-hour process and every unwritten call after N. Retried kinds are exactly the transient
+# ones (connection drop, timeout, rate limit, 5xx); a 4xx (bad request, auth) is not retried --
+# retrying a permanent error just delays the same failure.
+#
+# D055: the first budget (5 retries, ~126s total) was still too short. The Modal container
+# crashed/recycled mid-run at frame 3,000 of the resumed P0b pass, and its replacement
+# cold-starts in ~11 min (measured: vLLM engine init ~165s + torch.compile + CUDA-graph
+# capture + weight load). The retry budget has to outlast a full cold start or a single
+# mid-run recycle still kills the job. 40 retries with the delay capped at 30s gives ~19 min
+# of coverage -- comfortably past the observed ~11 min, and `min_containers` on the deploy
+# would not help here since a *crash* cold-starts regardless of the idle-scaledown setting.
+_MAX_RETRIES = 40
+_RETRY_BASE_DELAY_S = 2.0
+_RETRY_MAX_DELAY_S = 30.0
+_RETRYABLE_EXCEPTIONS = (
+    openai.APIConnectionError,
+    openai.APITimeoutError,
+    openai.RateLimitError,
+    openai.InternalServerError,
+)
+
 
 def _combine_status(a: JudgeStatus, b: JudgeStatus) -> JudgeStatus:
     """Combine two per-task call statuses per the severity order documented above."""
@@ -177,25 +201,40 @@ class Qwen3VLJudge(JudgeAdapter):
         image_b64 = base64.standard_b64encode(image_bytes).decode("ascii")
 
         start = time.monotonic()
-        response = self._client.chat.completions.create(
-            model=_MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
+        response = None
+        for attempt in range(_MAX_RETRIES + 1):
+            try:
+                response = self._client.chat.completions.create(
+                    model=_MODEL,
+                    messages=[
                         {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"},
-                        },
-                        {"type": "text", "text": prompt_text},
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "image_url",
+                                    "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"},
+                                },
+                                {"type": "text", "text": prompt_text},
+                            ],
+                        }
                     ],
-                }
-            ],
-            max_tokens=_MAX_OUTPUT_TOKENS,
-            logprobs=True,
-            temperature=_TEMPERATURE,
-            seed=_SEED,
-        )
+                    max_tokens=_MAX_OUTPUT_TOKENS,
+                    logprobs=True,
+                    temperature=_TEMPERATURE,
+                    seed=_SEED,
+                )
+                break
+            except _RETRYABLE_EXCEPTIONS as exc:
+                if attempt == _MAX_RETRIES:
+                    raise
+                delay = min(_RETRY_MAX_DELAY_S, _RETRY_BASE_DELAY_S * (2**attempt))
+                print(
+                    f"[qwen3vl] transient error ({exc!r}), retry {attempt + 1}/{_MAX_RETRIES} "
+                    f"in {delay:.0f}s",
+                    flush=True,
+                )
+                time.sleep(delay)
+        assert response is not None  # loop only exits via `break` (success) or `raise`
         latency_ms = int((time.monotonic() - start) * 1000)
 
         self._last_model_version = response.model or self._last_model_version

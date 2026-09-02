@@ -52,12 +52,24 @@ def _run_variant(
     *,
     checkpoint_path: Path | None = None,
     checkpoint_every: int = 100,
+    resume_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """`checkpoint_path`, if given, is overwritten with the running aggregate every
     `checkpoint_every` frames -- real insurance for a real, many-hour run: without it, an
     interruption anywhere before the loop's own final line loses every call made so far, since
     nothing here was written to disk until now. `None` (the default) keeps existing callers
-    (smoke-scale runs, tests) byte-for-byte unchanged."""
+    (smoke-scale runs, tests) byte-for-byte unchanged.
+
+    `resume_state`, if given, is a prior checkpoint dict (as written by this function) to resume
+    from: `frames` is skipped up to `resume_state["n_processed"]` and every running total starts
+    from the checkpoint's own aggregates rather than zero. Real need, not speculative: D054's
+    full-scale P0b run died at 2,800/10,000 on a transient server error, and re-running the first
+    2,800 frames from scratch would silently re-spend real judge calls already paid for and
+    already counted. Aggregate-only checkpoints cannot restore `n_comparable_to_published`,
+    `hand_count_exact_agreement_rate`, or `active_labor_agreement_rate` exactly (those weren't
+    part of the periodic checkpoint payload) -- resuming re-derives them from that point forward
+    only, which is flagged in the final result via `resumed_from`.
+    """
     n_ok = 0
     hand_ge1 = hand_eq2 = active_yes = 0
     hand_count_agree = active_labor_agree = 0
@@ -65,8 +77,24 @@ def _run_variant(
     total_cost_usd = 0.0
     total_latency_ms = 0
     status_counts: dict[str, int] = {}
+    start_index = 0
 
-    for i, frame in enumerate(frames, start=1):
+    if resume_state is not None:
+        start_index = resume_state["n_processed"]
+        n_ok = resume_state["n_ok"]
+        status_counts = dict(resume_state["status_counts"])
+        hand_ge1 = round(resume_state["hand_ge1_rate"] * (n_ok or 1))
+        hand_eq2 = round(resume_state["hand_eq2_rate"] * (n_ok or 1))
+        active_yes = round(resume_state["active_manipulation_rate"] * (n_ok or 1))
+        total_cost_usd = resume_state["total_cost_usd"]
+        total_latency_ms = resume_state["total_latency_ms"]
+        print(
+            f"[{variant}] resuming from checkpoint at {start_index}/{len(frames)} "
+            f"(n_ok={n_ok}, cost so far=${total_cost_usd:.2f})",
+            flush=True,
+        )
+
+    for i, frame in enumerate(frames[start_index:], start=start_index + 1):
         resp = judge.judge_frame(frame, variant)
         total_cost_usd += resp.cost_usd
         total_latency_ms += resp.latency_ms
@@ -131,6 +159,86 @@ def _run_variant(
     }
 
 
+def _resume_decision(
+    checkpoint_path: Path, n_frames: int
+) -> tuple[str, dict[str, Any] | None]:
+    """Given a per-variant checkpoint path and the frame count the current run is scoped to,
+    decide how `main()` should treat it under `--resume`:
+
+    - `("fresh", None)` -- no checkpoint on disk, run the variant from zero.
+    - `("resume", <checkpoint dict>)` -- a partial checkpoint; hand it to `_run_variant` as
+      `resume_state` so only `frames[n_processed:]` are judged.
+    - `("done", <reconstructed result dict>)` -- a complete checkpoint (`n_processed >=
+      n_total`); rebuild the result with no judge calls at all. The 3 per-published-label
+      agreement fields were never part of the periodic checkpoint payload, so they come back
+      `None` with a `reconstructed_from_checkpoint` marker -- lost, not fabricated (D054).
+
+    Exits nonzero if the checkpoint was written for a different `n_total` than this run's
+    `n_frames` -- resuming a 10,000-frame run as a 20-frame smoke test (or vice versa) would
+    silently mean something other than what the operator asked for.
+    """
+    if not checkpoint_path.is_file():
+        return "fresh", None
+
+    ckpt = json.loads(checkpoint_path.read_text())
+    if ckpt["n_total"] != n_frames:
+        sys.exit(
+            f"{checkpoint_path.name}: checkpoint is for n_total={ckpt['n_total']}, but this "
+            f"run is scoped to --n {n_frames}. Refusing to resume across a different frame count."
+        )
+
+    if ckpt["n_processed"] >= ckpt["n_total"]:
+        return "done", {
+            "n_total": ckpt["n_total"],
+            "n_ok": ckpt["n_ok"],
+            "status_counts": ckpt["status_counts"],
+            "hand_ge1_rate": ckpt["hand_ge1_rate"],
+            "hand_eq2_rate": ckpt["hand_eq2_rate"],
+            "active_manipulation_rate": ckpt["active_manipulation_rate"],
+            "n_comparable_to_published": None,
+            "hand_count_exact_agreement_rate": None,
+            "active_labor_agreement_rate": None,
+            "total_cost_usd": ckpt["total_cost_usd"],
+            "total_latency_ms": ckpt["total_latency_ms"],
+            "reconstructed_from_checkpoint": True,
+        }
+
+    return "resume", ckpt
+
+
+def _variant_result(
+    frames: list[FrameRef],
+    variant: PromptVariant,
+    judge: JudgeAdapter,
+    published: dict[str, tuple[int, bool]],
+    *,
+    checkpoint_path: Path,
+    checkpoint_every: int,
+    resume: bool,
+) -> dict[str, Any]:
+    """Run (or resume, or reconstruct) one prompt variant. Without `--resume` this is a plain
+    `_run_variant` call; with it, `_resume_decision` picks the path."""
+    if resume:
+        kind, payload = _resume_decision(checkpoint_path, len(frames))
+        if kind == "done":
+            assert payload is not None
+            print(f"[{variant}] complete checkpoint found -- reconstructed, no judge calls", flush=True)
+            return payload
+        resume_state = payload if kind == "resume" else None
+    else:
+        resume_state = None
+
+    return _run_variant(
+        frames,
+        variant,
+        judge,
+        published,
+        checkpoint_path=checkpoint_path,
+        checkpoint_every=checkpoint_every,
+        resume_state=resume_state,
+    )
+
+
 def _h1(results_p0a: dict[str, Any]) -> dict[str, Any]:
     h1: dict[str, Any] = {}
     for key, published in _PUBLISHED.items():
@@ -176,6 +284,15 @@ def main(argv: list[str] | None = None) -> int:
         default=100,
         help="write a running-aggregate checkpoint every N frames (real insurance for a long run)",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help=(
+            "continue from any per-variant checkpoints next to --out: a complete one is "
+            "reconstructed with no judge calls, a partial one resumes from its last frame "
+            "(docs/DECISIONS.md D054)."
+        ),
+    )
     args = parser.parse_args(argv)
 
     frames = draw_sample("E10k-ego")[: args.n]
@@ -184,23 +301,18 @@ def main(argv: list[str] | None = None) -> int:
 
     checkpoint_dir = args.out.parent
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    variants: tuple[PromptVariant, ...] = ("P0a", "P0b")
     results = {
-        "P0a": _run_variant(
+        variant: _variant_result(
             frames,
-            "P0a",
+            variant,
             judge,
             published,
-            checkpoint_path=checkpoint_dir / f"{args.out.stem}.P0a.checkpoint.json",
+            checkpoint_path=checkpoint_dir / f"{args.out.stem}.{variant}.checkpoint.json",
             checkpoint_every=args.checkpoint_every,
-        ),
-        "P0b": _run_variant(
-            frames,
-            "P0b",
-            judge,
-            published,
-            checkpoint_path=checkpoint_dir / f"{args.out.stem}.P0b.checkpoint.json",
-            checkpoint_every=args.checkpoint_every,
-        ),
+            resume=args.resume,
+        )
+        for variant in variants
     }
 
     output = {

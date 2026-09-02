@@ -52,6 +52,8 @@ def _rates_per_variant(
     judge: JudgeAdapter,
     *,
     answer: Any,
+    checkpoint_path: Path | None = None,
+    resume: bool = False,
 ) -> tuple[dict[str, float], dict[str, dict[str, Any]]]:
     """Run every variant against every frame; return (per-variant positive rate, per-frame
     per-variant answer -- the latter feeds `_ipr_par`, kept only for `"ok"` responses).
@@ -60,11 +62,29 @@ def _rates_per_variant(
     into one `JudgeResponse` by design). Each sweep here only uses one task's half of that --
     real, known double-cost, not a bug -- so `len(frames) * len(variants)` calls to
     `judge_frame` here means `2x` that many real HTTP calls to the judge server.
+
+    `checkpoint_path`, if given, is rewritten after each *variant* finishes with that variant's
+    rate and per-frame answers. `resume=True` loads it first and skips any variant already
+    recorded -- so a crash mid-sweep costs one variant's calls, not all of them (D054). The
+    default (`None`) leaves the old behaviour and the old callers byte-for-byte unchanged.
     """
     rates: dict[str, float] = {}
     per_frame_answers: dict[str, dict[str, Any]] = {f.frame_id: {} for f in frames}
 
+    saved: dict[str, dict[str, Any]] = {}
+    if resume and checkpoint_path is not None and checkpoint_path.is_file():
+        saved = json.loads(checkpoint_path.read_text())["variants"]
+        for name, entry in saved.items():
+            rates[name] = entry["rate"]
+            for frame_id, value in entry["answers"].items():
+                if frame_id in per_frame_answers:
+                    per_frame_answers[frame_id][name] = value
+        if saved:
+            print(f"[e5] resuming: {sorted(saved)} already done, skipping", flush=True)
+
     for variant in variants:
+        if variant in saved:
+            continue
         n_ok = 0
         n_positive = 0
         for frame in frames:
@@ -77,6 +97,16 @@ def _rates_per_variant(
                 n_positive += 1
             per_frame_answers[frame.frame_id][variant] = value
         rates[variant] = n_positive / n_ok if n_ok else 0.0
+
+        if checkpoint_path is not None:
+            saved[variant] = {
+                "rate": rates[variant],
+                "answers": {
+                    fid: ans[variant] for fid, ans in per_frame_answers.items() if variant in ans
+                },
+            }
+            checkpoint_path.write_text(json.dumps({"variants": saved}, indent=2))
+            print(f"[e5] {variant} done ({rates[variant]:.3f}), checkpointed", flush=True)
 
     return rates, per_frame_answers
 
@@ -124,19 +154,35 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument("--out", type=Path, default=Path("data/e5_results.json"))
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="skip any prompt variant already recorded in the checkpoints next to --out (D054)",
+    )
     args = parser.parse_args(argv)
 
     frames = draw_sample("E10k-ego")[: args.n]
     judge = Qwen3VLJudge()
+
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    hand_ckpt = args.out.parent / f"{args.out.stem}.hand.checkpoint.json"
+    manip_ckpt = args.out.parent / f"{args.out.stem}.manip.checkpoint.json"
 
     hand_rates, hand_answers = _rates_per_variant(
         frames,
         _HAND_COUNT_VARIANTS,
         judge,
         answer=lambda resp: resp.hands_visible is not None and resp.hands_visible >= 1,
+        checkpoint_path=hand_ckpt,
+        resume=args.resume,
     )
     manip_rates, manip_answers = _rates_per_variant(
-        frames, _MANIPULATION_VARIANTS, judge, answer=lambda resp: bool(resp.manipulation)
+        frames,
+        _MANIPULATION_VARIANTS,
+        judge,
+        answer=lambda resp: bool(resp.manipulation),
+        checkpoint_path=manip_ckpt,
+        resume=args.resume,
     )
 
     hand_spread_pp = (max(hand_rates.values()) - min(hand_rates.values())) * 100
