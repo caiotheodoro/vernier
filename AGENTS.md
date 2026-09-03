@@ -4,10 +4,13 @@
 instrument anyone can re-run.** `README.md` is the argument. This file is the operating
 rules.
 
-**Current state: mid-experiment.** Real data drawn and persisted, the live judge deployed and
-called for real at smoke scale, matching Build AI's own published labels on every frame
-checked. No human label exists yet — Wave 3 is the critical path. No model trained.
-`docs/HANDOFF.md` is the resume point.
+**Current state: results in, two items blocked on external access.** Real data drawn and
+persisted; the live judge has made thousands of real calls across full-N replication, the
+prompt sweep, and gold-set judging. Real human labels are collected and committed (93 primary
++ retest, D057/D058). A real rung-1 model (DINOv2 features + linear probe + abstention
+cascade) has been trained and evaluated (D061) -- a disclosed negative result, not a missing
+one. `docs/HANDOFF.md` is the resume point; H2 and Result 2 remain blocked on gated corpus
+access.
 
 ## The claim
 
@@ -73,7 +76,10 @@ worth less than the honesty of noticing.
 
 Then: freeze `docs/PRE-REGISTRATION.md` → `make sample` → `make replicate` → `make
 human-labels` → `make agreement` → `make prompt-sweep` → `make domain-bias` → `make distil`
-→ `make calibrate` → kill-gate → `make probe` → `make card`.
+(calibration is folded into `distil`, not a separate step) → kill-gate → `make probe` →
+`make card`. `sample`, `human-labels`, `agreement`, `prompt-sweep`, `distil`, and `card` are
+real and have run for real; `replicate`, `domain-bias`, and `probe` remain unwired
+(`probe`/Result 2 is kill-gated per D048 and does not run regardless).
 
 ## Map
 

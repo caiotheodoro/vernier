@@ -1,10 +1,12 @@
 # Benchmark
 
-The results table. **Empty by design** — this repository is documentation-only, and a
-benchmark file carrying numbers before any experiment ran would be the exact failure mode
-vernier exists to document.
-
-Its structure is fixed now so that results land in a shape decided before anyone saw them.
+The results table. Its structure was fixed before any experiment ran, specifically so results
+would land in a shape decided before anyone saw them — that discipline held. Real results now
+exist for R0/R1/R4/R6, and for the agreement, calibration, and instrument sections (R2/R3/R5)
+via `data/wave4_analysis.json` and `data/rung1_distillation.json`; the authoritative,
+machine-checked source for every cited figure is `MEASUREMENT_CARD.json` (`make card`), not
+this file — backfilling this table's cells from that card is separate, still-open work, tracked
+in `docs/HANDOFF.md`, not a claim that no experiment has run.
 
 ## R0 — Participant-count precision disparity (H8, no experiment required)
 

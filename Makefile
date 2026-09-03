@@ -1,7 +1,9 @@
-# vernier -- targets are the table of contents. Most of these don't run yet: this repository
-# is documentation-only until `make survey` has an answer. `test`, `typecheck`, `fixtures` and
-# `validate` are Wave 0 -- the interface freeze -- and do run. The rest fail loudly (not
-# silently) until the wave that implements them replaces the recipe -- see docs/HANDOFF.md.
+# vernier -- targets are the table of contents. `sample`, `human-labels`, `prompt-sweep`,
+# `agreement`, `distil`, `card`, `test`, `typecheck`, `fixtures` and `validate` are real and run
+# real code against real, collected data (docs/HANDOFF.md). `effective-n`, `survey`, `replicate`,
+# `judge`, `domain-bias`, `probe`, and `estimate` (as a standalone target -- PPI estimation itself
+# runs, folded into `agreement`) are not wired to a target yet; they fail loudly (not silently)
+# until the wave that implements them replaces the recipe -- see docs/HANDOFF.md.
 .PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose \
         domain-bias distil calibrate estimate probe card validate privacy-gate \
         test typecheck fixtures check-eval-parquets install-hooks
@@ -32,16 +34,16 @@ ifndef RATER
 	$(error RATER is required, e.g. make human-labels RATER=caio)
 endif
 	python3 scripts/human_labels_cli.py --rater "$(RATER)" --pass "$(PASS)"
-agreement:     ## Judge-vs-human and judge-vs-judge agreement, with intervals.
-	$(NOT_YET)
+agreement:     ## Judge-vs-human agreement (AC1/kappa, bootstrap CI), H4/H5, PPI prevalence, H7 calibration.
+	python3 scripts/wave4_analysis.py
 prompt-sweep:  ## Prompt-sensitivity sweep (H3) over E10k-ego. Requires QWEN3VL_BASE_URL live.
 	python3 scripts/e5_prompt_sweep.py
 domain-bias:   ## The decisive experiment: same panel, matched Ego4D / EPIC-KITCHENS samples.
 	$(NOT_YET)
-distil:        ## Train the open instrument (linear probe, then Qwen3-VL LoRA).
-	$(NOT_YET)
-calibrate:     ## Calibration and severity-weighted reporting for the instrument.
-	$(NOT_YET)
+distil:        ## Train the rung-1 open instrument (DINOv2 features + linear probe) and calibrate its abstention cascade (D061).
+	python3 scripts/distill_rung1.py
+calibrate:     ## Folded into `make distil`: AbstentionCascade.calibrate_threshold runs there, not as a separate step.
+	@echo "calibration is not a separate step -- scripts/distill_rung1.py calls AbstentionCascade.calibrate_threshold as part of 'make distil'. Run that instead." >&2
 probe:         ## Result 2: transfer probe. Kill-gated -- see docs/METHOD.md.
 	$(NOT_YET)
 estimate:      ## PPI prevalence: naive, rectified, interval, design effect.
@@ -61,7 +63,7 @@ fixtures:      ## Wave 0: regenerate tests/fixtures/{valid,malformed}/*.json fro
 check-eval-parquets:  ## D016: verify evaluation parquets contain the frames the published labels refer to.
 	python3 scripts/check_eval_parquets.py
 
-check-stale-prose:  ## D050/REVIEW.md R10: fail if a retired design (e.g. the pre-D042 three-judge panel) is still described as current anywhere public.
+check-stale-prose:  ## D050/REVIEW.md R10: fail if a retired design (e.g. the pre-D042 multi-judge panel) is still described as current anywhere public.
 	python3 scripts/check_stale_prose.py
 
 validate: privacy-gate test typecheck fixtures check-stale-prose  ## All gates: structure, no placeholders, internal consistency, privacy, no stale design language.

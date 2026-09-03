@@ -33,13 +33,18 @@ are actually buying.
 
 vernier measures the judge, then replaces it with something re-runnable.
 
-> **Status: mid-experiment.** The protocol is specified in `docs/PRE-REGISTRATION.md` and froze
-> before `src/` existed -- that ordering is the whole point: a project auditing someone's
-> unvalidated measurement does not get to improvise its own. Since then: the live judge
-> (Qwen3-VL, self-hosted, `docs/DECISIONS.md` D042) is deployed and has been called for real,
-> at smoke scale, with results matching Build AI's own published labels on every frame checked.
-> No human label exists yet -- Wave 3 (600 primary + 100 retest, `docs/HANDOFF.md`) is the
-> critical path and has not started. No model has been trained.
+> **Status: results in, two items blocked on external access.** The protocol is specified in
+> `docs/PRE-REGISTRATION.md` and froze before `src/` existed -- that ordering is the whole
+> point: a project auditing someone's unvalidated measurement does not get to improvise its
+> own. Since then: the live judge (Qwen3-VL, self-hosted, `docs/DECISIONS.md` D042) has made
+> thousands of real calls across the full-N replication, the prompt sweep, and gold-set
+> judging. Human labels are real and collected (93 primary + retest, reduced from the
+> pre-registered 600/100 per D057/D058) and committed as data. A rung-1 instrument (DINOv2
+> features + linear probe + abstention cascade) has been trained and evaluated for real
+> (D061) -- it does not clear its pre-registered target, and that negative result is reported,
+> not hidden. `MEASUREMENT_CARD.json` is real and regenerable via `make card`; see
+> `docs/HANDOFF.md` for exactly what remains (H2 and Result 2, both blocked on gated corpus
+> access).
 >
 > What *has* happened is a close read of the published artifacts, which corrected several of
 > this repository's own earlier claims. Those corrections are in `docs/UPSTREAM-FINDINGS.md`,

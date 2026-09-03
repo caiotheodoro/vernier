@@ -26,8 +26,12 @@ _STALE_PATTERNS = (
     "three judges",
     "three-judge panel",
     "documentation only",
+    "documentation-only",
     "no judge has been called",
     "JUDGES=gemini",
+    "no human label exists",
+    "no model has been trained",
+    "no model trained",
 )
 
 # Historical-record files: DECISIONS.md documents what WAS true and when it changed, by design;
@@ -48,19 +52,24 @@ _EXEMPT_FILES = {
 
 
 def find_stale_prose(repo_root: Path) -> dict[str, list[tuple[int, str]]]:
-    """Scan every tracked `.md` file under `repo_root` (excluding `_EXEMPT_FILES` and anything
-    under `docs/private/`, `docs/upstream/`) for `_STALE_PATTERNS`. Returns
+    """Scan every tracked `.md` file under `repo_root`, plus `Makefile` (which is not `.md` and
+    was previously invisible to this scan even though its own header comment tripped
+    "documentation-only" -- a real scope gap, not a pattern gap), excluding `_EXEMPT_FILES` and
+    anything under `docs/private/`, `docs/upstream/`, for `_STALE_PATTERNS`. Returns
     `{relative_path: [(line_number, pattern), ...]}` for every file with a hit."""
     hits: dict[str, list[tuple[int, str]]] = {}
-    for md_path in sorted(repo_root.rglob("*.md")):
-        rel = md_path.relative_to(repo_root).as_posix()
+    paths = sorted(repo_root.rglob("*.md")) + [repo_root / "Makefile"]
+    for path in paths:
+        if not path.is_file():
+            continue
+        rel = path.relative_to(repo_root).as_posix()
         if rel in _EXEMPT_FILES:
             continue
         if rel.startswith("docs/private/") or rel.startswith("docs/upstream/"):
             continue
         if "/.git/" in f"/{rel}" or rel.startswith(".git/"):
             continue
-        text = md_path.read_text()
+        text = path.read_text()
         for line_no, line in enumerate(text.splitlines(), start=1):
             for pattern in _STALE_PATTERNS:
                 if pattern in line:
