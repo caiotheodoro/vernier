@@ -1,0 +1,3202 @@
+[
+  {
+    "frame_id": "03e1f023-3f78-4976-822e-4575a1d480eb",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4219,
+    "cost_usd": 0.0009375555555555556
+  },
+  {
+    "frame_id": "b8ffae02-97d7-40ea-8d1b-9e5a345fc8f6",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1964,
+    "cost_usd": 0.00043644444444444443
+  },
+  {
+    "frame_id": "eb4d82d3-a099-4a05-ba39-01d4ff2fbb13",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9946345505051704
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1861,
+    "cost_usd": 0.0004135555555555556
+  },
+  {
+    "frame_id": "6dc4a5d8-86cf-4cd8-aff1-ff8134dbc69f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999923706927797
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3114,
+    "cost_usd": 0.000692
+  },
+  {
+    "frame_id": "614eb022-5b2f-4597-b26f-0bccdb1295d3",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1307,
+    "cost_usd": 0.0002904444444444444
+  },
+  {
+    "frame_id": "e66590dd-8b2a-41ef-a4a4-b10c04902e01",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2457,
+    "cost_usd": 0.000546
+  },
+  {
+    "frame_id": "8163240c-d5c8-4008-854a-4ca2c28a8850",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2144,
+    "cost_usd": 0.0004764444444444445
+  },
+  {
+    "frame_id": "87f6cf3c-50ad-4853-8cca-304fb0290a66",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1385,
+    "cost_usd": 0.0003077777777777778
+  },
+  {
+    "frame_id": "12aafcee-72bf-4e0a-89b7-cd34fc24da25",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999986231611017
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1722,
+    "cost_usd": 0.0003826666666666667
+  },
+  {
+    "frame_id": "c35380fe-a9c9-44b1-bbb8-04f92b3c93da",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2361,
+    "cost_usd": 0.0005246666666666667
+  },
+  {
+    "frame_id": "73ef7e09-01c0-41fa-8906-65656af45f4d",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1986,
+    "cost_usd": 0.0004413333333333333
+  },
+  {
+    "frame_id": "5fbe7910-d086-4a9f-97a7-f524382a60f9",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2479,
+    "cost_usd": 0.000550888888888889
+  },
+  {
+    "frame_id": "5895dbc9-f6b8-4161-8ec0-16cb56d9a14e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999907614082284
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1232,
+    "cost_usd": 0.0002737777777777778
+  },
+  {
+    "frame_id": "3c3870f8-c6b4-4aa7-944f-d50ae470c0d0",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2473,
+    "cost_usd": 0.0005495555555555555
+  },
+  {
+    "frame_id": "b1c2bdca-2536-4a9a-ab7b-4460620a0d69",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9211974919643159
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1315,
+    "cost_usd": 0.00029222222222222225
+  },
+  {
+    "frame_id": "671344ad-b51c-473a-9888-0bc6b23a8da8",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1791,
+    "cost_usd": 0.000398
+  },
+  {
+    "frame_id": "5c6c1752-e1c4-4b61-a2df-b8d04c043bb7",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1843,
+    "cost_usd": 0.0004095555555555556
+  },
+  {
+    "frame_id": "a726f1ad-781f-427b-b18e-ab3f344064e9",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 801,
+    "cost_usd": 0.00017800000000000002
+  },
+  {
+    "frame_id": "771b44bb-6dbe-4846-bcc9-adf0f39af91a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999994635586251
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2277,
+    "cost_usd": 0.000506
+  },
+  {
+    "frame_id": "dc259e2c-62e4-44c4-ad75-77f9025c2b85",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998211861101
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 5286,
+    "cost_usd": 0.0011746666666666667
+  },
+  {
+    "frame_id": "38626100-7887-43c3-874f-3dec978986b0",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999934435537693
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1700,
+    "cost_usd": 0.00037777777777777777
+  },
+  {
+    "frame_id": "3a7c72b4-eea2-48e1-b375-2fb621df8694",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9998323147192028
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2193,
+    "cost_usd": 0.0004873333333333333
+  },
+  {
+    "frame_id": "11a07fbf-db18-4947-8a0b-24309422b535",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2119,
+    "cost_usd": 0.0004708888888888889
+  },
+  {
+    "frame_id": "cc37b6f4-beaa-446c-88f3-f2e7344c2774",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997615815062
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 5007,
+    "cost_usd": 0.0011126666666666668
+  },
+  {
+    "frame_id": "3b24548d-d0a8-4c91-8c19-120f4dffef12",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2010,
+    "cost_usd": 0.00044666666666666666
+  },
+  {
+    "frame_id": "4a9ce392-064e-438a-b4bc-d2b9d33bf325",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999981522611296
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1872,
+    "cost_usd": 0.00041600000000000003
+  },
+  {
+    "frame_id": "553b6e0a-d7bd-49f1-bf65-04b17578bb9b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4063,
+    "cost_usd": 0.000902888888888889
+  },
+  {
+    "frame_id": "adacc84a-b50c-499c-92e2-fc6f3071ef72",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2256,
+    "cost_usd": 0.0005013333333333333
+  },
+  {
+    "frame_id": "e94ed28e-ebba-4965-ada7-64e56ec08f43",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999992847450301
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2433,
+    "cost_usd": 0.0005406666666666667
+  },
+  {
+    "frame_id": "6b8e90b5-02b3-480f-9107-017a4d5626ee",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2681,
+    "cost_usd": 0.0005957777777777778
+  },
+  {
+    "frame_id": "3e9d8ab6-98f5-4312-9617-f5f0e7039dd2",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1990,
+    "cost_usd": 0.00044222222222222227
+  },
+  {
+    "frame_id": "8296fbe1-0b09-486f-9774-d334d205e561",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999994278003214
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2201,
+    "cost_usd": 0.0004891111111111112
+  },
+  {
+    "frame_id": "3d100e3c-6d59-4d97-8456-b8f367546a54",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9948675329311961
+    },
+    "raw": "1\n---\nno",
+    "status": "ok",
+    "latency_ms": 1167,
+    "cost_usd": 0.00025933333333333337
+  },
+  {
+    "frame_id": "013178b6-c41a-4262-971f-c20791a30f21",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9997739962168449
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1677,
+    "cost_usd": 0.00037266666666666665
+  },
+  {
+    "frame_id": "f70e9d20-ecc3-4473-b46b-52fa23a806d7",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999454662129182
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1380,
+    "cost_usd": 0.0003066666666666667
+  },
+  {
+    "frame_id": "62607631-a1c5-4c01-a755-dc0d46fd37fc",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997019769058
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3173,
+    "cost_usd": 0.0007051111111111111
+  },
+  {
+    "frame_id": "b41a50c8-1fe6-4c51-9ba2-8643ecf9e00b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1490,
+    "cost_usd": 0.0003311111111111111
+  },
+  {
+    "frame_id": "e620bdc8-4568-4402-a0fb-2fe276d69b4a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4771,
+    "cost_usd": 0.0010602222222222224
+  },
+  {
+    "frame_id": "7876303a-1380-4a53-ac1d-ad5023a45608",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2255,
+    "cost_usd": 0.0005011111111111111
+  },
+  {
+    "frame_id": "02e097d0-6095-4928-8340-8bc12f6c53d8",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999382553068965
+    },
+    "raw": "2\n---\nno",
+    "status": "ok",
+    "latency_ms": 1827,
+    "cost_usd": 0.000406
+  },
+  {
+    "frame_id": "8dba5b08-2e92-44f1-8c34-32099dc98131",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1476,
+    "cost_usd": 0.000328
+  },
+  {
+    "frame_id": "c66155c0-43eb-4f9d-ad30-29488fe518e2",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3012,
+    "cost_usd": 0.0006693333333333334
+  },
+  {
+    "frame_id": "73dcc69d-225b-4d50-afa7-74cf004e3b77",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999622439693125
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1802,
+    "cost_usd": 0.0004004444444444445
+  },
+  {
+    "frame_id": "ee77d303-87e1-47eb-90e9-d4980b7498b6",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1226,
+    "cost_usd": 0.00027244444444444446
+  },
+  {
+    "frame_id": "31c5d835-3e77-43bd-be1e-463cb54d4bf3",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2201,
+    "cost_usd": 0.0004891111111111112
+  },
+  {
+    "frame_id": "9454fbfb-dbfb-445d-bfd2-48ed558e2bf5",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9990361576848621
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2136,
+    "cost_usd": 0.0004746666666666667
+  },
+  {
+    "frame_id": "c82c9614-5b93-46b2-9c5b-d092e7edb7d9",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1218,
+    "cost_usd": 0.00027066666666666667
+  },
+  {
+    "frame_id": "b3fcc9b1-20a2-4143-b1ad-e48b1ff8b73f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2049,
+    "cost_usd": 0.00045533333333333336
+  },
+  {
+    "frame_id": "4f2a993a-aa16-4ffa-8887-43d4274de9da",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9991485634097376
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1602,
+    "cost_usd": 0.00035600000000000003
+  },
+  {
+    "frame_id": "e7febeef-629a-4488-a908-acb7c3f9f3e3",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999890329255534
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2515,
+    "cost_usd": 0.0005588888888888889
+  },
+  {
+    "frame_id": "d72a4f73-0f48-428c-9409-c6b1e8c0475d",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1620,
+    "cost_usd": 0.00036
+  },
+  {
+    "frame_id": "d2d6a393-aba4-423d-a181-c195c9c7777e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1691,
+    "cost_usd": 0.00037577777777777783
+  },
+  {
+    "frame_id": "73bf1d3b-3b64-49ce-b7a4-922efb738f9b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1685,
+    "cost_usd": 0.00037444444444444444
+  },
+  {
+    "frame_id": "223be64c-18d2-4d4a-a4d7-43df5974d744",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1154,
+    "cost_usd": 0.00025644444444444445
+  },
+  {
+    "frame_id": "b8017f46-3209-4ed3-96f7-f867cde5f1e4",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999994039540709
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2303,
+    "cost_usd": 0.0005117777777777778
+  },
+  {
+    "frame_id": "9b26fe3b-ac8a-40da-adbf-f0da49cc7598",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 735,
+    "cost_usd": 0.00016333333333333336
+  },
+  {
+    "frame_id": "c45985cb-1e5d-4891-8fd3-9c7d04c78590",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999838475318339
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1363,
+    "cost_usd": 0.0003028888888888889
+  },
+  {
+    "frame_id": "5fd1e052-c44c-443f-9ba6-0c428a3fbe7f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 671,
+    "cost_usd": 0.00014911111111111112
+  },
+  {
+    "frame_id": "ff42f69f-b4ff-419f-9414-f809c8a36f98",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2033,
+    "cost_usd": 0.00045177777777777783
+  },
+  {
+    "frame_id": "ca26bc23-862f-45c4-979b-07ed13067975",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2243,
+    "cost_usd": 0.0004984444444444445
+  },
+  {
+    "frame_id": "963bfa0f-4574-4a7c-9d94-f00176103034",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998211861101
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1843,
+    "cost_usd": 0.0004095555555555556
+  },
+  {
+    "frame_id": "3b44dc39-8725-4c27-89ba-120db0aa1aa6",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1841,
+    "cost_usd": 0.00040911111111111107
+  },
+  {
+    "frame_id": "cd29a375-68c3-46a7-894f-3d4d9bf13149",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999763377962273
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4133,
+    "cost_usd": 0.0009184444444444445
+  },
+  {
+    "frame_id": "70ddf1b7-68ca-401c-b3fd-701a481070a8",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2288,
+    "cost_usd": 0.0005084444444444445
+  },
+  {
+    "frame_id": "a3714ff8-5043-4694-ba09-33bcd1734094",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2322,
+    "cost_usd": 0.000516
+  },
+  {
+    "frame_id": "681edbc3-1240-499d-a15b-01e4917db90e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999973178018582
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3758,
+    "cost_usd": 0.0008351111111111111
+  },
+  {
+    "frame_id": "3626b5a1-e2cf-4ad3-b187-1c4ff0d652d2",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4729,
+    "cost_usd": 0.001050888888888889
+  },
+  {
+    "frame_id": "9455979e-72fe-4e07-9cf8-c1bce5a8f268",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2531,
+    "cost_usd": 0.0005624444444444444
+  },
+  {
+    "frame_id": "6981cee5-a7d9-4e87-8c90-d3335837b4cf",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997615815062
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1990,
+    "cost_usd": 0.0004422222222222222
+  },
+  {
+    "frame_id": "58ac6332-0fdd-46ee-8187-10cce2bbc8b5",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999985694915949
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2184,
+    "cost_usd": 0.0004853333333333334
+  },
+  {
+    "frame_id": "f152de1f-f600-4015-aad4-15500c2c40b4",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999723430005457
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2243,
+    "cost_usd": 0.0004984444444444445
+  },
+  {
+    "frame_id": "48548b29-b04d-4575-9068-d3bee4176b5c",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9997795357380976
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4091,
+    "cost_usd": 0.0009091111111111112
+  },
+  {
+    "frame_id": "05059514-1a18-4024-9b54-2b4ad733eef2",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997019769058
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1847,
+    "cost_usd": 0.00041044444444444445
+  },
+  {
+    "frame_id": "e3d56192-1816-4a09-b54c-f2487ad7681a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2341,
+    "cost_usd": 0.0005202222222222223
+  },
+  {
+    "frame_id": "4862973f-5be8-429d-b4e4-d9f979aa9b43",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2364,
+    "cost_usd": 0.0005253333333333334
+  },
+  {
+    "frame_id": "ae4412dd-6081-476c-adc7-e4100e5f38df",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2502,
+    "cost_usd": 0.0005560000000000001
+  },
+  {
+    "frame_id": "663ac8e8-4b89-4c75-8991-0cdd3912b304",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1398,
+    "cost_usd": 0.00031066666666666666
+  },
+  {
+    "frame_id": "9b3a9889-a435-470d-ad37-a4505fe2d2a6",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 3333,
+    "cost_usd": 0.0007406666666666666
+  },
+  {
+    "frame_id": "526df88d-a6c1-44ab-8b85-3e62ef89f018",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9987564671478182
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1547,
+    "cost_usd": 0.0003437777777777778
+  },
+  {
+    "frame_id": "d73ddbbf-14d3-4dd1-a2c3-cf5bd78c99d4",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999995231631829
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1540,
+    "cost_usd": 0.0003422222222222223
+  },
+  {
+    "frame_id": "a34aa4d2-bd68-440a-ac18-616daa74cac4",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1744,
+    "cost_usd": 0.00038755555555555554
+  },
+  {
+    "frame_id": "afbf17fa-7a67-44cd-bbaa-53cf5de1449f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999976158227355
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2238,
+    "cost_usd": 0.0004973333333333334
+  },
+  {
+    "frame_id": "0677d71f-a320-49a3-9aba-e2358dd99128",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1914,
+    "cost_usd": 0.00042533333333333334
+  },
+  {
+    "frame_id": "fe6d5e20-7ee7-4115-b982-5da6d5e8145c",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1895,
+    "cost_usd": 0.00042111111111111114
+  },
+  {
+    "frame_id": "f9abbe12-c961-4744-8d45-0a167c2c8d0e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997019769058
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2157,
+    "cost_usd": 0.00047933333333333335
+  },
+  {
+    "frame_id": "ca7e98e9-ecf4-4916-b75a-e771a3069f63",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9226546087031994
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1768,
+    "cost_usd": 0.0003928888888888889
+  },
+  {
+    "frame_id": "3a21acae-92bf-4884-b76e-e66a61729397",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9996943683395764
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1639,
+    "cost_usd": 0.00036422222222222227
+  },
+  {
+    "frame_id": "4dbd2c05-b1ec-47e4-8a9a-83d3337915a7",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999983906785008
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1316,
+    "cost_usd": 0.00029244444444444446
+  },
+  {
+    "frame_id": "7b83b563-cad8-4eaf-8d30-c9792011dbda",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9983751526527724
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2916,
+    "cost_usd": 0.000648
+  },
+  {
+    "frame_id": "cffa910a-e3f0-4551-a79a-7527cf84d437",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1983,
+    "cost_usd": 0.0004406666666666667
+  },
+  {
+    "frame_id": "2100ce6e-35c9-42a2-a892-8a9dca3333fb",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997615815062
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1360,
+    "cost_usd": 0.0003022222222222222
+  },
+  {
+    "frame_id": "1f97a520-c703-4a6b-9d79-f644826f336c",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999950528512772
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2163,
+    "cost_usd": 0.0004806666666666667
+  },
+  {
+    "frame_id": "e7cf0a19-464a-4f35-bab2-6c393db75a41",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999878408746362
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1388,
+    "cost_usd": 0.00030844444444444447
+  },
+  {
+    "frame_id": "ba8acbe6-0786-4af7-ad10-f6ef67055a5f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2004,
+    "cost_usd": 0.0004453333333333333
+  },
+  {
+    "frame_id": "54e59589-01c7-491b-af62-7520a919f8b4",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999986231611017
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1662,
+    "cost_usd": 0.0003693333333333334
+  },
+  {
+    "frame_id": "bf411945-70e3-4019-b451-4df7b5aeff64",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999969005728246
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1595,
+    "cost_usd": 0.00035444444444444445
+  },
+  {
+    "frame_id": "3fb0409f-e182-49e8-bc28-4ff03d4c6cb9",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999991059315239
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1943,
+    "cost_usd": 0.00043177777777777783
+  },
+  {
+    "frame_id": "8ecd8163-ccc4-4436-95b9-4679f5aa4439",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9995267177128327
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1797,
+    "cost_usd": 0.00039933333333333335
+  },
+  {
+    "frame_id": "e55c7dd9-a398-439b-8830-e774dcfc747b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9991069492473549
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1344,
+    "cost_usd": 0.0002986666666666667
+  },
+  {
+    "frame_id": "e5f2f397-d198-478e-8125-2e5b61793681",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1623,
+    "cost_usd": 0.0003606666666666667
+  },
+  {
+    "frame_id": "6f5cc224-ff97-4275-bd87-d623a54e2584",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999625107854343
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3952,
+    "cost_usd": 0.0008782222222222223
+  },
+  {
+    "frame_id": "137d24dc-9beb-40eb-b09c-cfff19c51482",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 5531,
+    "cost_usd": 0.0012291111111111112
+  },
+  {
+    "frame_id": "d590d322-dd1c-4b87-a994-4851a2d828c5",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1772,
+    "cost_usd": 0.0003937777777777778
+  },
+  {
+    "frame_id": "448c861a-0be8-4b07-8d0e-eaa5d6653885",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9884445017373491
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1472,
+    "cost_usd": 0.00032711111111111114
+  },
+  {
+    "frame_id": "56201f5e-3c3e-4034-bb3b-ca6732878ca8",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9992335319366085
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1420,
+    "cost_usd": 0.0003155555555555556
+  },
+  {
+    "frame_id": "3d78f1c3-97f4-458e-a60f-e6519ed0ad42",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997615815062
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1684,
+    "cost_usd": 0.0003742222222222223
+  },
+  {
+    "frame_id": "036bf0a9-14e1-4cda-9485-e8ee95d45d52",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999987483048347
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2311,
+    "cost_usd": 0.0005135555555555556
+  },
+  {
+    "frame_id": "4039fcc4-c01b-4095-8624-fb93818ca9a0",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999994039540709
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1721,
+    "cost_usd": 0.0003824444444444445
+  },
+  {
+    "frame_id": "a0362339-95ec-4e28-a3d6-f44c9387d96b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997019769058
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2420,
+    "cost_usd": 0.0005377777777777779
+  },
+  {
+    "frame_id": "2042bf8b-c3ac-4a80-9b7c-b425f0a287cb",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9884439263870926
+    },
+    "raw": "1\n---\nno",
+    "status": "ok",
+    "latency_ms": 2681,
+    "cost_usd": 0.0005957777777777778
+  },
+  {
+    "frame_id": "28c181d7-3b80-46fe-884f-9ac24b58434a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999892713369988
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1449,
+    "cost_usd": 0.000322
+  },
+  {
+    "frame_id": "2f108216-3ab3-403a-b3cb-5cfaeca53b4d",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.8901981704530765
+    },
+    "raw": "1\n---\nno",
+    "status": "ok",
+    "latency_ms": 1572,
+    "cost_usd": 0.00034933333333333333
+  },
+  {
+    "frame_id": "881523a1-bb7b-401b-847e-db5ed8bd9a59",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997019769058
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4493,
+    "cost_usd": 0.0009984444444444446
+  },
+  {
+    "frame_id": "3dfba778-7af8-43a2-8424-a980fbb68eb1",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9989059665750314
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1608,
+    "cost_usd": 0.00035733333333333336
+  },
+  {
+    "frame_id": "851e5360-c7a6-4a8f-9380-89d9f78328c4",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999892713369988
+    },
+    "raw": "1\n---\nno",
+    "status": "ok",
+    "latency_ms": 1589,
+    "cost_usd": 0.00035311111111111117
+  },
+  {
+    "frame_id": "d7a4531a-1dc1-4f6f-af37-824f6e82d638",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999207352504924
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1384,
+    "cost_usd": 0.00030755555555555554
+  },
+  {
+    "frame_id": "779dec00-16ba-4363-ab39-89584f83893a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1747,
+    "cost_usd": 0.00038822222222222226
+  },
+  {
+    "frame_id": "97f4e6dd-0870-4936-8229-373ff3201e91",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9811278572539144
+    },
+    "raw": "2\n---\nno",
+    "status": "ok",
+    "latency_ms": 2156,
+    "cost_usd": 0.00047911111111111114
+  },
+  {
+    "frame_id": "9a759025-aa5f-4727-97f5-3c6150ee17cc",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1482,
+    "cost_usd": 0.0003293333333333334
+  },
+  {
+    "frame_id": "a5b5e313-5f4b-4c3c-9703-e838436de5f6",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997019769058
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1671,
+    "cost_usd": 0.0003713333333333333
+  },
+  {
+    "frame_id": "359df40b-48c7-4990-9ce1-35ef1ebcd8ed",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999300314916635
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2494,
+    "cost_usd": 0.0005542222222222222
+  },
+  {
+    "frame_id": "32ef1e47-fddb-42a0-86eb-92e6578a9fd7",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3790,
+    "cost_usd": 0.0008422222222222223
+  },
+  {
+    "frame_id": "dd38b0c5-529a-4969-98d8-4d98685f9693",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1797,
+    "cost_usd": 0.0003993333333333334
+  },
+  {
+    "frame_id": "12872c0e-4a1e-40a6-a7ef-6543e1df9966",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9938395021032743
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3399,
+    "cost_usd": 0.0007553333333333333
+  },
+  {
+    "frame_id": "81550806-bb36-4faa-8906-fb66a15b35ef",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3825,
+    "cost_usd": 0.0008500000000000001
+  },
+  {
+    "frame_id": "45137189-ba8f-4d96-81a9-29ea5f85f95f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999591137230209
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 4049,
+    "cost_usd": 0.0008997777777777779
+  },
+  {
+    "frame_id": "bfa38ccd-43a0-446e-aa66-6e645fc4b148",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999383149005873
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2448,
+    "cost_usd": 0.000544
+  },
+  {
+    "frame_id": "7b4a7c85-db84-463e-9f47-98ad99b06b6e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1707,
+    "cost_usd": 0.00037933333333333336
+  },
+  {
+    "frame_id": "1f766065-bdb3-4651-a1f2-febbaa24abf0",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9385049743833896
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1177,
+    "cost_usd": 0.00026155555555555556
+  },
+  {
+    "frame_id": "4c790bf3-a8f6-45c0-8e41-b4da51e73164",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2293,
+    "cost_usd": 0.0005095555555555556
+  },
+  {
+    "frame_id": "0a9a7d2c-432a-4def-b1e2-008114172775",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1494,
+    "cost_usd": 0.000332
+  },
+  {
+    "frame_id": "96d650df-84f4-48aa-ad57-efc6d74b5c9f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1705,
+    "cost_usd": 0.0003788888888888889
+  },
+  {
+    "frame_id": "fdc7dcda-8ceb-4b45-be43-2d1f9cb8d3e9",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999994635586251
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1680,
+    "cost_usd": 0.0003733333333333333
+  },
+  {
+    "frame_id": "6ced8afa-4370-4428-92d2-1a01a24aa56f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1996,
+    "cost_usd": 0.0004435555555555556
+  },
+  {
+    "frame_id": "ae492f55-6cba-4583-a468-5d18e1809b73",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1709,
+    "cost_usd": 0.00037977777777777776
+  },
+  {
+    "frame_id": "8cfb401e-6866-4332-9398-1619e5d87732",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1711,
+    "cost_usd": 0.0003802222222222222
+  },
+  {
+    "frame_id": "c5fb143b-80e7-4a81-a198-d422c54dca2f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9998621629618334
+    },
+    "raw": "2\n---\nno",
+    "status": "ok",
+    "latency_ms": 2326,
+    "cost_usd": 0.000516888888888889
+  },
+  {
+    "frame_id": "9451f344-ed62-4603-8ac0-b9f14a51f234",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999997437010153
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2945,
+    "cost_usd": 0.0006544444444444445
+  },
+  {
+    "frame_id": "d0890071-860c-45fa-9eec-fa461bb28253",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1775,
+    "cost_usd": 0.00039444444444444444
+  },
+  {
+    "frame_id": "af330501-4700-4122-bd51-e8b5a0afc0fd",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1460,
+    "cost_usd": 0.0003244444444444445
+  },
+  {
+    "frame_id": "25b7f8cb-617b-4340-9c4b-9a8bdeb22aec",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1475,
+    "cost_usd": 0.0003277777777777778
+  },
+  {
+    "frame_id": "7f5078fd-b6ca-4461-b695-e0217ce0909f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999992251405434
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1382,
+    "cost_usd": 0.00030711111111111114
+  },
+  {
+    "frame_id": "750fbe59-7f45-46a8-89ec-1662e9e6c2e1",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9966477791699934
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1375,
+    "cost_usd": 0.00030555555555555555
+  },
+  {
+    "frame_id": "f147a29a-746c-4568-90c5-71030ac6c89a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1466,
+    "cost_usd": 0.0003257777777777778
+  },
+  {
+    "frame_id": "8b0e1e49-27f0-4f1a-b44b-d36848bf9780",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9997847179573338
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2922,
+    "cost_usd": 0.0006493333333333334
+  },
+  {
+    "frame_id": "acc54c66-1792-46f4-b831-0e868078d106",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 5559,
+    "cost_usd": 0.0012353333333333335
+  },
+  {
+    "frame_id": "7ed81636-3caa-47c1-8384-e2f7c7fff017",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2014,
+    "cost_usd": 0.00044755555555555553
+  },
+  {
+    "frame_id": "133e79f1-12ef-431e-a9de-226ab273c5c6",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999997019769058
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2223,
+    "cost_usd": 0.0004940000000000001
+  },
+  {
+    "frame_id": "bdd6472e-2570-48ea-9daa-1890bc2ed923",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9998709809151304
+    },
+    "raw": "1\n---\nno",
+    "status": "ok",
+    "latency_ms": 2056,
+    "cost_usd": 0.00045688888888888895
+  },
+  {
+    "frame_id": "74608f26-49be-4b6e-a5f2-a6dbb1a0a3a2",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3234,
+    "cost_usd": 0.0007186666666666667
+  },
+  {
+    "frame_id": "e635f1f3-7ec0-4e13-ac73-4916ee087d20",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1726,
+    "cost_usd": 0.00038355555555555555
+  },
+  {
+    "frame_id": "5c6e588b-43a9-4b8c-939c-ecb49c1fc11a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999859336010356
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1490,
+    "cost_usd": 0.0003311111111111111
+  },
+  {
+    "frame_id": "453e4425-88b1-4493-8c15-f685d3ea05eb",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999892117339048
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1424,
+    "cost_usd": 0.00031644444444444444
+  },
+  {
+    "frame_id": "76c2e326-31af-446b-ad4f-ed82bbb74af4",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999976754270126
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1999,
+    "cost_usd": 0.00044422222222222226
+  },
+  {
+    "frame_id": "03a035fc-5512-47fc-87ff-74357456f12a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999952316625239
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2925,
+    "cost_usd": 0.00065
+  },
+  {
+    "frame_id": "a6f0f771-581f-4a34-a0bd-9649187b2be7",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999992847450301
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2420,
+    "cost_usd": 0.0005377777777777779
+  },
+  {
+    "frame_id": "fe836313-194e-476d-9130-ab3569140413",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9996444096269349
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1962,
+    "cost_usd": 0.0004360000000000001
+  },
+  {
+    "frame_id": "00fc0b2b-bffa-47b4-a8b2-9f9907ad1a4e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1970,
+    "cost_usd": 0.0004377777777777778
+  },
+  {
+    "frame_id": "c655cd18-62ca-4f44-b5aa-5af256050aae",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3985,
+    "cost_usd": 0.0008855555555555557
+  },
+  {
+    "frame_id": "f30bd7c8-b03b-4ce7-a156-c259fb74ed5d",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9852333416521408
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1659,
+    "cost_usd": 0.00036866666666666667
+  },
+  {
+    "frame_id": "fe63d2c1-bfff-4581-a3cb-140e20be2c01",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1717,
+    "cost_usd": 0.00038155555555555555
+  },
+  {
+    "frame_id": "f0693ad3-7b75-4729-a21b-3e727c2f5fff",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1639,
+    "cost_usd": 0.00036422222222222227
+  },
+  {
+    "frame_id": "b35c3674-7754-4a8a-8eb5-6d48c260c28b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999991059315239
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1530,
+    "cost_usd": 0.00034
+  },
+  {
+    "frame_id": "ac72fbb7-c48b-41bf-8fa7-7b96085c5a20",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2387,
+    "cost_usd": 0.0005304444444444445
+  },
+  {
+    "frame_id": "86feebb6-4f3a-438f-aae0-d91d3a63c51b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 2356,
+    "cost_usd": 0.0005235555555555555
+  },
+  {
+    "frame_id": "3511ae3b-70d8-41be-b230-911b34d3adea",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1818,
+    "cost_usd": 0.000404
+  },
+  {
+    "frame_id": "baea70d4-51a9-42f8-ab6a-e07c216ad454",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999905229964278
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2435,
+    "cost_usd": 0.0005411111111111111
+  },
+  {
+    "frame_id": "4a274aaa-d1f1-4917-b6e4-3f15b12a68f8",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998211861101
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2199,
+    "cost_usd": 0.0004886666666666667
+  },
+  {
+    "frame_id": "0eaafad2-e65e-4fc5-9e76-153ab436ed22",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999772914047776
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4940,
+    "cost_usd": 0.0010977777777777778
+  },
+  {
+    "frame_id": "1c2bda43-6db4-44b7-a106-eb7010502761",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1705,
+    "cost_usd": 0.0003788888888888889
+  },
+  {
+    "frame_id": "d161d1b8-dc83-4b1c-bdee-a6ca471c7177",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999614380262957
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1796,
+    "cost_usd": 0.00039911111111111115
+  },
+  {
+    "frame_id": "3afcd143-dcbd-4572-b537-8c3639d0c27a",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.994491298545311
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2189,
+    "cost_usd": 0.0004864444444444445
+  },
+  {
+    "frame_id": "70c6ffed-507c-46af-9592-82620a29e50b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1774,
+    "cost_usd": 0.00039422222222222224
+  },
+  {
+    "frame_id": "4e80690e-0c27-400a-9437-78e0d6bac343",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9998683593364148
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1752,
+    "cost_usd": 0.00038933333333333333
+  },
+  {
+    "frame_id": "31d8d706-824f-48d9-944d-4fb69d8ef302",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999916554545785
+    },
+    "raw": "2\n---\nno",
+    "status": "ok",
+    "latency_ms": 2260,
+    "cost_usd": 0.0005022222222222223
+  },
+  {
+    "frame_id": "a536d193-3491-4ef3-be48-74b9bc68831c",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1427,
+    "cost_usd": 0.0003171111111111111
+  },
+  {
+    "frame_id": "2286e3ea-76f7-4b06-963d-f4ae5105ab24",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999992847450301
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1790,
+    "cost_usd": 0.00039777777777777777
+  },
+  {
+    "frame_id": "f01f38a4-5a99-41cf-bd9f-2400914a4c34",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1813,
+    "cost_usd": 0.00040288888888888894
+  },
+  {
+    "frame_id": "25a042f2-a6c6-4fd8-a094-41714ca3e2ea",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9613227341929996
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 4681,
+    "cost_usd": 0.0010402222222222223
+  },
+  {
+    "frame_id": "ade67c05-f10b-4992-9c16-961efe2f4106",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2199,
+    "cost_usd": 0.0004886666666666667
+  },
+  {
+    "frame_id": "94eb2eae-ee29-4588-8ddf-d8ab1a4e3cd9",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9613228416291932
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1520,
+    "cost_usd": 0.00033777777777777777
+  },
+  {
+    "frame_id": "55ccdabd-a152-406c-adce-758b16848d2b",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1639,
+    "cost_usd": 0.00036422222222222227
+  },
+  {
+    "frame_id": "0789fe64-b6e2-42d2-b75f-21299e59c5e5",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999999403953606
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1653,
+    "cost_usd": 0.00036733333333333334
+  },
+  {
+    "frame_id": "99cb697e-d6aa-4368-b805-e12387369167",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9041920141212711
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3889,
+    "cost_usd": 0.0008642222222222223
+  },
+  {
+    "frame_id": "9f2aecb8-7bef-4ea4-9550-b2201485a981",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2431,
+    "cost_usd": 0.0005402222222222222
+  },
+  {
+    "frame_id": "4fb9979c-3e68-4419-aa78-0bfaa6a972cc",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3879,
+    "cost_usd": 0.000862
+  },
+  {
+    "frame_id": "b702cf8d-70ab-4a32-94da-6b6e539ef4a8",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1469,
+    "cost_usd": 0.00032644444444444447
+  },
+  {
+    "frame_id": "c5abfb21-fef4-41cb-91ce-6f72431cffd3",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998211861101
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1512,
+    "cost_usd": 0.000336
+  },
+  {
+    "frame_id": "5ed1e4e6-351f-4fdb-917a-e2c903771cd3",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9992001722056602
+    },
+    "raw": "1\n---\nno",
+    "status": "ok",
+    "latency_ms": 1866,
+    "cost_usd": 0.0004146666666666667
+  },
+  {
+    "frame_id": "72f212c1-9d74-4a4d-94a4-8021b73fa704",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 1,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "1\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1743,
+    "cost_usd": 0.0003873333333333333
+  },
+  {
+    "frame_id": "822f15b2-4f4f-4b83-8c01-5c3ab4b8d83f",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999995231631829
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1415,
+    "cost_usd": 0.00031444444444444445
+  },
+  {
+    "frame_id": "55023482-de3f-4e64-b22d-0b27e5103d90",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1692,
+    "cost_usd": 0.00037600000000000003
+  },
+  {
+    "frame_id": "62c67a32-47ea-4172-8744-7626309fefd7",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2904,
+    "cost_usd": 0.0006453333333333334
+  },
+  {
+    "frame_id": "dcd246d0-20a1-4716-bc78-11463d7b6a1e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999969005728246
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2577,
+    "cost_usd": 0.0005726666666666666
+  },
+  {
+    "frame_id": "21b6b8e7-50c4-4516-8f31-8b769bf5a1f3",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999822978900521
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 2278,
+    "cost_usd": 0.0005062222222222223
+  },
+  {
+    "frame_id": "74a3c931-0c6d-4c9d-959e-a3f711495dc1",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.9999998807907318
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1640,
+    "cost_usd": 0.00036444444444444447
+  },
+  {
+    "frame_id": "5371ad3b-3cd7-4a4d-bdea-1197ba91717e",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1313,
+    "cost_usd": 0.0002917777777777778
+  },
+  {
+    "frame_id": "03d56f90-0ffd-4e57-876e-11792c8eea33",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 0,
+    "manipulation": false,
+    "confidence": {
+      "kind": "logprob",
+      "value": 1.0
+    },
+    "raw": "0\n---\nno",
+    "status": "ok",
+    "latency_ms": 1277,
+    "cost_usd": 0.00028377777777777776
+  },
+  {
+    "frame_id": "093e91ac-6eb9-40d5-acd5-4cee0d7404dd",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999986231611017
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 3736,
+    "cost_usd": 0.0008302222222222222
+  },
+  {
+    "frame_id": "93ceccf4-96a1-4f94-b711-a6077c671de9",
+    "judge": "qwen3-vl",
+    "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "prompt_variant": "P0b",
+    "hands_visible": 2,
+    "manipulation": true,
+    "confidence": {
+      "kind": "logprob",
+      "value": 0.999999642372309
+    },
+    "raw": "2\n---\nyes",
+    "status": "ok",
+    "latency_ms": 1680,
+    "cost_usd": 0.0003733333333333334
+  }
+]

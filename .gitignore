@@ -1,12 +1,29 @@
 # --- private material: outreach strategy, never published ---
 docs/private/
 
-# --- data: never committed, always streamed ---
-data/
+# --- data: raw/heavy media and derived caches never committed; real, small results are
+# (docs/DECISIONS.md D062) ---
+data/*
+!data/membership/
+!data/labels/
+!data/gold_judged/
+!data/judge_test_retest.json
+!data/wave4_analysis.json
+!data/rung1_distillation.json
+!data/e2_full_n10000.json
+!data/e5_full_n2000.json
+!data/rung1_stored_labels.json
 frames/
 cache/
 *.mp4
 *.parquet
+data/dinov2_features.json
+data/*.checkpoint.json
+data/*.log
+data/e2_n100.json
+data/e2_smoke_n20.json
+data/e5_smoke_n5.json
+data/rung1_smoke*.json
 
 # --- results are committed; scratch is not ---
 scratch/

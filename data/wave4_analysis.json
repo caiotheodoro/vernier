@@ -1,0 +1,370 @@
+{
+  "n_primary": 93,
+  "n_retest": 60,
+  "intra_rater": {
+    "hand_count": {
+      "ac1": 0.8757234236978373,
+      "kappa": 0.8479880774962741,
+      "n_pairs": 34
+    },
+    "manipulation": {
+      "ac1": 0.9036827195467422,
+      "kappa": 0.8488888888888888,
+      "n_pairs": 34
+    }
+  },
+  "H4": {
+    "hand_count": {
+      "ac1": 0.7951622418879056,
+      "kappa": 0.719396551724138,
+      "raw_agreement": 0.8494623655913979
+    },
+    "manipulation": {
+      "ac1": 0.8990045248868778,
+      "kappa": 0.8224061107574792,
+      "raw_agreement": 0.9354838709677419
+    },
+    "holds": false
+  },
+  "H5": {
+    "egocentric": {
+      "n": 33,
+      "error_rate": 0.09090909090909094
+    },
+    "epic_kitchens": {
+      "n": 30,
+      "error_rate": 0.0
+    },
+    "diff_pp": -9.090909090909093,
+    "epic_kitchens_higher": false,
+    "holds": false
+  },
+  "ppi": {
+    "G200-ego": {
+      "hand_count": {
+        "corpus": "egocentric-10k",
+        "task": "hand_count",
+        "prompt_variant": "P0b",
+        "judge": "qwen3-vl",
+        "naive": {
+          "value": 0.955,
+          "n": 200
+        },
+        "ppi": {
+          "value": 0.9271779022599961,
+          "ci": {
+            "lo": 0.860915203871509,
+            "hi": 0.9934406006484832,
+            "level": 0.95
+          },
+          "n_gold": 33,
+          "n_unlabelled": 167,
+          "rectifier": -1.1102230246251565e-16,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "published": 0.9642
+      },
+      "manipulation": {
+        "corpus": "egocentric-10k",
+        "task": "manipulation",
+        "prompt_variant": "P0b",
+        "judge": "qwen3-vl",
+        "naive": {
+          "value": 0.9,
+          "n": 200
+        },
+        "ppi": {
+          "value": 0.8083832335329342,
+          "ci": {
+            "lo": 0.7009784313992733,
+            "hi": 0.9157880356665951,
+            "level": 0.95
+          },
+          "n_gold": 33,
+          "n_unlabelled": 167,
+          "rectifier": -1.1102230246251565e-16,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "published": 0.9166
+      }
+    },
+    "G200-ego4d": {
+      "hand_count": {
+        "corpus": "ego4d",
+        "task": "hand_count",
+        "prompt_variant": "P0b",
+        "judge": "qwen3-vl",
+        "naive": {
+          "value": 0.68,
+          "n": 200
+        },
+        "ppi": {
+          "value": 0.6120448179271709,
+          "ci": {
+            "lo": 0.5022167367013918,
+            "hi": 0.72187289915295,
+            "level": 0.95
+          },
+          "n_gold": 30,
+          "n_unlabelled": 170,
+          "rectifier": 0.0,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "published": 0.6733
+      },
+      "manipulation": {
+        "corpus": "ego4d",
+        "task": "manipulation",
+        "prompt_variant": "P0b",
+        "judge": "qwen3-vl",
+        "naive": {
+          "value": 0.63,
+          "n": 200
+        },
+        "ppi": {
+          "value": 0.5294117647058824,
+          "ci": {
+            "lo": 0.40572701056017335,
+            "hi": 0.6530965188515914,
+            "level": 0.95
+          },
+          "n_gold": 30,
+          "n_unlabelled": 170,
+          "rectifier": -1.1102230246251565e-16,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "published": 0.5007
+      }
+    },
+    "G200-epic": {
+      "hand_count": {
+        "corpus": "epic-kitchens-100",
+        "task": "hand_count",
+        "prompt_variant": "P0b",
+        "judge": "qwen3-vl",
+        "naive": {
+          "value": 0.92,
+          "n": 200
+        },
+        "ppi": {
+          "value": 0.8604705882352942,
+          "ci": {
+            "lo": 0.7640921811961132,
+            "hi": 0.9568489952744752,
+            "level": 0.95
+          },
+          "n_gold": 30,
+          "n_unlabelled": 170,
+          "rectifier": 0.0,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "published": 0.9037
+      },
+      "manipulation": {
+        "corpus": "epic-kitchens-100",
+        "task": "manipulation",
+        "prompt_variant": "P0b",
+        "judge": "qwen3-vl",
+        "naive": {
+          "value": 0.875,
+          "n": 200
+        },
+        "ppi": {
+          "value": 0.8941176470588236,
+          "ci": {
+            "lo": 0.8477287695479309,
+            "hi": 0.9405065245697163,
+            "level": 0.95
+          },
+          "n_gold": 30,
+          "n_unlabelled": 170,
+          "rectifier": 0.0,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "published": 0.8504
+      }
+    }
+  },
+  "H7_calibration": {
+    "hand_count": {
+      "judge": "qwen3-vl",
+      "task": "hand_count",
+      "subset": "G200-primary-labelled",
+      "confidence_kind": "logprob",
+      "ece": 0.15052501378545585,
+      "bins": [
+        {
+          "lo": 0.0,
+          "hi": 0.1,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.30000000000000004,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.30000000000000004,
+          "hi": 0.4,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6000000000000001,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.6000000000000001,
+          "hi": 0.7000000000000001,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.7000000000000001,
+          "hi": 0.8,
+          "n": 1,
+          "mean_conf": 0.7070605469319159,
+          "accuracy": 1.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 92,
+          "mean_conf": 0.9968031177062968,
+          "accuracy": 0.8478260869565217
+        }
+      ],
+      "note": "empty bins are reported as empty, never merged away",
+      "n": 93
+    },
+    "manipulation": {
+      "judge": "qwen3-vl",
+      "task": "manipulation",
+      "subset": "G200-primary-labelled",
+      "confidence_kind": "logprob",
+      "ece": 0.06450350840911169,
+      "bins": [
+        {
+          "lo": 0.0,
+          "hi": 0.1,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.30000000000000004,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.30000000000000004,
+          "hi": 0.4,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6000000000000001,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.6000000000000001,
+          "hi": 0.7000000000000001,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.7000000000000001,
+          "hi": 0.8,
+          "n": 1,
+          "mean_conf": 0.7070605469319159,
+          "accuracy": 1.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 0,
+          "mean_conf": null,
+          "accuracy": null
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 92,
+          "mean_conf": 0.9968031177062968,
+          "accuracy": 0.9347826086956522
+        }
+      ],
+      "note": "empty bins are reported as empty, never merged away",
+      "n": 93
+    }
+  }
+}

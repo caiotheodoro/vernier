@@ -1721,3 +1721,45 @@ deliberately *not* a dependency. Regenerated `MEASUREMENT_CARD.json`: 15 real cl
 condition) and Caio wants the original pre-registered backbone re-run for comparison -- this
 result would then be reported alongside it, not replaced by it, since the substitution itself
 is real, disclosed history, not an error to erase.
+
+## D062 — Real result data tracked in git; `.gitignore` no longer blanket-excludes `data/`
+
+An external scorecard review (self-requested, `docs/HANDOFF.md`) graded reproducibility C+,
+the project's weakest category: `.gitignore` excluded all of `data/` with a bare `data/` rule
+and the comment "never committed, always streamed", while `docs/REPRODUCTION.md` already
+claimed "sample membership... committed" and "600 primary labels... published" -- both false.
+Every real result artifact this project produced (sample draws, human labels, live-judge
+output, Wave 4 analysis, the distillation result) existed only on one machine.
+
+**Fix, not a blanket un-ignore**: `.gitignore`'s `data/` block is now `data/*` plus explicit
+`!` negations for the specific real, small result paths, keeping heavy/raw/derived items
+excluded by name. Tracked: `data/membership/*.json` (17M, frame-id manifests, no image bytes),
+`data/labels/**` (40K, the real human labels), `data/gold_judged/*.json` (240K, real judge
+responses on gold-200), `data/rung1_stored_labels.json` (9.6M, Build AI's own real stored
+labels, D047's rung-1 training target -- large from 29,400 records, not media),
+`data/judge_test_retest.json`, `data/wave4_analysis.json`, `data/rung1_distillation.json`,
+`data/e2_full_n10000.json`, `data/e5_full_n2000.json` (each a few KB, pure computed results).
+Stays gitignored: `frames/`/`cache/`/`*.mp4`/`*.parquet` (unchanged, raw/heavy media),
+`data/dinov2_features.json` (6.4M derived feature cache, regeneratable via a real re-run of
+`scripts/distill_rung1.py`, downstream of licensed source media, not itself a finding),
+`*.checkpoint.json` under `data/` (redundant with the final combined result they were
+resumability scaffolding for), `*.log` under `data/` (checked live: these leak local
+`/Users/caiotheodoro/...` paths and username -- a real reason to exclude, not tidiness), and
+smoke-test outputs (`e2_n100.json`, `e2_smoke_n20.json`, `e5_smoke_n5.json`,
+`rung1_smoke*.json` -- dev scratch runs, not findings).
+
+**Secrets/PII scan before committing** (every tracked file, checked live): no API keys,
+tokens, bearer headers, passwords, emails, or absolute paths in any tracked JSON. The only
+identifying string is `"rater":"caio"` in the label files, which matches the user's own real
+git identity -- not a leak, and this project has never claimed to be anonymized.
+
+`docs/REPRODUCTION.md` corrected: the "600 primary labels" claim now states the real number
+(93 primary + 60 retest, D057/D058), and a new paragraph names exactly what's now
+reproducible from committed data with zero API spend (every cited number in
+`MEASUREMENT_CARD.json`, via `make agreement`/`make distil`/`make card`) versus what still
+needs a reproducer's own credentials (the live judge calls themselves, and the gated raw
+corpora).
+
+**Reverses if:** a future tracked file is found to carry sensitive content after all (re-scan
+before every subsequent addition to these paths, not just this one); or a tracked path grows
+past a size where it stops being "cheap to store" in the sense this decision relies on.

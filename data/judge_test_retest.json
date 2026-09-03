@@ -1,0 +1,410 @@
+{
+  "n_frames": 20,
+  "repeats_per_frame": 3,
+  "judge_config": "model=Qwen/Qwen3-VL-8B-Instruct-FP8 (FP8, Modal L4); vllm serve --max-model-len 8192, tensor-parallel-size 1; completion call sets max_tokens=64, logprobs=True; temperature, top_p, and seed are NOT set by this project's own client code, so the server's own default sampling behavior applies -- unpinned, and itself part of what this measures.",
+  "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+  "hand_count_self_agreement_rate": 1.0,
+  "manipulation_self_agreement_rate": 1.0,
+  "per_frame": [
+    {
+      "frame_id": "00059401-1b67-4f87-a11e-236e81a0dfa4",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        0,
+        0,
+        0
+      ],
+      "manipulations": [
+        false,
+        false,
+        false
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "0017a89b-d4c7-4d57-a180-1bc9fe037141",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "001e3d8b-cacd-4aab-a9ae-c262522ee762",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        1,
+        1,
+        1
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "00223d91-e2d5-4ed5-afa3-8196e664b557",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        1,
+        1,
+        1
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "0023f87a-9d01-4b61-9b56-03f8bc102a8c",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        1,
+        1,
+        1
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "002ecd04-b2ed-415a-81d8-4b354a3b5d2b",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "00308ae8-e3b1-4e2a-9b88-0bdb7ec171ce",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "003cccb7-8e8d-4348-a46b-3bc883933156",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        0,
+        0,
+        0
+      ],
+      "manipulations": [
+        false,
+        false,
+        false
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "00483495-ebbe-44d6-9ce6-a767ce79c083",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "00486166-9e04-4457-a870-18d992522688",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "0049fc7a-0276-4db6-9e6e-135360407db1",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "004dff06-cbb6-4060-be86-c37818a5f7cf",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "0051fc45-8aa4-4bcd-a11b-744fb167e86d",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "0053aa15-c2b7-4226-a7b7-e9005046795c",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "005b4ee4-673c-490f-abc4-b6a443a05bec",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        1,
+        1,
+        1
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "0069bd2c-8ad3-4d9e-a820-c0d395059b99",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "00759b29-4698-45cb-bc1f-f2ff394274fd",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "007822e6-f66b-4d94-91d6-da41882e0026",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "007866ac-8460-4990-9ae2-39a4e7befb5d",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        1,
+        1,
+        1
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    },
+    {
+      "frame_id": "007cccc2-37d8-4e1d-b4d9-c0b71bf3a6f7",
+      "statuses": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "hand_counts": [
+        2,
+        2,
+        2
+      ],
+      "manipulations": [
+        true,
+        true,
+        true
+      ],
+      "hand_count_unanimous": true,
+      "manipulation_unanimous": true
+    }
+  ]
+}

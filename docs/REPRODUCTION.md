@@ -51,9 +51,23 @@ resolved, not just disclosed: the comparison runs on stored data instead.
 | Bootstrap | Cluster over `worker_id`, B = 10,000, wherever a grouping variable exists; iid and labelled otherwise |
 | Estimator | PPI++ for prevalence; Gwet's AC1 primary for agreement, κ reported beside it |
 
+Sample membership (`data/membership/`), the human labels (`data/labels/`), the gold-set judge
+responses (`data/gold_judged/`), Build AI's own stored labels used for rung-1 training
+(`data/rung1_stored_labels.json`), and every computed result JSON (`data/wave4_analysis.json`,
+`data/rung1_distillation.json`, `data/e2_full_n10000.json`, `data/e5_full_n2000.json`,
+`data/judge_test_retest.json`) are committed to this repository (`docs/DECISIONS.md` D062) --
+a reproducer can open them, re-run the statistics (`make agreement`, `make distil`, `make
+card`) against them with zero API spend, and check that every cited number in
+`MEASUREMENT_CARD.json` really comes from that data. What is *not* reproducible by a third
+party without their own credentials is re-generating that data from scratch: the live judge
+calls themselves need a deployed Qwen3-VL endpoint, and the raw frames need the reproducer's
+own HF access to the gated corpora.
+
 ## What cannot be reproduced, and why
 
-- **The human labels.** 600 primary labels from one rater are published as data, but a
+- **The human labels.** 93 primary labels from one rater (reduced from the pre-registered 600
+  per `docs/DECISIONS.md` D057, balanced 33/30/30 across `G200-ego`/`G200-ego4d`/`G200-epic`)
+  plus a 60-label retest set (D058) are published as data under `data/labels/`, but a
   reproducer cannot regenerate them; they can only re-label and compare. That comparison is
   more valuable than a match, because it supplies the inter-rater agreement this project
   cannot produce. **A reproducer who re-labels `G200-ego` should be treated as a collaborator,

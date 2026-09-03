@@ -1,0 +1,14 @@
+{
+  "backbone": "facebook/dinov2-small",
+  "n_train": 600,
+  "n_fidelity_holdout": 150,
+  "fidelity_vs_gemini_2_5_flash": 0.6933333333333334,
+  "n_calibration_gold": 46,
+  "n_eval_gold": 47,
+  "target_floor": 0.8,
+  "target_coverage": 0.7,
+  "coverage": 0.40425531914893614,
+  "agreement_floor": 0.8421052631578947,
+  "floor_reached": true,
+  "holds": false
+}

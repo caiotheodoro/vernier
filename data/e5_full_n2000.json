@@ -1,0 +1,34 @@
+{
+  "n_frames_requested": 2000,
+  "n_frames_drawn": 2000,
+  "hand_count_rates_by_variant": {
+    "P0b": 0.952,
+    "P1": 0.95,
+    "P2": 0.9525,
+    "P3": 0.9515,
+    "P4": 0.95
+  },
+  "manipulation_rates_by_variant": {
+    "P0b": 0.9085,
+    "P5": 0.908,
+    "P6": 0.9205
+  },
+  "hand_count_ipr_par": {
+    "ipr": 0.996,
+    "par": 0.9980999999999998,
+    "n_frames_with_all_variants_ok": 2000
+  },
+  "manipulation_ipr_par": {
+    "ipr": 0.9865,
+    "par": 0.9909999999999995,
+    "n_frames_with_all_variants_ok": 2000
+  },
+  "H3": {
+    "hand_count_spread_pp": 0.2500000000000058,
+    "manipulation_spread_pp": 1.2499999999999956,
+    "manipulation_spread_at_least_5pp": false,
+    "manipulation_spread_exceeds_hand_count_spread": true,
+    "p3_glove_diff_pp": 0.04999999999999449,
+    "p3_glove_moves_hand_count_by_at_least_2pp": false
+  }
+}
