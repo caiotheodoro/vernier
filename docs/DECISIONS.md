@@ -1641,3 +1641,83 @@ gated raw corpus (D044), H6 on the gated DINOv3 checkpoint (D051); neither touch
 **Reverses if:** nothing. `compute_j`/`compute_delta_j` (2605.06939's J/delta-J) remain real,
 disclosed placeholders (their own docstrings, unrelated to this decision) -- not computed here,
 since this entry only closes the ECE/reliability-bins half of H7's pre-registered scope.
+
+---
+
+## D061 — H6 (distillation) closed: DINOv3 substituted with ungated DINOv2, real (negative) result
+
+Caio's explicit call: substitute an ungated backbone rather than wait on gated access or drop
+H6. Real, disclosed deviation from D034's pin, not a silent swap.
+
+**Backbone substitution, verified live before use, not assumed**: `facebook/dinov2-small` --
+a *different*, official Meta checkpoint (not a third-party re-upload of D034's pinned weights,
+the exact category D051 already rejected). Confirmed two ways: `HfApi().model_info(...).gated
+== False`, and a real `hf_hub_download` of its `config.json` actually succeeded (unlike
+D044/D051's real gated-repo 403s). This is architecturally a different backbone than DINOv3,
+not the same restricted weights under a different name -- reported as a real deviation from the
+pre-registered pin, in the H6 claim's own text, not smuggled in.
+
+**Real environment gap found and fixed while building this, unrelated to the backbone choice
+itself**: `transformers.AutoImageProcessor` (the normal preprocessing path) imports
+`torchvision`, which this environment's Python cannot import at all --
+`ModuleNotFoundError: No module named '_lzma'`, a real build-time gap in this Python's compile
+(missing `liblzma` at build time), not a missing pip package. Installing `torchvision` anyway
+made things *worse*: `transformers`' own backend-detection then tried to actually import it
+(since it was now present) and hit the same crash one layer deeper, inside `AutoModel.from_
+pretrained`'s architecture lookup. **Fix: leave `torchvision` uninstalled.** With it absent,
+`transformers` correctly detects that and uses its real fallback path -- `AutoModel.from_
+pretrained` loads cleanly. `scripts/distill_rung1.py`'s `_preprocess` reproduces DINOv2-small's
+own real `preprocessor_config.json` (live-fetched: resize shortest edge 256 bicubic, center-
+crop 224, ImageNet mean/std normalize) by hand with `pillow`, verified against the known
+normalization formula on a synthetic image before the real run.
+
+**Real pipeline, two real, separate datasets per H6's own pre-registered split** (never
+conflating judge labels with human gold):
+
+- **Rung-1 probe training**: `data/rung1_stored_labels.json` (D047's real fix -- Build AI's own
+  historical `gemini-2.5-flash` P0b labels), 600 real training frames + 150 real fidelity-
+  holdout frames, sampled deterministically (seed 777) from the real, resolvable stored-label
+  pool, DINOv2-small features extracted live for each (checkpointed, resumable).
+- **Cascade calibration/evaluation**: Wave 3's real 93 primary human-gold labels (D057/D058),
+  split 46/47 (seeded, disjoint) -- `WAVES.md`'s own Wave 4 acceptance criterion that the
+  floor be calibrated on data disjoint from what evaluates it.
+- `LinearProbe` gained a real `predict_proba` method (cascade.py's own docstring already named
+  this as the anticipated confidence-source extension point) so `AbstentionCascade`'s
+  `confidence_fn` has a genuine per-prediction confidence, not an invented one.
+
+**Real result** (`data/rung1_distillation.json`):
+
+| metric | value | pre-registered target | met? |
+|---|---|---|---|
+| teacher fidelity vs. gemini-2.5-flash P0b (diagnostic, not the claim) | 0.6933 | >=0.90 | no |
+| agreement floor (n_eval=47) | 0.8421 | >=0.80 | **yes** |
+| coverage (n_eval=47) | 0.4043 | >=0.70 | no |
+
+**H6 does not hold**: it requires floor AND coverage simultaneously. The real, interesting
+nuance -- not a clean negative: the cascade *can* reach a floor above the pre-registered target,
+just by abstaining on more than half the frames. Teacher fidelity (0.69) also falls well short
+of the pre-registered >=0.90 diagnostic, honestly expected given DINOv2-small is an untrained
+substitute backbone paired with a 600-frame logistic regression, not the original pre-registered
+setup.
+
+**Real limitations, disclosed in the claim itself, not buried here**: the 46/47 calibration/
+eval split is small (a direct consequence of D057's reduced Wave 3 target); `cascade.py`'s own
+documented gap applies in full -- `calibrate_threshold`'s floor is a point estimate with no
+finite-sample safety margin (D049 names Learn-then-Test/conformal risk control as the real,
+not-yet-implemented fix). A larger human-gold set or the safety-margin fix could move this
+result in either direction; this is a real, honest snapshot, not a final verdict on whether a
+distilled instrument could ever clear H6's bar.
+
+**`scripts/emit_card.py` updated to match**: `_h6_claim()` reads `data/rung1_distillation.json`
+and states the backbone substitution, the fidelity shortfall, and the floor/coverage split
+explicitly. H6 removed from `what_could_not_be_checked` (2 items left: H2, Result 2 -- both
+genuinely still gated-corpus-access blockers with no substitution available, unlike H6's
+backbone). `pyproject.toml`'s `probes` extra gains `pillow`, documents why `torchvision` is
+deliberately *not* a dependency. Regenerated `MEASUREMENT_CARD.json`: 15 real claims (was 14).
+**`verdict` stays `NOT_VERIFIED`** -- H2 and Result 2 remain blocked on the gated raw corpus
+(D044), untouched by this work.
+
+**Reverses if:** access to the pinned DINOv3 checkpoint is granted (D051's own reversal
+condition) and Caio wants the original pre-registered backbone re-run for comparison -- this
+result would then be reported alongside it, not replaced by it, since the substitution itself
+is real, disclosed history, not an error to erase.

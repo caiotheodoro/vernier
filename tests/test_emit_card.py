@@ -22,6 +22,7 @@ from emit_card import (  # noqa: E402
     _h3_claim,
     _h4_claim,
     _h5_claim,
+    _h6_claim,
     _h7_claim,
     _h8_claim,
     _intra_rater_claim,
@@ -48,7 +49,7 @@ def test_h8_claim_is_not_tied_to_a_prevalence_estimate() -> None:
 
 def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
     items = _unmet_claims()
-    assert len(items) == 3  # H2, H6, Result 2 -- H1/H1b/H3/H4/H5/H7 are now real Claims (D054-D056, D059, D060)
+    assert len(items) == 2  # H2, Result 2 -- H1/H1b/H3/H4/H5/H6/H7 are now real Claims (D054-D056, D059-D061)
     for item in items:
         assert item.reason.strip()
         assert "BLOCKER:" in item.reason
@@ -56,22 +57,21 @@ def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
 
 def test_unmet_claims_cover_every_still_blocked_hypothesis() -> None:
     items = {i.item for i in _unmet_claims()}
-    for tag in ["H2 ", "H6 ", "Result 2"]:
+    for tag in ["H2 ", "Result 2"]:
         assert any(tag in item for item in items), f"missing {tag!r} in unmet claims"
-    # H1/H1b/H3 (D054/D055), H4/H5 (D059), and H7 (D060) moved to real Claims -- must not still
-    # be listed as blocked, or the card would understate real, completed progress.
-    for tag in ["H1 ", "H1b", "H3 ", "H4 ", "H5 ", "H7 "]:
+    # H1/H1b/H3 (D054/D055), H4/H5 (D059), H7 (D060), and H6 (D061) moved to real Claims --
+    # must not still be listed as blocked, or the card would understate real, completed progress.
+    for tag in ["H1 ", "H1b", "H3 ", "H4 ", "H5 ", "H6 ", "H7 "]:
         assert not any(tag in item for item in items), f"{tag!r} should no longer be unmet"
 
 
 def test_blockers_are_named_specifically() -> None:
     # H2/Result 2's blocker is a real, checked access gap (D044), not "HF_TOKEN not configured"
-    # (it is configured); H6's blocker is the gated DINOv3 checkpoint (D051).
+    # (it is configured).
     items = _unmet_claims()
     reasons = " ".join(i.reason for i in items)
     assert "D044" in reasons
     assert "NOT authorized" in reasons
-    assert "DINOv3" in reasons
 
 
 # --- H1/H1b/H3: real claims from the full-N run (D054/D055) -----------------------------------
@@ -385,3 +385,76 @@ def test_h7_claim_reports_real_ece_and_the_p7_deviation(
     assert "P7" in claim.statement  # names the deviation, doesn't silently hide it
     assert "D060" in claim.statement
     assert claim.record_type != "PrevalenceEstimate"  # not pre-registered with a CI
+
+
+# --- H6: real distillation cascade (D061) ------------------------------------------------------
+
+
+def _write_rung1_fixture(
+    path: Path,
+    *,
+    fidelity: float = 0.69,
+    floor_reached: bool = True,
+    agreement_floor: float = 0.84,
+    coverage: float = 0.40,
+) -> None:
+    holds = floor_reached and agreement_floor >= 0.80 and coverage >= 0.70
+    payload: dict[str, object] = {
+        "backbone": "facebook/dinov2-small",
+        "n_train": 600,
+        "n_fidelity_holdout": 150,
+        "fidelity_vs_gemini_2_5_flash": fidelity,
+        "n_calibration_gold": 46,
+        "n_eval_gold": 47,
+        "target_floor": 0.80,
+        "target_coverage": 0.70,
+        "floor_reached": floor_reached,
+        "holds": holds,
+    }
+    if floor_reached:
+        payload["agreement_floor"] = agreement_floor
+        payload["coverage"] = coverage
+    else:
+        payload["error"] = "target floor 0.8 is unreachable at any coverage > 0 on the given held-out gold"
+    path.write_text(json.dumps(payload))
+
+
+def test_h6_claim_does_not_hold_when_coverage_misses_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "rung1.json"
+    _write_rung1_fixture(path, agreement_floor=0.84, coverage=0.40)
+    monkeypatch.setattr(emit_card, "_RUNG1_RESULTS_PATH", path)
+
+    claim = _h6_claim()
+
+    assert "does NOT hold" in claim.statement
+    assert "dinov2-small" in claim.statement
+    assert "D034" in claim.statement
+    assert claim.record_type != "PrevalenceEstimate"
+
+
+def test_h6_claim_holds_when_floor_and_coverage_both_met(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "rung1.json"
+    _write_rung1_fixture(path, agreement_floor=0.85, coverage=0.75)
+    monkeypatch.setattr(emit_card, "_RUNG1_RESULTS_PATH", path)
+
+    claim = _h6_claim()
+
+    assert "it holds." in claim.statement
+    assert "does NOT hold" not in claim.statement
+
+
+def test_h6_claim_reports_unreachable_floor_explicitly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "rung1.json"
+    _write_rung1_fixture(path, floor_reached=False)
+    monkeypatch.setattr(emit_card, "_RUNG1_RESULTS_PATH", path)
+
+    claim = _h6_claim()
+
+    assert "UNREACHABLE" in claim.statement
+    assert "does not hold" in claim.statement.lower()

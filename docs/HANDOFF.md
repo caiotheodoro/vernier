@@ -11,13 +11,13 @@ baseline (2026-09-02): full-N E2/E5 run completed for real (D054/D055/D056). Ear
 ## Where this stands
 
 **A real `MeasurementCard` exists and is committed: `MEASUREMENT_CARD.json`, `verdict=
-NOT_VERIFIED`.** Regenerate with `make card`. It now carries 14 real claims: H8
+NOT_VERIFIED`.** Regenerate with `make card`. It now carries 15 real claims: H8
 (participant-count disparity), **H1/H1b/H3 from the full-N E2/E5 run (D056)** -- H1 fails its
 own criterion (2-hands 6.32pp outside +/-2pp), H1b is null, H3's headline prediction is not
 supported -- **intra-rater reliability, H4, H5, and six PPI-corrected prevalence estimates
 (D059)**, off Wave 3's real reduced-target human gold (93 primary, 34-overlap retest) and a
 real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
-`scripts/judge_gold_sets.py`), and **H7 (calibration, D060)**:
+`scripts/judge_gold_sets.py`), **H7 (calibration, D060)**, and **H6 (distillation, D061)**:
 
 - **Intra-rater (the pre-registration's own first falsification check): passes.** AC1=0.876
   (hand_count), 0.904 (manipulation), n=34 -- both above the 0.70 gate. The audit is not
@@ -38,10 +38,18 @@ real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
   D052/D053), read straight off the already-collected `P0b` data, no new judge calls. Weak
   calibration curve by construction: 99% of frames land in the single [0.9, 1.0] confidence bin
   (greedy decoding, D053), so ECE mostly reflects that one bin, not a real spread.
+- **H6: does not hold.** Real rung-1 distillation on `facebook/dinov2-small` -- a disclosed,
+  live-verified-ungated substitute for D034's gated DINOv3 pin (D051 found no access, and
+  explicitly rejected unverified third-party re-uploads of the *same* weights; DINOv2 is a
+  different, official checkpoint, not that same risk). Teacher fidelity vs. `gemini-2.5-flash`
+  0.6933 (target >=0.90, not met). `AbstentionCascade`, calibrated/evaluated on a disjoint
+  46/47 split of Wave 3's human gold: agreement floor **0.8421 (target >=0.80, met)**, coverage
+  **0.4043 (target >=0.70, not met)** -- the cascade can clear the floor, just by abstaining on
+  more than half the frames.
 
-Three hypotheses remain in `what_could_not_be_checked` (H2, H6, Result 2), each with a specific
-`"BLOCKER:"` reason -- H2/Result 2 need the still-inaccessible gated raw corpus (D044), H6
-needs the still-gated DINOv3 checkpoint (D051) -- so `_derive_verdict` (D038) returns
+Two hypotheses remain in `what_could_not_be_checked` (H2, Result 2), both with a specific
+`"BLOCKER:"` reason -- the still-inaccessible gated raw corpus (D044), which (unlike H6's
+backbone) has no real substitute available -- so `_derive_verdict` (D038) returns
 `NOT_VERIFIED` because real blockers remain, not vacuously. `verify_and_exit` returns nonzero,
 for real, via `make card`. Not a placeholder, and not to be conflated with either the H8
 computation itself or the D016 live-data cross-check in the next paragraph (a data-integrity
@@ -160,7 +168,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D060 |
+| Decisions | `DECISIONS.md`, D001–D061 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -252,10 +260,10 @@ frames, `P0b`), and `scripts/wave4_analysis.py` computed the real intra-rater/H4
 results -- all folded into the card, D059/D060. See "Where this stands" above for the actual
 numbers.
 
-**What's left is genuinely just three named blockers** (H2, H6, Result 2) -- none automatable
-further without a decision from Caio: H2/Result 2 need access to the gated raw Egocentric-10K
-corpus (D044); H6 needs access to the gated DINOv3 checkpoint (D051). Nothing here is an
-engineering gap.
+**What's left is genuinely just two named blockers** (H2, Result 2) -- not automatable further
+without a decision from Caio: both need access to the gated raw Egocentric-10K corpus (D044),
+which has no real substitute the way H6's DINOv3 pin did (D061 swapped in an ungated backbone
+for that one). Nothing here is an engineering gap.
 
 **UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
 Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`

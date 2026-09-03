@@ -30,7 +30,19 @@ reported as such, not reframed. The six `PrevalenceEstimate`s are the first `rec
 "PrevalenceEstimate"` claims this card carries, so `_derive_verdict` (D038) now actually
 exercises its estimate-matching path, not just its blocker-scanning one.
 
-H2, H6, H7, and Result 2 remain named as unmet, each with a `"BLOCKER:"`-prefixed reason
+**H7 closed (D060)** -- `_h7_claim()` reads real calibration off already-collected `P0b`
+logprob confidence, a disclosed deviation from "P7 only" (the self-hosted judge exposes
+confidence on every call, not just P7).
+
+**H6 closed (D061)** -- `_h6_claim()` reads `data/rung1_distillation.json`
+(`scripts/distill_rung1.py`'s real output): a real, disclosed backbone substitution
+(`facebook/dinov2-small` for the gated `facebook/dinov3-vits16-pretrain-lvd1689m`, D034/D051),
+a real rung-1 linear probe, and a real `AbstentionCascade` calibrated/evaluated on a disjoint
+split of Wave 3's human gold. **Does not hold**: agreement floor (0.842) clears the
+pre-registered >=0.80 target, but coverage (0.404) falls well short of >=0.70 -- reported as a
+real, checked, mixed/negative finding, not reframed.
+
+H2 and Result 2 remain named as unmet, each with a `"BLOCKER:"`-prefixed reason
 (`docs/DECISIONS.md` D038) describing the REAL current blocker, not a stale one -- ensuring
 `_derive_verdict` returns `NOT_VERIFIED` because a real blocker is present, not vacuously from
 having nothing to claim.
@@ -52,9 +64,11 @@ _ROOT = Path(__file__).resolve().parent.parent
 _E2_RESULTS_PATH = _ROOT / "data" / "e2_full_n10000.json"
 _E5_RESULTS_PATH = _ROOT / "data" / "e5_full_n2000.json"
 _WAVE4_RESULTS_PATH = _ROOT / "data" / "wave4_analysis.json"
+_RUNG1_RESULTS_PATH = _ROOT / "data" / "rung1_distillation.json"
 _E2_RESULTS_REF = "data/e2_full_n10000.json"
 _E5_RESULTS_REF = "data/e5_full_n2000.json"
 _WAVE4_RESULTS_REF = "data/wave4_analysis.json"
+_RUNG1_RESULTS_REF = "data/rung1_distillation.json"
 
 # scripts/wave4_analysis.py's own domain-name/judge/prompt-variant constants, duplicated here
 # per D033's no-shared-file-edits convention (small constants, not worth a shared import).
@@ -280,6 +294,50 @@ def _h7_claim() -> Claim:
     return Claim(statement=statement, record_type="Calibration", record_ref=f"{_WAVE4_RESULTS_REF}#H7_calibration")
 
 
+def _h6_claim() -> Claim:
+    """Real, checked finding from `scripts/distill_rung1.py` (D061) -- a disclosed backbone
+    substitution: `facebook/dinov2-small` (verified live, genuinely ungated) instead of D034's
+    pinned, gated `facebook/dinov3-vits16-pretrain-lvd1689m` (D051, no access). The rung-1
+    probe trains on `gemini-2.5-flash` P0b's stored labels (D047, H6's own pre-registered
+    fidelity target); the `AbstentionCascade`'s threshold is calibrated on, and its floor/
+    coverage evaluated against, a real disjoint split of Wave 3's human gold -- never the
+    judge's own labels, per H6's own pre-registered design."""
+    rung1 = json.loads(_RUNG1_RESULTS_PATH.read_text())
+    statement = (
+        f"H6 (D061: rung-1 linear probe on {rung1['backbone']} features -- a disclosed "
+        "substitute for D034's gated DINOv3 pin, not the same checkpoint under a different "
+        f"name; n_train={rung1['n_train']}, n_fidelity_holdout={rung1['n_fidelity_holdout']}): "
+        f"teacher fidelity vs. gemini-2.5-flash P0b = {rung1['fidelity_vs_gemini_2_5_flash']:.4f} "
+        "(pre-registered diagnostic target >=0.90, not met -- a real, disclosed diagnostic gap, "
+        "not the H6 claim itself). "
+    )
+    if not rung1["floor_reached"]:
+        statement += (
+            f"The pre-registered floor (>=0.80) was UNREACHABLE at any coverage > 0 on the real "
+            f"n={rung1['n_calibration_gold']} calibration split of Wave 3's human gold: "
+            f"{rung1.get('error', 'no threshold cleared the floor')}. H6 does not hold."
+        )
+    else:
+        statement += (
+            f"AbstentionCascade, threshold calibrated on n={rung1['n_calibration_gold']} human-gold "
+            f"frames, evaluated on a disjoint n={rung1['n_eval_gold']}: agreement floor="
+            f"{rung1['agreement_floor']:.4f} (pre-registered target >=0.80, "
+            + ("met" if rung1["agreement_floor"] >= rung1["target_floor"] else "NOT met")
+            + f"), coverage={rung1['coverage']:.4f} (pre-registered target >=0.70, "
+            + ("met" if rung1["coverage"] >= rung1["target_coverage"] else "NOT met")
+            + "). H6 requires both simultaneously; "
+            + ("it holds." if rung1["holds"] else "it does NOT hold.")
+        )
+    statement += (
+        " Real limitation, disclosed: the calibration/eval split is small (Wave 3's reduced "
+        "target, D057/D058), and per cascade.py's own documented gap, the threshold search has "
+        "no finite-sample safety margin (D049 names Learn-then-Test/conformal risk control as "
+        "the real fix, not yet implemented) -- this floor is a point estimate on a small sample, "
+        "not a statistically guaranteed lower bound."
+    )
+    return Claim(statement=statement, record_type="DistillationCascade", record_ref=f"{_RUNG1_RESULTS_REF}#H6")
+
+
 def _unmet_claims() -> list[UncheckedItem]:
     # H2/Result 2's blocker is no longer "credentials not configured" -- HF_TOKEN *is*
     # configured and does authenticate; the account is simply not on the gated dataset's
@@ -293,26 +351,13 @@ def _unmet_claims() -> list[UncheckedItem]:
         "needs to request/confirm access, or say this arm is out of scope. The corpus is also "
         "WebDataset tar shards, not a parquet -- its real adapter is unwired regardless"
     )
-    # H4/H5 (D059) and H7 (D060) are now real, checked Claims -- Wave 3's human labels and
-    # scripts/judge_gold_sets.py's live-judge run both completed for real; H7 reads confidence
-    # off that same P0b data (D060's disclosed deviation from "P7 only", since the self-hosted
-    # judge exposes logprob confidence on every call, not just P7). Only H6 among H4-H7 remains
-    # blocked: its distillation rung needs the gated DINOv3 checkpoint (D051, still no access).
+    # H4/H5 (D059), H7 (D060), and H6 (D061) are now all real, checked Claims -- Wave 3's human
+    # labels, scripts/judge_gold_sets.py's live-judge run, and scripts/distill_rung1.py (a
+    # disclosed DINOv2 substitute for the gated DINOv3 pin) all completed for real.
     return [
         UncheckedItem(
             item="H2 -- cluster-bootstrap design effect >=2 on S10k-U/S10k-S",
             reason=gated_corpus,
-        ),
-        UncheckedItem(
-            item="H6 -- distilled instrument holds >=0.80 agreement floor at >=0.70 coverage",
-            reason=(
-                "BLOCKER: requires the gated DINOv3 checkpoint "
-                "(facebook/dinov3-vits16-pretrain-lvd1689m) for the linear-probe rung's real "
-                "features -- confirmed no access (docs/DECISIONS.md D051). Wave 3's human gold "
-                "now exists (D057/D058) but the distillation feature pipeline itself remains "
-                "unbuilt regardless -- Caio needs to request/confirm DINOv3 access, or say this "
-                "arm is out of scope"
-            ),
         ),
         UncheckedItem(
             item="Result 2 -- matched three-corpus transfer probe",
@@ -333,6 +378,7 @@ def main() -> int:
             _intra_rater_claim(),
             _h4_claim(),
             _h5_claim(),
+            _h6_claim(),
             *ppi_claims,
             _h7_claim(),
         ],

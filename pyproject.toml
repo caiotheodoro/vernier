@@ -49,6 +49,15 @@ probes = [
     # declared here anyway since it's the real, already-decided dependency, not a new one.
     "torch>=2.0",
     "transformers>=4.40",
+    # docs/DECISIONS.md D061: facebook/dinov2-small (ungated substitute for the blocked DINOv3
+    # pin). `scripts/distill_rung1.py` reproduces `AutoImageProcessor`'s real preprocessing
+    # manually with pillow, deliberately NOT depending on `torchvision` -- this environment's
+    # Python cannot import it (`No module named '_lzma'`, a real build-time gap, not a missing
+    # package), and worse, `transformers` only attempts the broken import *because* torchvision
+    # is present on the path; leaving it uninstalled makes `transformers` correctly detect its
+    # absence and skip the torchvision-dependent codepath entirely. Found only by actually
+    # running the pipeline both ways, not assumed.
+    "pillow>=10.0",
 ]
 cloud = [
     # cloud/modal_qwen3vl.py -- serving Qwen3-VL-8B-Instruct-FP8 on Modal (docs/DECISIONS.md

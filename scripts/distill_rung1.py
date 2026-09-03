@@ -32,7 +32,10 @@ import json
 import random
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from PIL import Image
 
 from vernier.distil.cascade import AbstentionCascade
 from vernier.distil.linear_probe import LinearProbe, fidelity
@@ -105,16 +108,50 @@ def split_gold_for_calibration_and_eval(
     return shuffled[:midpoint], shuffled[midpoint:]
 
 
+# Real values read from facebook/dinov2-small's own preprocessor_config.json (live-fetched,
+# not guessed) -- reproduced manually rather than via `transformers.AutoImageProcessor`, whose
+# import chain pulls in `torchvision`, which this environment's Python cannot import
+# (`ModuleNotFoundError: No module named '_lzma'` -- a real, environment-level build gap, not a
+# missing pip package; rebuilding Python to fix it is out of scope for a feature-extraction
+# script). `AutoModel` alone imports cleanly (verified live) since it never touches torchvision.
+_RESIZE_SHORTEST_EDGE = 256
+_CROP_SIZE = 224
+_IMAGE_MEAN = (0.485, 0.456, 0.406)
+_IMAGE_STD = (0.229, 0.224, 0.225)
+
+
+def _preprocess(image: "Image.Image", torch_module: Any) -> Any:
+    """Manual reproduction of `BitImageProcessor`'s real pipeline for this checkpoint: resize
+    shortest edge to 256 (bicubic), center-crop to 224x224, rescale to [0,1], normalize by
+    ImageNet mean/std. Returns a `(1, 3, 224, 224)` tensor, the same shape `AutoImageProcessor`
+    would have produced."""
+    w, h = image.size
+    scale = _RESIZE_SHORTEST_EDGE / min(w, h)
+    image = image.resize((round(w * scale), round(h * scale)), resample=3)  # 3 == PIL.Image.BICUBIC
+    w, h = image.size
+    left = (w - _CROP_SIZE) // 2
+    top = (h - _CROP_SIZE) // 2
+    image = image.crop((left, top, left + _CROP_SIZE, top + _CROP_SIZE))
+
+    import numpy as np
+
+    array = np.asarray(image, dtype=np.float32) / 255.0
+    array = (array - np.array(_IMAGE_MEAN)) / np.array(_IMAGE_STD)
+    tensor = torch_module.from_numpy(array).permute(2, 0, 1).unsqueeze(0).float()
+    return tensor
+
+
 def _extract_features(frame_ids: list[str], frame_by_id: dict[str, FrameRef]) -> dict[str, list[float]]:
     """Real DINOv2-small embeddings (mean-pooled patch tokens), one per `frame_id`, cached to
-    `_FEATURES_CACHE_PATH` so a re-run resumes rather than re-extracting. Import of `torch`/
-    `transformers` is local to this function -- real, already-declared `probes` extra
-    dependencies (D051), but no reason to pay their import cost for callers that only use this
-    module's pure sampling/splitting functions (tested without either)."""
-    import torch
-    from transformers import AutoImageProcessor, AutoModel
-    from PIL import Image
+    `_FEATURES_CACHE_PATH` so a re-run resumes rather than re-extracting. Imports are local to
+    this function -- real, already-declared `probes` extra dependencies (D051), but no reason
+    to pay their import cost for callers that only use this module's pure sampling/splitting
+    functions (tested without either)."""
     import io
+
+    import torch
+    from PIL import Image
+    from transformers import AutoModel
 
     cache: dict[str, list[float]] = {}
     if _FEATURES_CACHE_PATH.is_file():
@@ -122,15 +159,14 @@ def _extract_features(frame_ids: list[str], frame_by_id: dict[str, FrameRef]) ->
 
     pending = [fid for fid in frame_ids if fid not in cache]
     if pending:
-        processor = AutoImageProcessor.from_pretrained(_BACKBONE)  # type: ignore[no-untyped-call]
         model = AutoModel.from_pretrained(_BACKBONE)
         model.eval()
         for i, frame_id in enumerate(pending, start=1):
             frame = frame_by_id[frame_id]
             image = Image.open(io.BytesIO(image_bytes_for(frame))).convert("RGB")
-            inputs = processor(images=image, return_tensors="pt")
+            inputs = _preprocess(image, torch)
             with torch.no_grad():
-                output = model(**inputs)
+                output = model(pixel_values=inputs)
             embedding = output.last_hidden_state.mean(dim=1).squeeze(0).tolist()
             cache[frame_id] = embedding
             if i % 50 == 0 or i == len(pending):
