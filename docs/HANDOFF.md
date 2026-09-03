@@ -142,7 +142,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D056 |
+| Decisions | `DECISIONS.md`, D001–D057 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -226,13 +226,25 @@ now exist and are folded into `MEASUREMENT_CARD.json` (see "Where this stands" a
 `DECISIONS.md` D056 for the exact figures). The n=100/n=5 numbers above are kept as a record of
 what was known at the time, not as the current state.
 
-**The real next action is Wave 3** (600 primary + 100 retest human labels) — the one piece of
+**The real next action is Wave 3, at a reduced target: 90 primary + 30 retest, not the
+pre-registered 600+100 (`docs/DECISIONS.md` D057, Caio's explicit call)** — the one piece of
 this project that is explicitly not automatable (`AGENTS.md` rule 3, "the judge is never the
 oracle": every downstream statistic — AC1, PPI, H4/H5/H6 — needs a genuine independent human
-judgment to compare the judge against, not another AI's output). The labelling tool itself is
-real and ready (`labels/tool.py`); the frame pools it draws from are already drawn and
-persisted. Nothing else in Wave 2 remains open, and nothing in Wave 4 (PPI-corrected estimates,
-H5's cross-corpus analysis, distillation, calibration) can start before Wave 3 exists.
+judgment to compare the judge against, not another AI's output). Real progress as of this
+writing: 3/90 primary labels recorded (`data/labels/caio/primary.json`). Run (real, ready now):
+
+    python3 scripts/human_labels_cli.py --rater caio --pass primary --sample G200-ego --stop-after 30
+    python3 scripts/human_labels_cli.py --rater caio --pass primary --sample G200-ego4d --stop-after 30
+    python3 scripts/human_labels_cli.py --rater caio --pass primary --sample G200-epic --stop-after 30
+    python3 scripts/human_labels_cli.py --rater caio --pass retest --stop-after 30
+
+`--sample` scopes to one balanced G200-* arm at a time (D057 added this; the merged-pool tool
+had no per-arm stop point); `--stop-after` stops cleanly at the real reduced target regardless
+of what's left in that arm's pool. Ctrl-C is always safe; re-running resumes at the next
+pending frame. Nothing else in Wave 2 remains open, and nothing in Wave 4 (PPI-corrected
+estimates, H5's cross-corpus analysis, distillation, calibration) can start before Wave 3
+exists — and per D057, Wave 4's writeup must report H5/AC1's wider real confidence intervals at
+this reduced N honestly, not silently as if the pre-registered precision had been achieved.
 
 **UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
 Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`

@@ -1440,3 +1440,63 @@ not a bug: nothing in this session's work touches those blockers.
 
 **Reverses if:** nothing. A real, complete, honestly-reported result at the pre-registered
 scale for the three hypotheses this session's infra work targeted.
+
+---
+
+## D057 — Wave 3 sample size cut from 600+100 to 90+30, Caio's explicit call
+
+Caio: "im literally not gonna do 600. too much." A real, explicit decision, not a silent
+drift -- `PRE-REGISTRATION.md`'s `600` primary / `100` retest are frozen numbers, and per
+`AGENTS.md` rule 1 a size change needs its own dated amendment here, not a quiet edit to the
+frozen text or the labelling tool.
+
+**New real target: 90 primary (30 each, balanced across `G200-ego`/`G200-ego4d`/`G200-epic`)
++ 30 retest (`R100`).** Balance is preserved deliberately -- D023 already calls the primary
+set a *balanced* gold set for exactly the cross-corpus comparison H5 needs; a random 90-frame
+draw off the merged 600-frame pool would land near 30/arm in expectation but with real sampling
+variance, which is worse for H5 than a guaranteed even split at no extra labelling cost.
+
+**What this actually costs, stated plainly, not glossed over:**
+
+- D035 already found the *full* n=200/arm underpowered for H5's ≥5pp significance framing
+  (19-48% power, never above a coin flip) -- H5's real analysis is a point estimate with an
+  interval, not that test, so cutting to n=30/arm does not cross from "rigorous" to "not"; it
+  makes an already-wide interval wider. This must be stated in whatever writeup reports H5, not
+  silently absorbed into a bare number.
+- R100's retest gate (0.70 AC1 boundary) was already found borderline-noisy at n=100 (D035);
+  n=30 makes that boundary noisier still. The measured AC1 at n=30 should be read as
+  indicative, not a decisive pass/fail, when Wave 4 reports it.
+- PPI-corrected prevalence estimates and AC1 confidence intervals throughout Wave 4 will be
+  correspondingly wider than the pre-registered design intended. None of this is a validity
+  problem -- it is a precision problem, and precision is exactly what a confidence interval is
+  for reporting honestly.
+
+**Real code change**: `labels/tool.py`'s `next_frame`/`_pending_frames` pool all three `G200-*`
+samples together with no per-sample stop point, so hitting a guaranteed 30/30/30 split off the
+merged pool isn't possible without new scoping (repeated calls with no label written return the
+same frame forever, so naive post-hoc filtering doesn't work either). Rather than edit
+`labels/tool.py`'s already-reviewed, frozen Wave-1 functions, `scripts/human_labels_cli.py`
+(an operational script, not a frozen unit) gained its own scoped pending-pool/RNG helpers
+(`_scoped_pending_frames`/`_scoped_next_frame`, mirroring `labels/tool.py`'s pattern rather than
+sharing it, per D033's established convention) plus two new flags: `--sample <G200-*>` runs one
+arm in isolation, `--stop-after N` stops cleanly after N real labels regardless of what remains
+pending. Both are additive and off by default -- the original merged-pool, run-until-exhausted
+behaviour is unchanged when neither flag is passed. Real usage for the new target:
+
+    python3 scripts/human_labels_cli.py --rater caio --pass primary --sample G200-ego --stop-after 30
+    python3 scripts/human_labels_cli.py --rater caio --pass primary --sample G200-ego4d --stop-after 30
+    python3 scripts/human_labels_cli.py --rater caio --pass primary --sample G200-epic --stop-after 30
+    python3 scripts/human_labels_cli.py --rater caio --pass retest --stop-after 30
+
+Regression-tested: scoped-pool exclusion of already-labelled frames, determinism/no-cross-
+sample-leak on repeated calls, `--sample` rejected under `--pass retest`, `--stop-after`
+actually stopping the loop before the pool is exhausted.
+
+**Not changed**: `PRE-REGISTRATION.md`'s frozen `600`/`100` text itself -- per its own rule,
+amendments are recorded here and pointed to from its Amendments section, never edited in place.
+Wave 4's analysis code must read the real recorded label count from `HumanLabelStore`, not
+assume 600/100 -- this was already the only honest design (nothing in Wave 4 has been written
+yet to assume otherwise).
+
+**Reverses if:** Caio decides to label more later -- `next_frame`/`--sample` both resume from
+wherever the store already is, so raising the target back up costs nothing already spent.

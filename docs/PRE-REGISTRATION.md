@@ -279,3 +279,10 @@ Every entry here is a pointer to the real `DECISIONS.md` record, not a restateme
   the judge-arm framing for E4/E6, and calibration's real availability under the open judge —
   is recorded in `docs/DECISIONS.md` D047, D048, following an independent review,
   `docs/REVIEW.md`.
+- **Wave 3's sample sizes are cut from the `600` primary / `100` retest named above to 90
+  primary (30/arm, still balanced across the three `G200-*` sets) / 30 retest** — Caio's
+  explicit call, not a silent drift. Confidence intervals throughout Wave 4 (AC1, PPI-corrected
+  prevalence, H5's cross-corpus comparison) are correspondingly wider than this document's
+  numbers were sized for; H5 was already found underpowered at the *full* size (D035), so this
+  widens an already-wide interval rather than crossing into invalid territory. `docs/DECISIONS.md`
+  D057.

@@ -18,7 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import human_labels_cli as cli_mod  # noqa: E402
 
 from vernier.labels.store import HumanLabelStore
-from vernier.models import FrameRef
+from vernier.models import FrameRef, HumanLabel
+from vernier.sampling.membership import write_membership
 
 
 def _frame(uid: str = "0") -> FrameRef:
@@ -155,19 +156,143 @@ def test_label_one_frame_defaults_difficulty_to_medium_on_blank(
     assert label.note == ""
 
 
+# --- _scoped_pending_frames / _scoped_next_frame: D057's balanced reduced-target scoping ------
+
+
+def _frames(sample: str, n: int) -> list[FrameRef]:
+    return [
+        FrameRef(
+            frame_id=f"{sample}-{i}",
+            corpus="egocentric-10k",
+            corpus_rev="deadbeef",
+            factory_id=None,
+            worker_id=None,
+            clip_id=None,
+            frame_index=0,
+            timestamp_s=None,
+            width=1920,
+            height=1080,
+            fps=None,
+            codec=None,
+            sample=sample,
+            stratum="unstratified",
+            why_no_provenance="test fixture",
+        )
+        for i in range(n)
+    ]
+
+
+def test_scoped_pending_frames_excludes_already_labelled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(cli_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+    frames = _frames("G200-ego", 3)
+    write_membership("G200-ego", frames, tmp_path / "membership")
+
+    store = HumanLabelStore(tmp_path / "labels" / "R1")
+    store.write(
+        HumanLabel.model_validate(
+            {
+                "frame_id": frames[0].frame_id,
+                "rater": "R1",
+                "pass": "primary",
+                "rubric_rev": "1.2.0",
+                "hands_visible": 1,
+                "manipulation": False,
+                "edge_case": [],
+                "difficulty": "easy",
+                "note": "",
+                "labelled_at": "2026-01-01T00:00:00Z",
+                "seconds_spent": 5,
+            }
+        )
+    )
+
+    pending = cli_mod._scoped_pending_frames("G200-ego", "primary", "R1")
+
+    assert {f.frame_id for f in pending} == {frames[1].frame_id, frames[2].frame_id}
+
+
+def test_scoped_next_frame_returns_none_when_sample_exhausted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(cli_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+    write_membership("G200-ego", [], tmp_path / "membership")
+
+    assert cli_mod._scoped_next_frame("G200-ego", "primary", "R1") is None
+
+
+def test_scoped_next_frame_is_deterministic_and_scoped_to_its_own_sample(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(cli_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+    ego_frames = _frames("G200-ego", 5)
+    other_frames = _frames("G200-ego4d", 5)
+    write_membership("G200-ego", ego_frames, tmp_path / "membership")
+    write_membership("G200-ego4d", other_frames, tmp_path / "membership")
+
+    first = cli_mod._scoped_next_frame("G200-ego", "primary", "R1")
+    second = cli_mod._scoped_next_frame("G200-ego", "primary", "R1")
+
+    assert first is not None
+    assert second is not None
+    assert first.frame_id == second.frame_id  # repeated calls, no label recorded -> same frame
+    assert first.sample == "G200-ego"  # never leaks a frame from the other scoped sample
+
+
 # --- main: loop termination and Ctrl-C handling -----------------------------------------------
 
 
 def test_main_stops_cleanly_when_pool_exhausted(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cli_mod, "_label_one_frame", lambda rater, pass_: False)
+    monkeypatch.setattr(cli_mod, "_label_one_frame", lambda rater, pass_, sample: False)
 
     assert cli_mod.main(["--rater", "R1", "--pass", "primary"]) == 0
 
 
 def test_main_handles_keyboard_interrupt_gracefully(monkeypatch: pytest.MonkeyPatch) -> None:
-    def _raise(rater: str, pass_: str) -> bool:
+    def _raise(rater: str, pass_: str, sample: str | None) -> bool:
         raise KeyboardInterrupt
 
     monkeypatch.setattr(cli_mod, "_label_one_frame", _raise)
 
     assert cli_mod.main(["--rater", "R1", "--pass", "primary"]) == 0
+
+
+# --- main: --sample and --stop-after (D057's reduced-target scoping) --------------------------
+
+
+def test_main_rejects_sample_with_retest_pass() -> None:
+    with pytest.raises(SystemExit):
+        cli_mod.main(["--rater", "R1", "--pass", "retest", "--sample", "G200-ego"])
+
+
+def test_main_stops_after_n_labels_regardless_of_pool_remaining(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = {"n": 0}
+
+    def _always_true(rater: str, pass_: str, sample: str | None) -> bool:
+        calls["n"] += 1
+        return True
+
+    monkeypatch.setattr(cli_mod, "_label_one_frame", _always_true)
+
+    assert cli_mod.main(["--rater", "R1", "--pass", "primary", "--stop-after", "3"]) == 0
+    assert calls["n"] == 3  # the pool never runs out here -- --stop-after must be what stops it
+
+
+def test_main_passes_sample_through_to_label_one_frame(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[str | None] = []
+
+    def _fake(rater: str, pass_: str, sample: str | None) -> bool:
+        seen.append(sample)
+        return len(seen) < 2
+
+    monkeypatch.setattr(cli_mod, "_label_one_frame", _fake)
+
+    cli_mod.main(["--rater", "R1", "--pass", "primary", "--sample", "G200-ego"])
+
+    assert seen == ["G200-ego", "G200-ego"]
