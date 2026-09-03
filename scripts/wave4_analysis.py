@@ -22,6 +22,15 @@ Real published figures used as `PrevalenceEstimate.published` (`PRE-REGISTRATION
 table, `>=1 hand` / active manipulation columns; `hand_count` in this codebase's own PPI
 vocabulary means the `>=1 hand` indicator, not "both hands" -- see `estimation/ppi.py`'s
 docstring): Egocentric-10K 96.42%/91.66%, Ego4D 67.33%/50.07%, EPIC-KITCHENS-100 90.37%/85.04%.
+
+- **H7 (calibration), a real, disclosed deviation from "P7 only" (D060)**: `PRE-REGISTRATION.md`
+  scopes calibration to `P7` because the *retired* closed judges (Gemini/Claude) only ever
+  exposed confidence when a prompt explicitly asked for one. The self-hosted `qwen3-vl` judge
+  is different -- it derives logprob confidence from its own output distribution on *every*
+  call, `P7` or not (`judges/qwen3vl.py`'s own docstring; D052/D053 pinned this). The 600 real
+  `G200-*` `P0b` responses already carry real logprob confidence, so `_calibration()` computes
+  ECE from that already-collected data against the 93 primary human-gold labels -- no new judge
+  calls needed. Flagged in the report's own `note` field, not silently substituted for P7.
 """
 
 from __future__ import annotations
@@ -32,6 +41,7 @@ from typing import Any
 
 from vernier.agreement.core import (
     _LABEL_FIELD,
+    _RESPONSE_FIELD,
     _categories,
     _gwet_ac1_from_pairs,
     cohens_kappa,
@@ -39,6 +49,7 @@ from vernier.agreement.core import (
     intra_rater_kappa,
     raw_agreement,
 )
+from vernier.calibration import build_calibration_report, reliability_bins
 from vernier.estimation.ppi import estimate_prevalence
 from vernier.judges.prompts import PromptVariant
 from vernier.labels.store import HumanLabelStore
@@ -128,6 +139,40 @@ def _h4(primary: list[HumanLabel], judged_by_sample: dict[SampleName, list[Judge
     return result
 
 
+def _calibration(
+    primary: list[HumanLabel], judged_by_sample: dict[SampleName, list[JudgeResponse]]
+) -> dict[str, Any]:
+    """H7, a real, disclosed deviation from `PRE-REGISTRATION.md`'s "P7 only" scoping (D060) --
+    see module docstring for why: the self-hosted judge exposes real logprob confidence on
+    every call, not just P7, so this reads it straight off the already-collected `P0b`
+    responses against the 93 primary human-gold labels. No new judge calls."""
+    all_judged_by_frame = {j.frame_id: j for responses in judged_by_sample.values() for j in responses}
+    result: dict[str, Any] = {}
+    for task in ("hand_count", "manipulation"):
+        label_value = _LABEL_FIELD[task]
+        response_value = _RESPONSE_FIELD[task]
+        confidences: list[float] = []
+        correct: list[bool] = []
+        for label in primary:
+            response = all_judged_by_frame.get(label.frame_id)
+            if response is None or response.status != "ok":
+                continue
+            if response.confidence.kind != "logprob" or response.confidence.value is None:
+                continue
+            confidences.append(response.confidence.value)
+            correct.append(label_value(label) == response_value(response))
+        bins = reliability_bins(confidences, correct)
+        report = build_calibration_report(
+            judge=_JUDGE,
+            task=task,
+            subset="G200-primary-labelled",
+            confidence_kind="logprob",
+            bins=bins,
+        )
+        result[task] = {**report.model_dump(mode="json"), "n": len(confidences)}
+    return result
+
+
 def _h5(
     primary: list[HumanLabel],
     judged_by_sample: dict[SampleName, list[JudgeResponse]],
@@ -190,6 +235,7 @@ def main() -> int:
         "H4": _h4(primary, judged_by_sample),
         "H5": _h5(primary, judged_by_sample, frame_ids_by_sample),
         "ppi": _ppi_per_domain(primary, judged_by_sample, frame_ids_by_sample),
+        "H7_calibration": _calibration(primary, judged_by_sample),
     }
     out_path = Path("data/wave4_analysis.json")
     out_path.write_text(json.dumps(output, indent=2))

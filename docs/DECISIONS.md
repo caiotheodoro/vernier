@@ -1598,3 +1598,46 @@ touches those blockers.
 **Reverses if:** nothing. Real, complete, honestly-reported results -- including the negative
 and reversed ones -- at the real (reduced) scale this session's human labelling and live-judge
 work actually reached.
+
+---
+
+## D060 — H7 (calibration) closed, reading confidence from already-collected P0b data, not P7
+
+`PRE-REGISTRATION.md` scopes H7 to `P7` specifically: "Both published prompts constrain output
+to a bare integer or a `yes`/`no` enum, exposing no confidence. Calibration is therefore
+reported for `P7` only." That framing was written for the *retired* closed judges
+(gemini/claude), which only ever exposed a confidence value when a prompt explicitly requested
+one under `P7`'s verbalized-confidence schema.
+
+**The self-hosted judge is architecturally different, and was always documented as such**:
+`judges/qwen3vl.py`'s own module docstring says logprob confidence "does not depend on the
+model volunteering a number in its answer text... regardless of prompt variant" -- D052/D053
+already pinned and verified this live. The 600 real `P0b` responses from D059's `G200-*` run
+each carry a real logprob confidence value (verified: all 600 have `confidence.kind ==
+"logprob"` with a real, non-null value). Building a calibration report from that
+already-collected data, rather than making new `P7` calls, is a real, deliberate substitution
+-- correct given the judge's real properties, but a genuine deviation from the pre-registered
+text's literal scoping, so it is recorded here and stated plainly inside the H7 claim itself,
+not silently swapped in.
+
+**Real result** (`scripts/wave4_analysis.py`'s new `_calibration`, off the 93 primary
+human-gold labels): ECE = 0.1505 (hand_count), 0.0645 (manipulation). **A real but weak
+calibration curve, disclosed as such**: 99% of frames in both tasks land in the single [0.9,
+1.0] confidence bin -- a direct, expected consequence of D053's `temperature=0.0` pin (greedy
+decoding produces near-degenerate, near-1.0 token probabilities on a closed-form
+classification task). ECE here is measured almost entirely from that one bin's own
+accuracy-vs-confidence gap, not a real curve across confidence levels -- a real number, not a
+fabricated one, but a limitation of what greedy decoding can show about calibration, not of the
+estimator (`calibration.reliability_bins`/`ece` themselves are unchanged, already-reviewed
+Wave-1 code).
+
+**`scripts/emit_card.py` updated to match**: `_h7_claim()` reads `data/wave4_analysis.json`'s
+new `H7_calibration` block and states the P7-to-P0b deviation explicitly in the claim text
+itself, plus the near-degenerate-confidence caveat. H7 removed from `what_could_not_be_checked`
+(now 3 items: H2, H6, Result 2, down from 4). Regenerated `MEASUREMENT_CARD.json`: 14 real
+claims (was 13). **`verdict` stays `NOT_VERIFIED`** -- H2 and Result 2 remain blocked on the
+gated raw corpus (D044), H6 on the gated DINOv3 checkpoint (D051); neither touched by this work.
+
+**Reverses if:** nothing. `compute_j`/`compute_delta_j` (2605.06939's J/delta-J) remain real,
+disclosed placeholders (their own docstrings, unrelated to this decision) -- not computed here,
+since this entry only closes the ECE/reliability-bins half of H7's pre-registered scope.

@@ -8,9 +8,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from wave4_analysis import _h4, _h5, _intra_rater_ac1, _ppi_per_domain  # noqa: E402
+from wave4_analysis import _calibration, _h4, _h5, _intra_rater_ac1, _ppi_per_domain  # noqa: E402
 
 from vernier.models import Confidence, HumanLabel, JudgeResponse
 
@@ -33,7 +35,9 @@ def _label(frame_id: str, hands_visible: int, manipulation: bool) -> HumanLabel:
     )
 
 
-def _response(frame_id: str, hands_visible: int, manipulation: bool) -> JudgeResponse:
+def _response(
+    frame_id: str, hands_visible: int, manipulation: bool, confidence: float | None = None
+) -> JudgeResponse:
     return JudgeResponse(
         frame_id=frame_id,
         judge="qwen3-vl",
@@ -41,7 +45,11 @@ def _response(frame_id: str, hands_visible: int, manipulation: bool) -> JudgeRes
         prompt_variant="P0b",
         hands_visible=hands_visible,  # type: ignore[arg-type]
         manipulation=manipulation,
-        confidence=Confidence(kind="none", value=None),
+        confidence=(
+            Confidence(kind="none", value=None)
+            if confidence is None
+            else Confidence(kind="logprob", value=confidence)
+        ),
         raw="raw",
         status="ok",
         latency_ms=10,
@@ -120,3 +128,30 @@ def test_ppi_per_domain_returns_a_real_estimate_with_gold_and_unlabelled_split()
     assert manipulation_est["ppi"]["n_gold"] == 5
     assert manipulation_est["ppi"]["n_unlabelled"] == 15
     assert manipulation_est["published"] == 0.9166  # PRE-REGISTRATION.md's real Egocentric-10K figure
+
+
+def test_calibration_only_uses_frames_with_real_logprob_confidence() -> None:
+    primary = [_label("f0", 1, True), _label("f1", 1, True), _label("f2", 1, True)]
+    responses = [
+        _response("f0", 1, True, confidence=0.95),  # correct, high confidence
+        _response("f1", 0, True, confidence=0.5),  # wrong on hand_count, mid confidence
+        _response("f2", 1, True, confidence=None),  # no usable confidence -- excluded
+    ]
+
+    result = _calibration(primary, {"G200-ego": responses})
+
+    assert result["hand_count"]["n"] == 2  # f2 excluded (no logprob confidence)
+    assert result["manipulation"]["n"] == 2
+    assert result["hand_count"]["judge"] == "qwen3-vl"
+    assert result["hand_count"]["confidence_kind"] == "logprob"
+
+
+def test_calibration_reports_perfect_ece_when_confidence_matches_accuracy_exactly() -> None:
+    # 10 frames, all correct, all confidence 1.0 -> the top bin's mean_conf == accuracy == 1.0.
+    primary = [_label(f"f{i}", 1, True) for i in range(10)]
+    responses = [_response(f"f{i}", 1, True, confidence=1.0) for i in range(10)]
+
+    result = _calibration(primary, {"G200-ego": responses})
+
+    assert result["hand_count"]["ece"] == pytest.approx(0.0)
+    assert result["manipulation"]["ece"] == pytest.approx(0.0)

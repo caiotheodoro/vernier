@@ -253,6 +253,33 @@ def _ppi_claims() -> tuple[list[Claim], list[PrevalenceEstimate]]:
     return claims, estimates
 
 
+def _h7_claim() -> Claim:
+    """Real, checked finding from `scripts/wave4_analysis.py` (D060) -- a disclosed deviation
+    from `PRE-REGISTRATION.md`'s "calibration under P7 only" scoping: the self-hosted judge
+    exposes real logprob confidence on every call, not just P7 (`judges/qwen3vl.py`, D052/D053),
+    so this reads confidence straight off the already-collected `P0b` `G200-*` responses against
+    the 93 primary human-gold labels. No new judge calls; stated plainly, not silently swapped."""
+    wave4 = json.loads(_WAVE4_RESULTS_PATH.read_text())
+    calibration = wave4["H7_calibration"]
+    top_bin_shares = {
+        task: max((b["n"] for b in report["bins"]), default=0) / report["n"] if report["n"] else 0.0
+        for task, report in calibration.items()
+    }
+    statement = (
+        f"H7 (D060: calibration read from {_WAVE4_JUDGE}'s {_WAVE4_PROMPT_VARIANT} logprob "
+        "confidence, a real, disclosed deviation from PRE-REGISTRATION.md's 'P7 only' scoping -- "
+        "the retired closed judges needed P7 to expose any confidence at all; this self-hosted "
+        "judge exposes it on every call): "
+        + "; ".join(f"{task} ECE={report['ece']:.4f} (n={report['n']})" for task, report in calibration.items())
+        + ". Confidence is near-degenerate under greedy decoding (temperature=0, D053): "
+        + "; ".join(f"{task} {share:.0%} of frames land in the top [0.9, 1.0] bin" for task, share in top_bin_shares.items())
+        + " -- ECE here is measured almost entirely from that one bin, not a real spread across "
+        "confidence levels. A real number, not a fabricated one, but a weak calibration curve by "
+        "construction, not a limitation of the estimator."
+    )
+    return Claim(statement=statement, record_type="Calibration", record_ref=f"{_WAVE4_RESULTS_REF}#H7_calibration")
+
+
 def _unmet_claims() -> list[UncheckedItem]:
     # H2/Result 2's blocker is no longer "credentials not configured" -- HF_TOKEN *is*
     # configured and does authenticate; the account is simply not on the gated dataset's
@@ -266,10 +293,11 @@ def _unmet_claims() -> list[UncheckedItem]:
         "needs to request/confirm access, or say this arm is out of scope. The corpus is also "
         "WebDataset tar shards, not a parquet -- its real adapter is unwired regardless"
     )
-    # H4/H5 are now real, checked Claims (D059) -- Wave 3's human labels and
-    # scripts/judge_gold_sets.py's live-judge run both completed for real. H6/H7 remain
-    # blocked: H6's distillation needs the gated DINOv3 checkpoint (D051, still no access);
-    # H7's calibration needs live P7 calls, never made.
+    # H4/H5 (D059) and H7 (D060) are now real, checked Claims -- Wave 3's human labels and
+    # scripts/judge_gold_sets.py's live-judge run both completed for real; H7 reads confidence
+    # off that same P0b data (D060's disclosed deviation from "P7 only", since the self-hosted
+    # judge exposes logprob confidence on every call, not just P7). Only H6 among H4-H7 remains
+    # blocked: its distillation rung needs the gated DINOv3 checkpoint (D051, still no access).
     return [
         UncheckedItem(
             item="H2 -- cluster-bootstrap design effect >=2 on S10k-U/S10k-S",
@@ -284,15 +312,6 @@ def _unmet_claims() -> list[UncheckedItem]:
                 "now exists (D057/D058) but the distillation feature pipeline itself remains "
                 "unbuilt regardless -- Caio needs to request/confirm DINOv3 access, or say this "
                 "arm is out of scope"
-            ),
-        ),
-        UncheckedItem(
-            item="H7 -- calibration (ECE, J/deltaJ) under the P7 confidence-schema variant",
-            reason=(
-                "BLOCKER: no live P7 calls have been made at all -- scripts/e2_replication.py "
-                "covers only P0a/P0b, scripts/e5_prompt_sweep.py only P0b/P1-P6; P7 (the "
-                "confidence-schema addition) is real and available in judges/prompts.py but "
-                "has not been exercised against the live judge, live or otherwise"
             ),
         ),
         UncheckedItem(
@@ -315,6 +334,7 @@ def main() -> int:
             _h4_claim(),
             _h5_claim(),
             *ppi_claims,
+            _h7_claim(),
         ],
         what_could_not_be_checked=_unmet_claims(),
         sample_definition=(

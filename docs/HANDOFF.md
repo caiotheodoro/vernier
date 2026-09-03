@@ -11,13 +11,13 @@ baseline (2026-09-02): full-N E2/E5 run completed for real (D054/D055/D056). Ear
 ## Where this stands
 
 **A real `MeasurementCard` exists and is committed: `MEASUREMENT_CARD.json`, `verdict=
-NOT_VERIFIED`.** Regenerate with `make card`. It now carries 13 real claims: H8
+NOT_VERIFIED`.** Regenerate with `make card`. It now carries 14 real claims: H8
 (participant-count disparity), **H1/H1b/H3 from the full-N E2/E5 run (D056)** -- H1 fails its
 own criterion (2-hands 6.32pp outside +/-2pp), H1b is null, H3's headline prediction is not
-supported -- and, new this update, **intra-rater reliability, H4, H5, and six PPI-corrected
-prevalence estimates (D059)**, off Wave 3's real reduced-target human gold (93 primary,
-34-overlap retest) and a real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
-`scripts/judge_gold_sets.py`):
+supported -- **intra-rater reliability, H4, H5, and six PPI-corrected prevalence estimates
+(D059)**, off Wave 3's real reduced-target human gold (93 primary, 34-overlap retest) and a
+real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
+`scripts/judge_gold_sets.py`), and **H7 (calibration, D060)**:
 
 - **Intra-rater (the pre-registration's own first falsification check): passes.** AC1=0.876
   (hand_count), 0.904 (manipulation), n=34 -- both above the 0.70 gate. The audit is not
@@ -33,14 +33,19 @@ prevalence estimates (D059)**, off Wave 3's real reduced-target human gold (93 p
   Ego4D and EPIC-KITCHENS-100 for the first time (E2 never touched them), plus a second,
   PPI-corrected view of Egocentric-10K. Not clustered (D039, still unfixed) -- each interval is
   a disclosed lower bound on true width.
+- **H7: ECE=0.1505 (hand_count), 0.0645 (manipulation)** -- a real, disclosed deviation from
+  "P7 only" (the self-hosted judge exposes real logprob confidence on every call, not just P7,
+  D052/D053), read straight off the already-collected `P0b` data, no new judge calls. Weak
+  calibration curve by construction: 99% of frames land in the single [0.9, 1.0] confidence bin
+  (greedy decoding, D053), so ECE mostly reflects that one bin, not a real spread.
 
-Four hypotheses remain in `what_could_not_be_checked` (H2, H6, H7, Result 2), each with a
-specific `"BLOCKER:"` reason -- H2/Result 2 need the still-inaccessible gated raw corpus (D044),
-H6 needs the still-gated DINOv3 checkpoint (D051), H7 needs live P7 calls never made -- so
-`_derive_verdict` (D038) returns `NOT_VERIFIED` because real blockers remain, not vacuously.
-`verify_and_exit` returns nonzero, for real, via `make card`. Not a placeholder, and not to be
-conflated with either the H8 computation itself or the D016 live-data cross-check in the next
-paragraph (a data-integrity sanity check, never presented as a hypothesis result).
+Three hypotheses remain in `what_could_not_be_checked` (H2, H6, Result 2), each with a specific
+`"BLOCKER:"` reason -- H2/Result 2 need the still-inaccessible gated raw corpus (D044), H6
+needs the still-gated DINOv3 checkpoint (D051) -- so `_derive_verdict` (D038) returns
+`NOT_VERIFIED` because real blockers remain, not vacuously. `verify_and_exit` returns nonzero,
+for real, via `make card`. Not a placeholder, and not to be conflated with either the H8
+computation itself or the D016 live-data cross-check in the next paragraph (a data-integrity
+sanity check, never presented as a hypothesis result).
 
 **Wave S, Wave 0, the P1 tier, and Wave 1 are all done and committed. Wave 2 is real, wireable
 work in progress — but every path to a VERIFIED card needs a credential this environment does
@@ -155,7 +160,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D059 |
+| Decisions | `DECISIONS.md`, D001–D060 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -243,14 +248,14 @@ what was known at the time, not as the current state.
 `G200-ego`/`G200-ego4d`/`G200-epic`, D057's reduced target) and 60 retest labels (34
 real-overlapping with primary, via `--retest-from-primary`, D058's fix for the original
 4-overlap gap).** `scripts/judge_gold_sets.py` then real-judged all three `G200-*` sets (600
-frames, `P0b`), and `scripts/wave4_analysis.py` computed the real intra-rater/H4/H5/PPI results
--- all folded into the card, D059. See "Where this stands" above for the actual numbers.
+frames, `P0b`), and `scripts/wave4_analysis.py` computed the real intra-rater/H4/H5/PPI/H7
+results -- all folded into the card, D059/D060. See "Where this stands" above for the actual
+numbers.
 
-**What's left is genuinely just the four named blockers** (H2, H6, H7, Result 2) -- none
-automatable further without a decision from Caio: H2/Result 2 need access to the gated raw
-Egocentric-10K corpus (D044); H6 needs access to the gated DINOv3 checkpoint (D051); H7 needs a
-live judge run under `P7` (real infra, just never exercised -- `scripts/e2_replication.py`/
-`e5_prompt_sweep.py` only ever covered P0a/P0b/P1-P6). Nothing here is an engineering gap.
+**What's left is genuinely just three named blockers** (H2, H6, Result 2) -- none automatable
+further without a decision from Caio: H2/Result 2 need access to the gated raw Egocentric-10K
+corpus (D044); H6 needs access to the gated DINOv3 checkpoint (D051). Nothing here is an
+engineering gap.
 
 **UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
 Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`

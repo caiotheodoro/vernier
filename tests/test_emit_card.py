@@ -22,6 +22,7 @@ from emit_card import (  # noqa: E402
     _h3_claim,
     _h4_claim,
     _h5_claim,
+    _h7_claim,
     _h8_claim,
     _intra_rater_claim,
     _ppi_claims,
@@ -47,7 +48,7 @@ def test_h8_claim_is_not_tied_to_a_prevalence_estimate() -> None:
 
 def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
     items = _unmet_claims()
-    assert len(items) == 4  # H2, H6, H7, Result 2 -- H1/H1b/H3/H4/H5 are now real Claims (D054-D056, D059)
+    assert len(items) == 3  # H2, H6, Result 2 -- H1/H1b/H3/H4/H5/H7 are now real Claims (D054-D056, D059, D060)
     for item in items:
         assert item.reason.strip()
         assert "BLOCKER:" in item.reason
@@ -55,24 +56,22 @@ def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
 
 def test_unmet_claims_cover_every_still_blocked_hypothesis() -> None:
     items = {i.item for i in _unmet_claims()}
-    for tag in ["H2 ", "H6 ", "H7 ", "Result 2"]:
+    for tag in ["H2 ", "H6 ", "Result 2"]:
         assert any(tag in item for item in items), f"missing {tag!r} in unmet claims"
-    # H1/H1b/H3 (D054/D055) and H4/H5 (D059) moved to real Claims -- must not still be listed
-    # as blocked, or the card would understate real, completed progress.
-    for tag in ["H1 ", "H1b", "H3 ", "H4 ", "H5 "]:
+    # H1/H1b/H3 (D054/D055), H4/H5 (D059), and H7 (D060) moved to real Claims -- must not still
+    # be listed as blocked, or the card would understate real, completed progress.
+    for tag in ["H1 ", "H1b", "H3 ", "H4 ", "H5 ", "H7 "]:
         assert not any(tag in item for item in items), f"{tag!r} should no longer be unmet"
 
 
 def test_blockers_are_named_specifically() -> None:
     # H2/Result 2's blocker is a real, checked access gap (D044), not "HF_TOKEN not configured"
-    # (it is configured); H6's blocker is the gated DINOv3 checkpoint (D051); H7's is that no
-    # live P7 calls have ever been made.
+    # (it is configured); H6's blocker is the gated DINOv3 checkpoint (D051).
     items = _unmet_claims()
     reasons = " ".join(i.reason for i in items)
     assert "D044" in reasons
     assert "NOT authorized" in reasons
     assert "DINOv3" in reasons
-    assert "P7" in reasons
 
 
 # --- H1/H1b/H3: real claims from the full-N run (D054/D055) -----------------------------------
@@ -252,6 +251,28 @@ def _write_wave4_fixture(
                     "G200-ego": {"manipulation": _ppi_block(corpus="egocentric-10k", published=0.9166)},
                     "G200-ego4d": {"manipulation": _ppi_block(corpus="ego4d", published=0.5007)},
                 },
+                "H7_calibration": {
+                    "hand_count": {
+                        "judge": "qwen3-vl",
+                        "task": "hand_count",
+                        "subset": "G200-primary-labelled",
+                        "confidence_kind": "logprob",
+                        "ece": 0.15,
+                        "bins": [{"lo": 0.9, "hi": 1.0, "n": 92, "mean_conf": 0.997, "accuracy": 0.85}],
+                        "note": "test fixture",
+                        "n": 93,
+                    },
+                    "manipulation": {
+                        "judge": "qwen3-vl",
+                        "task": "manipulation",
+                        "subset": "G200-primary-labelled",
+                        "confidence_kind": "logprob",
+                        "ece": 0.06,
+                        "bins": [{"lo": 0.9, "hi": 1.0, "n": 92, "mean_conf": 0.997, "accuracy": 0.93}],
+                        "note": "test fixture",
+                        "n": 93,
+                    },
+                },
             }
         )
     )
@@ -348,3 +369,19 @@ def test_ppi_claims_produce_prevalence_estimate_typed_claims_with_the_real_natur
     assert "ego4d/manipulation/P0b/qwen3-vl" in refs
     for claim in claims:
         assert claim.record_type == "PrevalenceEstimate"
+
+
+def test_h7_claim_reports_real_ece_and_the_p7_deviation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claim = _h7_claim()
+
+    assert "0.1500" in claim.statement  # hand_count ECE
+    assert "0.0600" in claim.statement  # manipulation ECE
+    assert "P7" in claim.statement  # names the deviation, doesn't silently hide it
+    assert "D060" in claim.statement
+    assert claim.record_type != "PrevalenceEstimate"  # not pre-registered with a CI
