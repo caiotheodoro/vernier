@@ -86,6 +86,10 @@ def test_h4_reports_higher_ac1_for_hand_count_when_true(monkeypatch: object) -> 
     assert result["hand_count"]["ac1"] == 1.0
     assert result["manipulation"]["ac1"] < 1.0
     assert result["holds"] is True
+    for task in ("hand_count", "manipulation"):
+        ci = result[task]["ac1_ci"]
+        assert ci["method"] == "iid"
+        assert ci["lo"] <= result[task]["ac1"] <= ci["hi"]
 
 
 def test_h5_computes_real_pp_difference_between_domains() -> None:

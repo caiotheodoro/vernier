@@ -50,6 +50,7 @@ from vernier.agreement.core import (
     raw_agreement,
 )
 from vernier.calibration import build_calibration_report, reliability_bins
+from vernier.estimation.agreement_ci import ac1_bootstrap_ci, intra_rater_ac1_bootstrap_ci
 from vernier.estimation.ppi import estimate_prevalence
 from vernier.judges.prompts import PromptVariant
 from vernier.labels.store import HumanLabelStore
@@ -122,7 +123,12 @@ def _intra_rater(primary: list[HumanLabel], retest: list[HumanLabel]) -> dict[st
     result: dict[str, Any] = {}
     for task in ("hand_count", "manipulation"):
         ac1, n = _intra_rater_ac1(primary, retest, task)
-        result[task] = {"ac1": ac1, "kappa": intra_rater_kappa(primary, retest, task), "n_pairs": n}
+        result[task] = {
+            "ac1": ac1,
+            "ac1_ci": intra_rater_ac1_bootstrap_ci(primary, retest, task).model_dump(mode="json"),
+            "kappa": intra_rater_kappa(primary, retest, task),
+            "n_pairs": n,
+        }
     return result
 
 
@@ -132,6 +138,7 @@ def _h4(primary: list[HumanLabel], judged_by_sample: dict[SampleName, list[Judge
     for task in ("hand_count", "manipulation"):
         result[task] = {
             "ac1": gwet_ac1(primary, all_judged, task),
+            "ac1_ci": ac1_bootstrap_ci(primary, all_judged, task).model_dump(mode="json"),
             "kappa": cohens_kappa(primary, all_judged, task),
             "raw_agreement": raw_agreement(primary, all_judged, task),
         }

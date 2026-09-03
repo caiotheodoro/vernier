@@ -194,6 +194,16 @@ def test_h3_reports_prediction_supported_when_spread_clears_floor(
 # --- intra-rater / H4 / H5 / PPI: real Wave 4 claims (D059) ------------------------------------
 
 
+def _ac1_ci_block(point: float, width: float = 0.1) -> dict[str, object]:
+    return {
+        "lo": max(0.0, point - width),
+        "hi": min(1.0, point + width),
+        "method": "iid",
+        "clusters": None,
+        "B": None,
+    }
+
+
 def _ppi_block(*, corpus: str, published: float) -> dict[str, object]:
     return {
         "corpus": corpus,
@@ -232,12 +242,32 @@ def _write_wave4_fixture(
                 "n_primary": 93,
                 "n_retest": 60,
                 "intra_rater": {
-                    "hand_count": {"ac1": intra_rater_ac1, "kappa": 0.8, "n_pairs": 34},
-                    "manipulation": {"ac1": intra_rater_ac1, "kappa": 0.8, "n_pairs": 34},
+                    "hand_count": {
+                        "ac1": intra_rater_ac1,
+                        "ac1_ci": _ac1_ci_block(intra_rater_ac1),
+                        "kappa": 0.8,
+                        "n_pairs": 34,
+                    },
+                    "manipulation": {
+                        "ac1": intra_rater_ac1,
+                        "ac1_ci": _ac1_ci_block(intra_rater_ac1),
+                        "kappa": 0.8,
+                        "n_pairs": 34,
+                    },
                 },
                 "H4": {
-                    "hand_count": {"ac1": h4_hand_count_ac1, "kappa": 0.7, "raw_agreement": 0.9},
-                    "manipulation": {"ac1": h4_manipulation_ac1, "kappa": 0.7, "raw_agreement": 0.9},
+                    "hand_count": {
+                        "ac1": h4_hand_count_ac1,
+                        "ac1_ci": _ac1_ci_block(h4_hand_count_ac1),
+                        "kappa": 0.7,
+                        "raw_agreement": 0.9,
+                    },
+                    "manipulation": {
+                        "ac1": h4_manipulation_ac1,
+                        "ac1_ci": _ac1_ci_block(h4_manipulation_ac1),
+                        "kappa": 0.7,
+                        "raw_agreement": 0.9,
+                    },
                     "holds": h4_hand_count_ac1 > h4_manipulation_ac1,
                 },
                 "H5": {
@@ -300,6 +330,7 @@ def test_intra_rater_claim_no_warning_above_the_070_gate(
     claim = _intra_rater_claim()
 
     assert "WARNING" not in claim.statement
+    assert "iid bootstrap CI" in claim.statement
 
 
 def test_h4_claim_reports_predicted_direction_when_hand_count_ac1_is_higher(
@@ -313,6 +344,7 @@ def test_h4_claim_reports_predicted_direction_when_hand_count_ac1_is_higher(
 
     assert "predicted direction" in claim.statement
     assert "OPPOSITE" not in claim.statement
+    assert "iid bootstrap CI" in claim.statement
 
 
 def test_h4_claim_reports_opposite_direction_when_manipulation_ac1_is_higher(

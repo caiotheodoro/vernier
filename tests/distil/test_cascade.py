@@ -20,7 +20,7 @@ from collections.abc import Callable
 import pytest
 
 from tests.fixtures import make_frame_ref, make_human_label
-from vernier.distil.cascade import AbstentionCascade, CoverageAndFloor
+from vernier.distil.cascade import AbstentionCascade, CoverageAndFloor, _wilson_lower_bound
 from vernier.models import HumanLabel
 
 
@@ -95,11 +95,18 @@ def _golden_predictions_and_confidences() -> tuple[dict[str, int], dict[str, flo
 
 
 def test_calibration_abstains_on_low_confidence_wrong_frames_and_raises_the_floor() -> None:
+    # confidence_level=0.5 is a deliberate mechanism-check pin, not the real default: at that
+    # level the Wilson lower bound (docs/DECISIONS.md D063) collapses to the raw point estimate
+    # (z = norm.ppf(0.5) == 0.0, so the bound reduces to correct/i exactly), which is what makes
+    # this small, hand-verified 7/3 fixture's fractions still checkable by hand. At the real
+    # default confidence_level=0.95, small-n golden cases like this one are exactly where a
+    # Wilson bound is least forgiving -- see
+    # test_wilson_confidence_makes_the_floor_harder_to_clear_at_small_n below for that behaviour.
     predictions, confidences = _golden_predictions_and_confidences()
     cascade = _cascade(predictions, confidences, target_floor=0.95)
     gold = _golden_gold()
 
-    cascade.calibrate_threshold(gold)
+    cascade.calibrate_threshold(gold, confidence_level=0.5)
 
     for i in range(7):
         label, abstain = cascade.predict(make_frame_ref(frame_id=_correct_id(i)))
@@ -182,6 +189,7 @@ def test_calibrate_raises_when_target_floor_is_unreachable() -> None:
 
 
 def test_calibrate_and_evaluate_on_disjoint_gold_still_shows_the_floor_gap() -> None:
+    # confidence_level=0.5 pinned for the same mechanism-check reason as the golden case above.
     predictions, confidences = _golden_predictions_and_confidences()
     cascade = _cascade(predictions, confidences, target_floor=0.95)
 
@@ -193,7 +201,7 @@ def test_calibrate_and_evaluate_on_disjoint_gold_still_shows_the_floor_gap() -> 
     predictions.update({_correct_id(i): 1 for i in range(7, 14)})
     confidences.update({_correct_id(i): 0.9 for i in range(7, 14)})
 
-    cascade.calibrate_threshold(calibration_gold)
+    cascade.calibrate_threshold(calibration_gold, confidence_level=0.5)
     result = cascade.coverage_and_floor(evaluation_gold)
 
     assert result.coverage == pytest.approx(1.0)
@@ -209,3 +217,91 @@ def test_default_target_floor_matches_h6() -> None:
         distillate=FakeDistillate(predictions), confidence_fn=make_confidence_fn(confidences)
     )
     assert cascade._target_floor == pytest.approx(0.80)
+
+
+# --- _wilson_lower_bound (D063): Wilson-score lower confidence bound on a binomial proportion --
+
+
+def test_wilson_lower_bound_matches_a_published_reference_value() -> None:
+    # Cross-checked independently of this codebase: the standard (non-continuity-corrected)
+    # Wilson score interval for 8 successes out of 10 trials, two-sided 95% (z=1.96, i.e.
+    # confidence_level=0.975 for the one-sided lower half of that interval), has a published
+    # lower bound of ~0.4902 -- a commonly cited textbook example, not derived from this
+    # function's own formula.
+    assert _wilson_lower_bound(8, 10, 0.975) == pytest.approx(0.4902, abs=1e-4)
+
+
+def test_wilson_lower_bound_at_confidence_level_half_collapses_to_the_point_estimate() -> None:
+    # z = norm.ppf(0.5) == 0.0 exactly, so the Wilson bound reduces to the raw point estimate --
+    # the mechanism the small-n golden-case tests above rely on to stay hand-verifiable.
+    assert _wilson_lower_bound(7, 7, 0.5) == pytest.approx(1.0)
+    assert _wilson_lower_bound(3, 10, 0.5) == pytest.approx(0.3)
+
+
+def test_wilson_lower_bound_edges_stay_in_zero_one() -> None:
+    assert _wilson_lower_bound(0, 5, 0.95) == pytest.approx(0.0)
+    assert 0.0 <= _wilson_lower_bound(5, 5, 0.95) <= 1.0
+    assert _wilson_lower_bound(0, 0, 0.95) == 0.0
+
+
+def test_wilson_lower_bound_decreases_as_confidence_level_increases() -> None:
+    lb_90 = _wilson_lower_bound(8, 10, 0.90)
+    lb_95 = _wilson_lower_bound(8, 10, 0.95)
+    lb_99 = _wilson_lower_bound(8, 10, 0.99)
+    assert lb_90 > lb_95 > lb_99
+
+
+# --- calibrate_threshold's real Wilson-LCB behaviour change (D063) -----------------------------
+
+
+def test_calibrate_threshold_default_confidence_level_is_the_real_095() -> None:
+    predictions, confidences = _golden_predictions_and_confidences()
+    cascade = _cascade(predictions, confidences, target_floor=0.6)
+    gold = _golden_gold()
+
+    # No confidence_level kwarg -- backward-compatible positional call, same as every existing
+    # real caller (scripts/distill_rung1.py).
+    cascade.calibrate_threshold(gold)
+
+    for i in range(7):
+        label, abstain = cascade.predict(make_frame_ref(frame_id=_correct_id(i)))
+        assert (label, abstain) == (1, False)
+
+
+def test_wilson_confidence_correctly_refuses_a_threshold_the_point_estimate_would_accept() -> None:
+    # The same 7-correct/3-wrong golden shape as the mechanism-check tests above, at the real
+    # default confidence_level=0.95: the raw point estimate at the 7/7 prefix is 1.0 (would
+    # clear target_floor=0.95 under the pre-D063 point-estimate search), but its Wilson lower
+    # bound at 95% confidence is far below 0.95 -- this small a held-out set cannot actually
+    # support that guarantee, and calibrate_threshold must now say so instead of asserting it.
+    predictions, confidences = _golden_predictions_and_confidences()
+    cascade = _cascade(predictions, confidences, target_floor=0.95)
+    gold = _golden_gold()
+
+    with pytest.raises(ValueError):
+        cascade.calibrate_threshold(gold, confidence_level=0.95)
+
+
+def test_wilson_confidence_still_reaches_a_realistic_floor_at_larger_n() -> None:
+    # 100 correct at high confidence, 5 wrong at low confidence -- large enough that the Wilson
+    # lower bound on the full-100 prefix is not crippled by small-n the way the 7-frame golden
+    # case is, demonstrating the fix doesn't make calibration impossible in general.
+    correct_predictions = {f"ok-{i}": 1 for i in range(100)}
+    correct_confidences = {f"ok-{i}": 0.9 for i in range(100)}
+    wrong_predictions = {f"bad-{i}": 0 for i in range(5)}
+    wrong_confidences = {f"bad-{i}": 0.2 for i in range(5)}
+    predictions = correct_predictions | wrong_predictions
+    confidences = correct_confidences | wrong_confidences
+    gold = [
+        make_human_label(frame_id=f"ok-{i}", hands_visible=1, manipulation=True)
+        for i in range(100)
+    ] + [
+        make_human_label(frame_id=f"bad-{i}", hands_visible=1, manipulation=True)
+        for i in range(5)
+    ]
+    cascade = _cascade(predictions, confidences, target_floor=0.80)
+
+    cascade.calibrate_threshold(gold, confidence_level=0.95)
+    result = cascade.coverage_and_floor(gold)
+
+    assert result.agreement_floor >= 0.80

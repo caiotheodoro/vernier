@@ -7,8 +7,7 @@
   "n_eval_gold": 47,
   "target_floor": 0.8,
   "target_coverage": 0.7,
-  "coverage": 0.40425531914893614,
-  "agreement_floor": 0.8421052631578947,
-  "floor_reached": true,
-  "holds": false
+  "floor_reached": false,
+  "holds": false,
+  "error": "target floor 0.8 is unreachable (at 95% confidence) at any coverage > 0 on the given held-out gold"
 }

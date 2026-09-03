@@ -44,6 +44,10 @@ dev = [
 probes = [
     "scikit-learn>=1.4",
     "numpy>=1.26",
+    # docs/DECISIONS.md D063: cascade.py's Wilson-score lower bound needs scipy.stats.norm for
+    # its z-quantile -- already a real project dependency via estimation/ppi.py's own two-sided
+    # z, pinned again here since distil/cascade.py can be exercised without the `stats` extra.
+    "scipy>=1.11",
     # docs/DECISIONS.md D034's pinned frozen backbone (facebook/dinov3-vits16-pretrain-
     # lvd1689m). Blocked as of D051: this account is not authorized for the gated checkpoint --
     # declared here anyway since it's the real, already-decided dependency, not a new one.

@@ -11,7 +11,24 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, NamedTuple, Protocol
 
+from scipy.stats import norm
+
 from vernier.models import FrameRef, HumanLabel
+
+
+def _wilson_lower_bound(k: int, n: int, confidence_level: float) -> float:
+    """Wilson-score lower confidence bound on a binomial proportion `k/n`, at `confidence_level`
+    (e.g. 0.95 for a 95% one-sided lower bound). One-sided `z` deliberately -- `calibrate_
+    threshold` only ever needs a lower bound, never the two-sided interval `estimation/ppi.py`
+    uses for its `lo`/`hi` pair."""
+    if n == 0:
+        return 0.0
+    z: float = float(norm.ppf(confidence_level))
+    p_hat = k / n
+    denom = 1 + z**2 / n
+    center = p_hat + z**2 / (2 * n)
+    margin = z * ((p_hat * (1 - p_hat) / n + z**2 / (4 * n**2)) ** 0.5)
+    return float((center - margin) / denom)
 
 
 class CoverageAndFloor(NamedTuple):
@@ -83,32 +100,30 @@ class AbstentionCascade:
             return None, True
         return prediction, False
 
-    def calibrate_threshold(self, held_out_gold: list[HumanLabel]) -> None:
+    def calibrate_threshold(
+        self, held_out_gold: list[HumanLabel], *, confidence_level: float = 0.95
+    ) -> None:
         """Fit the abstention threshold. Must be called with gold the cascade will never be
         scored against again.
 
         Finds the highest-coverage confidence threshold such that predictions at or above it
-        achieve >= `target_floor` accuracy against `held_out_gold`: sort by confidence
-        descending, and take the longest prefix whose cumulative accuracy still clears the
-        floor. If no non-empty prefix clears it -- the floor is unreachable at any coverage > 0
-        on this gold -- raises `ValueError` rather than silently picking a near-zero-coverage
+        achieve a `confidence_level`-level Wilson-score lower bound on accuracy >= `target_floor`
+        against `held_out_gold`: sort by confidence descending, and take the longest prefix whose
+        Wilson lower bound on cumulative accuracy still clears the floor. If no non-empty prefix
+        clears it -- the floor is unreachable at any coverage > 0 on this gold, at this
+        confidence level -- raises `ValueError` rather than silently picking a near-zero-coverage
         threshold that cannot actually deliver the stated guarantee (D026).
 
-        **No safety margin.** The reported floor is a point estimate on `held_out_gold`, not a
-        statistically-guaranteed lower bound -- there is no confidence interval or correction
-        for the finite size of `held_out_gold`, so on a small held-out set this can pick a
-        threshold that clears `target_floor` on this particular sample by chance without
-        reliably clearing it on new data. A larger `held_out_gold` reduces this risk; it is not
-        eliminated by this implementation. Independent review flagged this explicitly --
-        resolving it with an actual lower-confidence-bound (e.g. a Wilson-score interval on the
-        prefix accuracy) is future work, not done here.
-
-        **The real fix is named, not yet implemented: `docs/DECISIONS.md` D049 pins
-        Learn-then-Test / conformal risk control (2110.01052, the machinery Trust-or-Escalate
-        itself builds on) as the mechanism that will replace this point-estimate search with a
-        finite-sample-valid threshold selection.** This function's current behaviour is the
-        pre-D049 naive version, kept because a rushed rewrite risks a subtler bug than this
-        honestly-flagged limitation.
+        **Real safety margin, still a real remaining gap.** D049 named the fix and this applies
+        it: the reported floor is now a `confidence_level`-level Wilson-score lower bound on
+        prefix accuracy, not the raw point estimate -- a small held-out set can no longer clear
+        `target_floor` by chance and have that reported as if it were reliable. This is not the
+        full fix D049 names, though: a Wilson bound treats each prefix's accuracy as an
+        independent Bernoulli draw, which ignores that successive prefixes are nested, overlapping
+        samples, not independent ones. Full Learn-then-Test / conformal risk control (2110.01052,
+        the machinery Trust-or-Escalate itself builds on) remains the eventual, not-yet-implemented
+        complete answer for that; this is the cheaper, real, disclosed interim step D049's own
+        text already named as reachable, not a claim that D049 is fully closed.
         """
         features = [self._features_for(label.frame_id) for label in held_out_gold]
         predictions = self._distillate.predict(features)
@@ -123,13 +138,13 @@ class AbstentionCascade:
         correct = 0
         for i, (confidence, prediction, gold_value) in enumerate(triples, start=1):
             correct += int(prediction == gold_value)
-            if correct / i >= self._target_floor:
+            if _wilson_lower_bound(correct, i, confidence_level) >= self._target_floor:
                 best_threshold = confidence
 
         if best_threshold is None:
             raise ValueError(
-                f"target floor {self._target_floor} is unreachable at any coverage > 0 "
-                "on the given held-out gold"
+                f"target floor {self._target_floor} is unreachable (at {confidence_level:.0%} "
+                "confidence) at any coverage > 0 on the given held-out gold"
             )
         self._threshold = best_threshold
 

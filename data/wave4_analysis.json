@@ -4,11 +4,25 @@
   "intra_rater": {
     "hand_count": {
       "ac1": 0.8757234236978373,
+      "ac1_ci": {
+        "lo": 0.725085901702189,
+        "hi": 1.0,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
       "kappa": 0.8479880774962741,
       "n_pairs": 34
     },
     "manipulation": {
       "ac1": 0.9036827195467422,
+      "ac1_ci": {
+        "lo": 0.7433962264150943,
+        "hi": 1.0,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
       "kappa": 0.8488888888888888,
       "n_pairs": 34
     }
@@ -16,11 +30,25 @@
   "H4": {
     "hand_count": {
       "ac1": 0.7951622418879056,
+      "ac1_ci": {
+        "lo": 0.6868806672533191,
+        "hi": 0.8935929006665568,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
       "kappa": 0.719396551724138,
       "raw_agreement": 0.8494623655913979
     },
     "manipulation": {
       "ac1": 0.8990045248868778,
+      "ac1_ci": {
+        "lo": 0.8067012052966005,
+        "hi": 0.9687342410489158,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
       "kappa": 0.8224061107574792,
       "raw_agreement": 0.9354838709677419
     },

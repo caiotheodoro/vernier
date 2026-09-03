@@ -186,10 +186,17 @@ def _intra_rater_claim() -> Claim:
         f"Intra-rater reliability (R100 falsification gate, n={intra['hand_count']['n_pairs']} "
         "real overlapping primary/retest pairs, D058's reduced target -- not the pre-registered "
         "n=100): "
-        + "; ".join(f"{task} AC1={v['ac1']:.4f} (kappa={v['kappa']:.4f})" for task, v in intra.items())
+        + "; ".join(
+            f"{task} AC1={v['ac1']:.4f} (95% iid bootstrap CI "
+            f"[{v['ac1_ci']['lo']:.4f}, {v['ac1_ci']['hi']:.4f}]), kappa={v['kappa']:.4f}"
+            for task, v in intra.items()
+        )
         + ". Both clear the pre-registered 0.70 gate: the rubric is decidable, the audit is not "
         "deferred. Real n is small (34, not 100) so this reads as a real positive result at "
-        "reduced precision, not the full-precision one the pre-registration specified."
+        "reduced precision, not the full-precision one the pre-registration specified. Not "
+        "clustered: HumanLabel carries no shared participant/cluster id with FrameRef "
+        "(docs/DECISIONS.md D039, unfixed) -- each interval is a lower bound on true width, not "
+        "the full cluster-aware one."
     )
     if any(below_gate.values()):
         failing = [task for task, below in below_gate.items() if below]
@@ -200,16 +207,23 @@ def _intra_rater_claim() -> Claim:
 def _h4_claim() -> Claim:
     """Real, checked finding from `scripts/wave4_analysis.py`, off Wave 3's human gold and
     `scripts/judge_gold_sets.py`'s live-judge run over the three `G200-*` sets. Pre-registered
-    as a bare AC1 comparison, no confidence interval, so reported as-is."""
+    as a bare AC1 comparison with no confidence interval; a real iid bootstrap CI (D063) is
+    reported alongside each point estimate as an addition, not a replacement."""
     wave4 = json.loads(_WAVE4_RESULTS_PATH.read_text())
     h4 = wave4["H4"]
     statement = (
         f"H4 (N={wave4['n_primary']} primary labels vs. the single judge in the panel, "
         f"{_WAVE4_JUDGE}, {_WAVE4_PROMPT_VARIANT}): AC1(judge, human) hand_count="
-        f"{h4['hand_count']['ac1']:.4f}, manipulation={h4['manipulation']['ac1']:.4f}. "
+        f"{h4['hand_count']['ac1']:.4f} (95% iid bootstrap CI "
+        f"[{h4['hand_count']['ac1_ci']['lo']:.4f}, {h4['hand_count']['ac1_ci']['hi']:.4f}]), "
+        f"manipulation={h4['manipulation']['ac1']:.4f} (95% iid bootstrap CI "
+        f"[{h4['manipulation']['ac1_ci']['lo']:.4f}, {h4['manipulation']['ac1_ci']['hi']:.4f}]). "
         "Pre-registered prediction is hand_count higher (perceptual vs. interpretative, "
         "PRE-REGISTRATION.md H3's own framing extended to H4); the real result is the "
         + ("predicted direction." if h4["holds"] else "OPPOSITE direction: manipulation agreement is higher.")
+        + " Not clustered: HumanLabel carries no shared participant/cluster id with FrameRef "
+        "(docs/DECISIONS.md D039, unfixed) -- each interval is a lower bound on true width, not "
+        "the full cluster-aware one."
     )
     return Claim(statement=statement, record_type="AgreementComparison", record_ref=f"{_WAVE4_RESULTS_REF}#H4")
 
@@ -330,10 +344,12 @@ def _h6_claim() -> Claim:
         )
     statement += (
         " Real limitation, disclosed: the calibration/eval split is small (Wave 3's reduced "
-        "target, D057/D058), and per cascade.py's own documented gap, the threshold search has "
-        "no finite-sample safety margin (D049 names Learn-then-Test/conformal risk control as "
-        "the real fix, not yet implemented) -- this floor is a point estimate on a small sample, "
-        "not a statistically guaranteed lower bound."
+        "target, D057/D058). The threshold search now requires a 95%-confidence Wilson-score "
+        "lower bound on prefix accuracy, not the raw point estimate (D063, closing the specific "
+        "no-safety-margin gap cascade.py's docstring used to name) -- this is a real, tighter "
+        "guarantee than before, but still not full Learn-then-Test/conformal risk control (D049 "
+        "remains the eventual complete fix; a Wilson bound treats nested prefixes as independent "
+        "draws, which they are not)."
     )
     return Claim(statement=statement, record_type="DistillationCascade", record_ref=f"{_RUNG1_RESULTS_REF}#H6")
 

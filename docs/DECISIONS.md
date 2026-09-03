@@ -1763,3 +1763,65 @@ corpora).
 **Reverses if:** a future tracked file is found to carry sensitive content after all (re-scan
 before every subsequent addition to these paths, not just this one); or a tracked path grows
 past a size where it stops being "cheap to store" in the sense this decision relies on.
+
+## D063 — Bootstrap CI on AC1 claims; Wilson LCB closes cascade.py's named safety-margin gap
+
+The same scorecard review (D062) named two real statistical gaps already anticipated by this
+project's own code: `estimation/bootstrap.py`'s bootstrap machinery existed and was tested, but
+no AC1 claim on the card carried an interval; and `cascade.py`'s own docstring already named its
+fix -- "resolving it with an actual lower-confidence-bound (e.g. a Wilson-score interval on the
+prefix accuracy) is future work" (D049) -- without anyone having done it.
+
+**Bootstrap CI on AC1 (H4, intra-rater).** New `estimation/agreement_ci.py`: `ac1_bootstrap_ci`
+and `intra_rater_ac1_bootstrap_ci` resample matched (human, judge) or (primary, retest) pairs
+with replacement B=10,000 times, recomputing `agreement/core.py`'s real `_gwet_ac1_from_pairs`
+fresh on each resample -- never resampling a precomputed per-unit value, since AC1 is a
+whole-sample pooled-marginal statistic, not a mean. `HumanLabel`/`JudgeResponse` carry no
+shared cluster id (D039, still unfixed), so every interval here is honestly `method="iid"`,
+disclosed the same way `_ppi_claims()` already discloses its own iid intervals. Wired into
+`scripts/wave4_analysis.py`'s `_h4`/`_intra_rater` (real re-run, folded into
+`data/wave4_analysis.json`) and `scripts/emit_card.py`'s `_h4_claim`/`_intra_rater_claim`. Real
+numbers: H4 hand_count AC1=0.7952 (95% CI [0.6869, 0.8936]), manipulation=0.8990 (95% CI
+[0.8067, 0.9687]); intra-rater hand_count AC1=0.8757 (95% CI [0.7251, 1.0000]),
+manipulation=0.9037 (95% CI [0.7434, 1.0000]) -- an addition alongside the existing point
+estimates, not a replacement.
+
+**Wilson LCB on `AbstentionCascade.calibrate_threshold` (D049's own named interim fix,
+applied).** New `_wilson_lower_bound(k, n, confidence_level)` in `cascade.py` (standard
+Wilson-score formula, one-sided `z` -- this only ever needs a lower bound, never
+`estimation/ppi.py`'s two-sided interval). `calibrate_threshold` gained a keyword-only
+`confidence_level: float = 0.95`; the prefix search now requires the Wilson lower bound on
+cumulative accuracy to clear `target_floor`, not the raw point estimate. Backward compatible --
+every real caller (`scripts/distill_rung1.py`) calls it positionally with no kwargs. This closes
+the specific gap the docstring named, not full Learn-then-Test/conformal risk control (D049
+remains the eventual complete fix; a Wilson bound treats nested, overlapping prefixes as
+independent Bernoulli draws, which they are not) -- disclosed as a real, smaller, remaining
+approximation, not a claim that D049 is closed.
+
+**Test consequence, handled explicitly, not silently patched.** The existing golden-case test
+(`test_calibration_abstains_on_low_confidence_wrong_frames_and_raises_the_floor`, a 7-correct/
+3-wrong held-out set at `target_floor=0.95`) has a Wilson lower bound on its 7/7 prefix far below
+0.95 -- small-n golden cases are least forgiving for Wilson bounds by construction. Pinned that
+test (and its disjoint-gold sibling) to an explicit `confidence_level=0.5`, at which the Wilson
+bound collapses exactly to the point estimate (`z = norm.ppf(0.5) == 0`), preserving its
+hand-verified fractions as a mechanism check. Added new tests at the real default
+`confidence_level=0.95`: one confirming a larger, realistic-n gold set still reaches the floor,
+and one confirming the fix's actual point -- a threshold the old point-estimate search would
+have accepted is now correctly refused.
+
+**Real required re-run.** `scripts/distill_rung1.py` re-run for real after the fix (no new judge
+calls, pure recomputation over already-held gold, n_calibration_gold=46). Real new result: the
+0.80 floor is now **unreachable at 95% confidence** on this real, small calibration split --
+`floor_reached=False`, `holds=False`, same overall H6 outcome (does not hold) as D061's original
+point-estimate result (which had `floor_reached=True` but failed on coverage), reached by a
+different, more honest mechanism this time. Reported as the real number, not adjusted:
+`_h6_claim()`'s stale "point estimate, not a statistically guaranteed lower bound" disclosure is
+rewritten to state the Wilson bound now applies, while still naming D049 as the eventual
+complete fix. `pyproject.toml`'s `probes` extra gains `scipy>=1.11` (cascade.py now imports
+`scipy.stats.norm` directly, previously reachable only via the separate `stats` extra).
+Regenerated `MEASUREMENT_CARD.json`: still 15 claims, **`verdict` stays `NOT_VERIFIED`** (H2,
+Result 2 unchanged, both still blocked on gated corpus access -- untouched by this work).
+
+**Reverses if:** a future, real Learn-then-Test/conformal implementation (D049's complete fix)
+replaces the Wilson-bound interim step; or `held_out_gold` grows large enough that the
+finite-sample gap this closes becomes negligible in practice.

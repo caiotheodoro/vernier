@@ -3,10 +3,19 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-03 — Wave 3 (reduced target, D057/D058) and Wave 4's real intra-rater/
-H4/H5/PPI analysis (D059) are both complete; the card now carries 13 real claims. Prior
-baseline (2026-09-02): full-N E2/E5 run completed for real (D054/D055/D056). Earlier baseline
-(2026-09-01): Wave S, Wave 0, the P1 hygiene tier, Wave 1's full 18-unit fan-out.**
+**Last updated: 2026-09-03 — a scorecard-driven cleanup round (D062/D063): real result data
+(`data/membership`, `data/labels`, `data/gold_judged`, and every small computed-result JSON) is
+now tracked in git, not just local; stale pre-data/pre-model prose in README/AGENTS/Makefile is
+fixed and `check_stale_prose.py`'s reach widened (it now also scans `Makefile`, not just
+`*.md`); H4 and intra-rater AC1 claims now carry a real bootstrap CI; `cascade.py`'s
+`calibrate_threshold` now uses a Wilson-score lower bound instead of a raw point estimate
+(closing the specific gap its own docstring named), and H6's real numbers changed as a real
+consequence -- the floor is now reported unreachable at 95% confidence on the real, small
+calibration split, not "floor met, coverage short" as before. Prior to that: Wave 3 (reduced
+target, D057/D058) and Wave 4's real intra-rater/H4/H5/PPI/H7/H6 analysis (D059-D061) all
+complete; the card carries 15 real claims. Prior baseline (2026-09-02): full-N E2/E5 run
+completed for real (D054/D055/D056). Earlier baseline (2026-09-01): Wave S, Wave 0, the P1
+hygiene tier, Wave 1's full 18-unit fan-out.**
 
 ## Where this stands
 
@@ -20,11 +29,13 @@ real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
 `scripts/judge_gold_sets.py`), **H7 (calibration, D060)**, and **H6 (distillation, D061)**:
 
 - **Intra-rater (the pre-registration's own first falsification check): passes.** AC1=0.876
-  (hand_count), 0.904 (manipulation), n=34 -- both above the 0.70 gate. The audit is not
-  deferred, at reduced precision (n=34, not the pre-registered 100).
-- **H4: does not hold, direction reversed.** AC1(judge,human) hand_count=0.795,
-  manipulation=0.899 -- the pre-registered prediction (hand_count higher) is not what the real
-  data shows.
+  (95% iid bootstrap CI [0.725, 1.000]) for hand_count, 0.904 ([0.743, 1.000]) for manipulation,
+  n=34 -- both above the 0.70 gate. The audit is not deferred, at reduced precision (n=34, not
+  the pre-registered 100).
+- **H4: does not hold, direction reversed.** AC1(judge,human) hand_count=0.795 (95% CI [0.687,
+  0.894]), manipulation=0.899 (95% CI [0.807, 0.969]) -- the pre-registered prediction
+  (hand_count higher) is not what the real data shows. Intervals are new (D063): a real
+  additional statistic, not a replacement for the point estimates.
 - **H5: does not hold, direction reversed.** Judge error rate on manipulation: Egocentric
   9.09%, EPIC-KITCHENS-100 0.00% -- EPIC-KITCHENS-100 has the *lower* error, opposite the
   prediction. Already known underpowered even at full pre-registered size (D035); a null/
@@ -42,10 +53,13 @@ real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
   live-verified-ungated substitute for D034's gated DINOv3 pin (D051 found no access, and
   explicitly rejected unverified third-party re-uploads of the *same* weights; DINOv2 is a
   different, official checkpoint, not that same risk). Teacher fidelity vs. `gemini-2.5-flash`
-  0.6933 (target >=0.90, not met). `AbstentionCascade`, calibrated/evaluated on a disjoint
-  46/47 split of Wave 3's human gold: agreement floor **0.8421 (target >=0.80, met)**, coverage
-  **0.4043 (target >=0.70, not met)** -- the cascade can clear the floor, just by abstaining on
-  more than half the frames.
+  0.6933 (target >=0.90, not met). `AbstentionCascade`, calibrated on a real n=46 split of Wave
+  3's human gold: as of D063, the threshold search requires a 95%-confidence Wilson-score lower
+  bound on prefix accuracy to clear `target_floor`, not the raw point estimate (closing
+  `cascade.py`'s own previously-named no-safety-margin gap) -- on this real, small split, the
+  0.80 floor is now reported **unreachable at any coverage > 0, at 95% confidence**. Same
+  overall outcome as before (H6 does not hold), reached more honestly this time; D061's original
+  point-estimate result had instead reported floor 0.8421 (met) at coverage 0.4043 (not met).
 
 Two hypotheses remain in `what_could_not_be_checked` (H2, Result 2), both with a specific
 `"BLOCKER:"` reason -- the still-inaccessible gated raw corpus (D044), which (unlike H6's
@@ -168,7 +182,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D061 |
+| Decisions | `DECISIONS.md`, D001–D063 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
