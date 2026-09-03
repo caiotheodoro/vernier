@@ -1500,3 +1500,45 @@ yet to assume otherwise).
 
 **Reverses if:** Caio decides to label more later -- `next_frame`/`--sample` both resume from
 wherever the store already is, so raising the target back up costs nothing already spent.
+
+---
+
+## D058 — Real Wave 3 labels found a real gap: retest overlap was ~4 frames, not enough for intra-rater AC1
+
+D057's reduced target (93 primary, balanced 33/30/30; 30 retest) was completed for real. Before
+computing anything downstream, the real overlap between the two label sets was checked (it has
+to be checked, not assumed, per this project's own "reality anchors" discipline): **only 4
+frame_ids appear in both `primary.json` and `retest.json`.**
+
+**Root cause, found by inspection of `sampling/draw.py`'s real subset relationships, not
+guessed:** `R100` (`PRE-REGISTRATION.md`'s "Samples" table) is drawn from the *union* of the
+three `G200-*` sets, sized so that under the full pre-registered design (all 600 primary
+frames labelled), `R100`'s 100 frames are **always** a subset of what's already primary-
+labelled -- guaranteed full overlap by construction. At D057's reduced 93/600 primary, that
+guarantee silently breaks: `--pass retest` still drew from `R100`'s real fixed 100-frame
+membership, which only randomly intersects the smaller primary subset. Expected overlap by
+chance is `30 * (93/600) ≈ 4.65` -- almost exactly the 4 observed. Not a code bug (the code
+did exactly what was asked, correctly); a real consequence of D057 that wasn't fully thought
+through before Caio spent the labelling time.
+
+**Why this matters more than an ordinary gap**: intra-rater AC1 on `R100` is
+`PRE-REGISTRATION.md`'s own **first** listed falsification check ("Human gold disagrees with
+itself... the audit is deferred") -- not a downstream nicety. Computing it on 4 pairs would be
+reporting noise as a finding, which is exactly what "no fudged verdict" exists to prevent.
+
+**Fix, offered to Caio as a real choice (redo correctly / skip / use n=4 anyway) -- redo
+correctly was chosen.** `scripts/human_labels_cli.py` gained `--retest-from-primary`: draws its
+pending pool from this rater's own already-primary-labelled frames (real, on-disk via
+`HumanLabelStore.read_pass("primary")`, resolved back to full `FrameRef`s by scanning the three
+`G200-*` membership files, since `HumanLabel` itself stores only `frame_id`) instead of `R100`'s
+fixed membership -- guaranteeing every new retest label overlaps a real primary one. Real usage:
+
+    python3 scripts/human_labels_cli.py --rater caio --pass retest --retest-from-primary --stop-after 30
+
+The original 30 `R100`-drawn retest labels are kept, not discarded (harmless, real data, just
+not useful beyond the 4 that already overlap) -- Caio relabels a fresh ~30 from the primary
+pool. Regression-tested: pool restricted to real primary-labelled frames only, already-retested
+frames excluded, `--retest-from-primary` rejected under `--pass primary` or combined with
+`--sample`, `main()` threads the flag through correctly. `make validate` green (370 tests).
+
+**Reverses if:** nothing -- this is a real fix for a real gap, not a provisional one.

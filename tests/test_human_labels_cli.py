@@ -247,13 +247,13 @@ def test_scoped_next_frame_is_deterministic_and_scoped_to_its_own_sample(
 
 
 def test_main_stops_cleanly_when_pool_exhausted(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cli_mod, "_label_one_frame", lambda rater, pass_, sample: False)
+    monkeypatch.setattr(cli_mod, "_label_one_frame", lambda rater, pass_, sample, retest_from_primary: False)
 
     assert cli_mod.main(["--rater", "R1", "--pass", "primary"]) == 0
 
 
 def test_main_handles_keyboard_interrupt_gracefully(monkeypatch: pytest.MonkeyPatch) -> None:
-    def _raise(rater: str, pass_: str, sample: str | None) -> bool:
+    def _raise(rater: str, pass_: str, sample: str | None, retest_from_primary: bool) -> bool:
         raise KeyboardInterrupt
 
     monkeypatch.setattr(cli_mod, "_label_one_frame", _raise)
@@ -274,7 +274,7 @@ def test_main_stops_after_n_labels_regardless_of_pool_remaining(
 ) -> None:
     calls = {"n": 0}
 
-    def _always_true(rater: str, pass_: str, sample: str | None) -> bool:
+    def _always_true(rater: str, pass_: str, sample: str | None, retest_from_primary: bool) -> bool:
         calls["n"] += 1
         return True
 
@@ -287,7 +287,7 @@ def test_main_stops_after_n_labels_regardless_of_pool_remaining(
 def test_main_passes_sample_through_to_label_one_frame(monkeypatch: pytest.MonkeyPatch) -> None:
     seen: list[str | None] = []
 
-    def _fake(rater: str, pass_: str, sample: str | None) -> bool:
+    def _fake(rater: str, pass_: str, sample: str | None, retest_from_primary: bool) -> bool:
         seen.append(sample)
         return len(seen) < 2
 
@@ -296,3 +296,133 @@ def test_main_passes_sample_through_to_label_one_frame(monkeypatch: pytest.Monke
     cli_mod.main(["--rater", "R1", "--pass", "primary", "--sample", "G200-ego"])
 
     assert seen == ["G200-ego", "G200-ego"]
+
+
+# --- main / _label_one_frame: --retest-from-primary (D058's broken-overlap fix) ---------------
+
+
+def test_main_rejects_retest_from_primary_with_primary_pass() -> None:
+    with pytest.raises(SystemExit):
+        cli_mod.main(["--rater", "R1", "--pass", "primary", "--retest-from-primary"])
+
+
+def test_main_rejects_retest_from_primary_with_sample() -> None:
+    with pytest.raises(SystemExit):
+        cli_mod.main(
+            ["--rater", "R1", "--pass", "retest", "--sample", "G200-ego", "--retest-from-primary"]
+        )
+
+
+def test_main_passes_retest_from_primary_through_to_label_one_frame(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[bool] = []
+
+    def _fake(rater: str, pass_: str, sample: str | None, retest_from_primary: bool) -> bool:
+        seen.append(retest_from_primary)
+        return len(seen) < 2
+
+    monkeypatch.setattr(cli_mod, "_label_one_frame", _fake)
+
+    cli_mod.main(["--rater", "R1", "--pass", "retest", "--retest-from-primary"])
+
+    assert seen == [True, True]
+
+
+def test_retest_from_primary_pending_frames_only_includes_primary_labelled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(cli_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+    ego_frames = _frames("G200-ego", 5)
+    write_membership("G200-ego", ego_frames, tmp_path / "membership")
+    write_membership("G200-ego4d", [], tmp_path / "membership")
+    write_membership("G200-epic", [], tmp_path / "membership")
+
+    store = HumanLabelStore(tmp_path / "labels" / "R1")
+    for frame in ego_frames[:2]:
+        store.write(
+            HumanLabel.model_validate(
+                {
+                    "frame_id": frame.frame_id,
+                    "rater": "R1",
+                    "pass": "primary",
+                    "rubric_rev": "1.2.0",
+                    "hands_visible": 1,
+                    "manipulation": False,
+                    "edge_case": [],
+                    "difficulty": "easy",
+                    "note": "",
+                    "labelled_at": "2026-01-01T00:00:00Z",
+                    "seconds_spent": 5,
+                }
+            )
+        )
+
+    pending = cli_mod._retest_from_primary_pending_frames("R1")
+
+    assert {f.frame_id for f in pending} == {ego_frames[0].frame_id, ego_frames[1].frame_id}
+
+
+def test_retest_from_primary_excludes_already_retested(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(cli_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+    ego_frames = _frames("G200-ego", 2)
+    write_membership("G200-ego", ego_frames, tmp_path / "membership")
+    write_membership("G200-ego4d", [], tmp_path / "membership")
+    write_membership("G200-epic", [], tmp_path / "membership")
+
+    store = HumanLabelStore(tmp_path / "labels" / "R1")
+    for frame in ego_frames:
+        store.write(
+            HumanLabel.model_validate(
+                {
+                    "frame_id": frame.frame_id,
+                    "rater": "R1",
+                    "pass": "primary",
+                    "rubric_rev": "1.2.0",
+                    "hands_visible": 1,
+                    "manipulation": False,
+                    "edge_case": [],
+                    "difficulty": "easy",
+                    "note": "",
+                    "labelled_at": "2026-01-01T00:00:00Z",
+                    "seconds_spent": 5,
+                }
+            )
+        )
+    store.write(
+        HumanLabel.model_validate(
+            {
+                "frame_id": ego_frames[0].frame_id,
+                "rater": "R1",
+                "pass": "retest",
+                "rubric_rev": "1.2.0",
+                "hands_visible": 1,
+                "manipulation": False,
+                "edge_case": [],
+                "difficulty": "easy",
+                "note": "",
+                "labelled_at": "2026-01-01T00:00:00Z",
+                "seconds_spent": 5,
+            }
+        )
+    )
+
+    pending = cli_mod._retest_from_primary_pending_frames("R1")
+
+    assert {f.frame_id for f in pending} == {ego_frames[1].frame_id}
+
+
+def test_retest_from_primary_next_frame_returns_none_when_nothing_primary_labelled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli_mod, "_MEMBERSHIP_ROOT", tmp_path / "membership")
+    monkeypatch.setattr(cli_mod, "_LABEL_STORE_ROOT", tmp_path / "labels")
+    write_membership("G200-ego", _frames("G200-ego", 3), tmp_path / "membership")
+    write_membership("G200-ego4d", [], tmp_path / "membership")
+    write_membership("G200-epic", [], tmp_path / "membership")
+
+    assert cli_mod._retest_from_primary_next_frame("R1") is None

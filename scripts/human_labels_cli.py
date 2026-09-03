@@ -33,6 +33,19 @@ regardless of what remains in the pool. Recommended real usage for the reduced t
 
 Omitting `--sample` keeps the original merged-pool behaviour (still real, still useful for the
 full pre-registered run if that ever changes back).
+
+**Real correctness gap found and fixed (`docs/DECISIONS.md` D058)**: the reduced target above
+broke intra-rater reliability. `R100`'s fixed 100-frame membership was drawn assuming the *full*
+600-frame primary pass (under which `R100` -- itself a subset of the 600 -- is always fully
+overlapped by whatever's already primary-labelled). At 93/600 primary, a `--pass retest` run
+against `R100`'s real fixed pool landed on only ~4 frames also present in the primary labels
+(matching the ~93/600 * 30 expected-by-chance overlap) -- nowhere near enough to say anything
+about "does human gold disagree with itself," the pre-registration's own *first* falsification
+check. Fixed with `--retest-from-primary`: draws its pool from whatever this rater has *already
+primary-labelled* (real, on-disk, via `HumanLabelStore`), not `R100`'s fixed membership --
+guaranteeing every retest label overlaps a real primary one. Real usage:
+
+    python3 scripts/human_labels_cli.py --rater caio --pass retest --retest-from-primary --stop-after 30
 """
 
 from __future__ import annotations
@@ -81,6 +94,39 @@ def _scoped_next_frame(sample: SampleName, pass_: PassType, rater: str) -> Frame
     if not pending:
         return None
     return random.Random(f"{_SEED}:{rater}:{pass_}:{sample}").choice(pending)
+
+
+def _primary_labelled_frame_ids(rater: str) -> set[str]:
+    return {label.frame_id for label in HumanLabelStore(_LABEL_STORE_ROOT / rater).read_pass("primary")}
+
+
+def _frames_by_id(frame_ids: set[str]) -> dict[str, FrameRef]:
+    """Resolve `frame_ids` to their real `FrameRef`s by scanning the three `G200-*` membership
+    pools -- the only place a primary-labelled frame's full record lives; `HumanLabel` itself
+    stores only `frame_id` (D058)."""
+    found: dict[str, FrameRef] = {}
+    for sample in _PRIMARY_SAMPLES:
+        for frame in load_membership(sample, _MEMBERSHIP_ROOT):
+            if frame.frame_id in frame_ids:
+                found[frame.frame_id] = frame
+    return found
+
+
+def _retest_from_primary_pending_frames(rater: str) -> list[FrameRef]:
+    """D058: the real fix for broken intra-rater overlap at a reduced primary target -- this
+    pool is whatever the rater has *already primary-labelled* (real, on-disk), not `R100`'s
+    fixed membership, guaranteeing every retest label overlaps a real primary one."""
+    store = HumanLabelStore(_LABEL_STORE_ROOT / rater)
+    resolved = _frames_by_id(_primary_labelled_frame_ids(rater))
+    return [f for fid, f in resolved.items() if not store.has_label(fid, "retest")]
+
+
+def _retest_from_primary_next_frame(rater: str) -> FrameRef | None:
+    pending = _retest_from_primary_pending_frames(rater)
+    if not pending:
+        return None
+    return random.Random(f"{_SEED}:{rater}:retest-from-primary").choice(pending)
+
 
 _EDGE_CASE_TAGS: tuple[EdgeCaseTag, ...] = (
     "partial",
@@ -152,12 +198,25 @@ def _prompt_edge_case_tags() -> list[EdgeCaseTag]:
         return tags  # type: ignore[return-value]  # validated against _EDGE_CASE_TAGS above
 
 
-def _label_one_frame(rater: str, pass_: PassType, sample: SampleName | None = None) -> bool:
-    """Returns False when the pass (or, when `sample` is given, that one sample's scoped pool)
-    is complete, True otherwise. `sample` is `None` by default -- the original merged-pool
-    behaviour, unchanged -- and only meaningful for `pass_="primary"` (D057's per-arm scoping);
-    passing it under `pass_="retest"` is a caller error since `R100` is already a single sample."""
-    frame = _scoped_next_frame(sample, pass_, rater) if sample is not None else next_frame(pass_=pass_, rater=rater)
+def _label_one_frame(
+    rater: str,
+    pass_: PassType,
+    sample: SampleName | None = None,
+    retest_from_primary: bool = False,
+) -> bool:
+    """Returns False when the pool in play is complete, True otherwise. `sample` is `None` by
+    default -- the original merged-pool behaviour, unchanged -- and only meaningful for
+    `pass_="primary"` (D057's per-arm scoping). `retest_from_primary` (D058) only meaningful for
+    `pass_="retest"`: draws from this rater's own already-primary-labelled frames instead of
+    `R100`'s fixed membership, so intra-rater agreement has real overlap to measure at a reduced
+    primary target. `sample` and `retest_from_primary` are mutually exclusive with each other by
+    construction (one only applies to primary, the other only to retest)."""
+    if sample is not None:
+        frame = _scoped_next_frame(sample, pass_, rater)
+    elif retest_from_primary:
+        frame = _retest_from_primary_next_frame(rater)
+    else:
+        frame = next_frame(pass_=pass_, rater=rater)
     if frame is None:
         return False
 
@@ -207,15 +266,26 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="stop cleanly after N real labels this run, regardless of what remains pending",
     )
+    parser.add_argument(
+        "--retest-from-primary",
+        action="store_true",
+        help="D058: draw retest frames from this rater's own already-primary-labelled frames "
+        "instead of R100's fixed membership -- fixes broken intra-rater overlap at a reduced "
+        "primary target; retest only, invalid with --pass primary or with --sample",
+    )
     args = parser.parse_args(argv)
 
     if args.sample is not None and args.pass_ != "primary":
         parser.error("--sample is only valid with --pass primary")
+    if args.retest_from_primary and args.pass_ != "retest":
+        parser.error("--retest-from-primary is only valid with --pass retest")
+    if args.retest_from_primary and args.sample is not None:
+        parser.error("--retest-from-primary and --sample are mutually exclusive")
 
     n_labelled = 0
     try:
         while args.stop_after is None or n_labelled < args.stop_after:
-            if not _label_one_frame(args.rater, args.pass_, args.sample):
+            if not _label_one_frame(args.rater, args.pass_, args.sample, args.retest_from_primary):
                 break
             n_labelled += 1
     except KeyboardInterrupt:
