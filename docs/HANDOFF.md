@@ -3,26 +3,31 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-02 — full-N E2/E5 run authorized and resumed after a crash (D054);
-retry + `--resume` added. Prior baseline (2026-09-01): Wave S, Wave 0, the P1 hygiene tier,
-Wave 1's full 18-unit fan-out (all committed, all independently reviewed), real Wave 2
-judge-SDK wiring, and a real, committed `MEASUREMENT_CARD.json` — `verdict=NOT_VERIFIED`.**
+**Last updated: 2026-09-02 — full-N E2/E5 run completed for real (D054/D055/D056); the card now
+carries real H1/H1b/H3 claims from that run. Prior baseline (2026-09-01): Wave S, Wave 0, the
+P1 hygiene tier, Wave 1's full 18-unit fan-out (all committed, all independently reviewed),
+real Wave 2 judge-SDK wiring, and a real, committed `MEASUREMENT_CARD.json` —
+`verdict=NOT_VERIFIED`.**
 
 ## Where this stands
 
 **A real `MeasurementCard` exists and is committed: `MEASUREMENT_CARD.json`, `verdict=
-NOT_VERIFIED`.** Regenerate with `make card`. It carries exactly one real claim (H8 --
-participant-count precision disparity, pre-registered as computable from public counts alone,
-no judge call or human label needed: a genuine 58.2x spread across the three corpora) and names
-every other pre-registered hypothesis (H1, H1b, H2, H3, H4, H5, H6, H7) plus Result 2 in
-`what_could_not_be_checked`, each with a specific `"BLOCKER:"` reason (which credential is
-missing, or that the 600 human labels don't exist yet) -- so `_derive_verdict` (D038) returns
-`NOT_VERIFIED` because a real blocker is present, not vacuously from having nothing to claim.
-`verify_and_exit` returns nonzero, for real, via `make card`. This is the actual deliverable
-`card/__init__.py`'s own docstring names as the point of the whole exercise ("an audit that
-always exits zero is decoration") -- not a placeholder, and not to be conflated with either the
-H8 computation itself (a real result) or the D016 live-data cross-check in the next paragraph
-(a data-integrity sanity check, never presented as a hypothesis result).
+NOT_VERIFIED`.** Regenerate with `make card`. It now carries four real claims: H8
+(participant-count precision disparity, computable from public counts alone -- a genuine 58.2x
+spread across the three corpora), and **H1, H1b, and H3 from the full-N (10,000/2,000) live
+Qwen3-VL judge run (D056)** -- H1 fails its own pre-registered criterion (the 2-hands figure is
+6.32pp outside the +/-2pp band, though the other two figures replicate), H1b is null (P0a/P0b
+disagree by only 0.32pp, below the >=1pp threshold), and H3's headline prediction is not
+supported (manipulation spread 1.25pp, below the pre-registered >=5pp floor, though the
+predicted direction holds). Six hypotheses remain in `what_could_not_be_checked` (H2, H4, H5,
+H6, H7, Result 2), each with a specific `"BLOCKER:"` reason (gated-corpus access, or that the
+600 human labels don't exist yet) -- so `_derive_verdict` (D038) returns `NOT_VERIFIED` because
+real blockers remain, not vacuously from having nothing to claim. `verify_and_exit` returns
+nonzero, for real, via `make card`. This is the actual deliverable `card/__init__.py`'s own
+docstring names as the point of the whole exercise ("an audit that always exits zero is
+decoration") -- not a placeholder, and not to be conflated with either the H8 computation
+itself (a real result) or the D016 live-data cross-check in the next paragraph (a
+data-integrity sanity check, never presented as a hypothesis result).
 
 **Wave S, Wave 0, the P1 tier, and Wave 1 are all done and committed. Wave 2 is real, wireable
 work in progress — but every path to a VERIFIED card needs a credential this environment does
@@ -137,7 +142,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D054 |
+| Decisions | `DECISIONS.md`, D001–D056 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -214,9 +219,20 @@ disagreement at this n (H1b). IPR/PAR (`e5_prompt_sweep.py`) is a flagged, faith
 pinned construction of 2604.16413's definition — the paper's exact formula isn't in hand, only
 `SURVEY.md`'s excerpt of it.
 
-**No known gap is left before running a real smoke batch at a more statistically meaningful N
-(e.g. a few hundred) across E10k-* frames** — both runners already default small (20 and 5
-respectively) specifically so a larger run is `--n <bigger>`, not new code.
+**Superseded by D054/D055/D056**: the n=100/n=5 figures above were the largest runs at the time
+they were written. Caio has since authorized, and this session has run, both scripts at the
+full pre-registered scale (E2 N=10,000, E5 N=2,000/8 variant-passes) — real H1/H1b/H3 results
+now exist and are folded into `MEASUREMENT_CARD.json` (see "Where this stands" above and
+`DECISIONS.md` D056 for the exact figures). The n=100/n=5 numbers above are kept as a record of
+what was known at the time, not as the current state.
+
+**The real next action is Wave 3** (600 primary + 100 retest human labels) — the one piece of
+this project that is explicitly not automatable (`AGENTS.md` rule 3, "the judge is never the
+oracle": every downstream statistic — AC1, PPI, H4/H5/H6 — needs a genuine independent human
+judgment to compare the judge against, not another AI's output). The labelling tool itself is
+real and ready (`labels/tool.py`); the frame pools it draws from are already drawn and
+persisted. Nothing else in Wave 2 remains open, and nothing in Wave 4 (PPI-corrected estimates,
+H5's cross-corpus analysis, distillation, calibration) can start before Wave 3 exists.
 
 **UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
 Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`

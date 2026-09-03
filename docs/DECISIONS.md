@@ -1394,3 +1394,49 @@ preemption -- a preempted container cold-starts regardless.
 or the judge is redeployed on AWS (D042's stated fallback) -- at which point the wide retry
 budget becomes belt-and-suspenders rather than load-bearing, but there's no reason to narrow
 it back.
+
+---
+
+## D056 — Full-N E2/E5 run completed for real; H1/H1b/H3 become real Claims in the card
+
+Both `scripts/e2_replication.py` (N=10,000) and `scripts/e5_prompt_sweep.py` (N=2,000, 8
+prompt-variant-passes) ran to completion for real, unattended, under D054/D055's
+retry+resume+tmux hardening -- roughly 10 hours wall-clock, zero further crashes after D055's
+fix landed.
+
+**Real results:**
+
+- **H1** (P0a vs. Build AI's published figures, N=10,000): `>=1 hand` 95.45% (published
+  96.42%, diff 0.97pp, within tolerance); `2 hands` 82.66% (published 76.34%, diff **6.32pp,
+  outside** the pre-registered +/-2pp band); `active manipulation` 91.28% (published 91.66%,
+  diff 0.38pp, within tolerance). **H1 as pre-registered ("reproduces ALL three ... within
+  +/-2pp") does not hold** -- PRE-REGISTRATION.md's own rule names this a replication failure,
+  not a partial success, and this entry does the same. 2 of 3 individual figures do replicate.
+- **H1b** (P0a vs. P0b, N=10,000 each): active-manipulation rates differ by 0.32pp, below the
+  pre-registered >=1pp threshold. **H1b is null**: the two prompt arms do not disagree.
+- **H3** (8 variant-passes, N=2,000 each): hand-count spread 0.25pp across 5 wordings;
+  manipulation spread 1.25pp across 3 wordings. The predicted *direction* holds (manipulation
+  spread > hand-count spread) but the *magnitude* does not clear the pre-registered >=5pp
+  floor. **H3's headline prediction is not supported** at this judge/prompt set. The "also
+  checked" sub-claim (P3 gloves alone moves hand-count by >=2pp) is also not met (0.05pp).
+
+**Read against `PRE-REGISTRATION.md`'s own stated falsification scenario** ("H1 holds tightly,
+H1b is null, H2 is small, H3 is under 2pp, and H5 is null" -> Build AI's measurement is more
+robust than its documentation suggests): H1b is null and H3's manipulation spread (1.25pp) is
+in fact under 2pp -- two of that scenario's conditions are met -- but H1 does **not** hold
+tightly (fails on the 2-hands figure), so this is not a clean confirmation of that scenario
+either. H2 and H5 remain unchecked (Wave 3/gated-corpus blockers). This is reported as a real,
+mixed finding, not rounded toward either the confirmation or the critique framing.
+
+**`scripts/emit_card.py` updated to match**: `_h1_h1b_claims()`/`_h3_claim()` read the real
+result files (`data/e2_full_n10000.json`, `data/e5_full_n2000.json`, both gitignored) and
+report the exact point estimates above as real `Claim`s (not `PrevalenceEstimate`s -- neither
+hypothesis is pre-registered with a confidence interval, so none is fabricated here). H1, H1b,
+and H3 are removed from `what_could_not_be_checked`; H2, H4, H5, H6, H7, and Result 2 remain,
+unchanged, each still a real `"BLOCKER:"`. Regenerated `MEASUREMENT_CARD.json`:
+**`verdict` stays `NOT_VERIFIED`** -- six real hard blockers remain, all gated on Wave 3's
+human labels (H4-H7) or the still-inaccessible gated corpus (H2, Result 2). This was expected,
+not a bug: nothing in this session's work touches those blockers.
+
+**Reverses if:** nothing. A real, complete, honestly-reported result at the pre-registered
+scale for the three hypotheses this session's infra work targeted.

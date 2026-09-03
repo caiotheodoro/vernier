@@ -6,21 +6,29 @@ what has and has not actually been run, as of this commit. H8 is pre-registered 
 first for that reason" (`PRE-REGISTRATION.md`) -- it is the one hypothesis with a real claim
 today.
 
-**Refreshed post-reframe (`docs/DECISIONS.md` D042-D045)** -- the previous version of this
-script predated the judge-panel reframe and named credentials-not-configured as every blocker's
-reason. That is no longer true: real samples are drawn and persisted
-(`scripts/draw_all_samples.py`), the Qwen3-VL judge is live and deployed, and
-`scripts/e2_replication.py`/`scripts/e5_prompt_sweep.py` have real, live, preliminary results
-(n=100/n=5 respectively -- see `docs/HANDOFF.md`). None of that reaches the pre-registered
-sample sizes those hypotheses are actually specified at, so H1, H1b, H2, H3, H4, H5, H6, H7,
-and Result 2 all remain named as unmet, each with a `"BLOCKER:"`-prefixed reason
-(`docs/DECISIONS.md` D038) describing the REAL current blocker, not a stale one -- ensuring
-`_derive_verdict` returns `NOT_VERIFIED`, not a vacuous `VERIFIED` from having zero prevalence
-estimates to fail to claim.
+**Refreshed post-full-N-run (`docs/DECISIONS.md` D054/D055)** -- `scripts/e2_replication.py`
+(H1/H1b) and `scripts/e5_prompt_sweep.py` (H3) have now both completed for real at the
+pre-registered scale (N=10,000 and N=2,000/8 prompt-variant-passes respectively), against the
+live, deployed Qwen3-VL judge. H1, H1b, and H3 are therefore real, checked findings now --
+`_h1_h1b_claims()`/`_h3_claim()` below, sourced directly from `data/e2_full_n10000.json` and
+`data/e5_full_n2000.json` (gitignored, real artifacts). Neither hypothesis is claimed as a
+`PrevalenceEstimate` record: both are pre-registered as bare point-estimate comparisons against
+either a published figure or another prompt variant's own point estimate, with no confidence
+interval in their pre-registered definition (`PRE-REGISTRATION.md`'s own H1/H1b/H3 text), so
+`record_type` here is a descriptive tag, not `"PrevalenceEstimate"` -- `_derive_verdict` never
+tries to match these against `prevalence_estimates` (still `[]`; that machinery is real Wave 4
+work, gated on Wave 3's human labels for the PPI-corrected estimates this project actually
+intends to publish).
+
+H2, H4, H5, H6, H7, and Result 2 all remain named as unmet, each with a `"BLOCKER:"`-prefixed
+reason (`docs/DECISIONS.md` D038) describing the REAL current blocker, not a stale one --
+ensuring `_derive_verdict` returns `NOT_VERIFIED`, not a vacuous `VERIFIED` from having zero
+prevalence estimates to fail to claim.
 """
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -29,6 +37,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from vernier.card import build_card, emit_card, verify_and_exit
 from vernier.estimation.disparity import participant_count_disparity
 from vernier.models import Claim, UncheckedItem
+
+_ROOT = Path(__file__).resolve().parent.parent
+_E2_RESULTS_PATH = _ROOT / "data" / "e2_full_n10000.json"
+_E5_RESULTS_PATH = _ROOT / "data" / "e5_full_n2000.json"
+_E2_RESULTS_REF = "data/e2_full_n10000.json"
+_E5_RESULTS_REF = "data/e5_full_n2000.json"
 
 # docs/BENCHMARK.md R0 / docs/DECISIONS.md D024's corrected counts.
 _REAL_PARTICIPANT_COUNTS = {
@@ -52,25 +66,83 @@ def _h8_claim() -> Claim:
     )
 
 
+def _h1_h1b_claims() -> list[Claim]:
+    """Real, checked findings from the full-N (10,000) `e2_replication.py` run (D054/D055).
+
+    Both hypotheses are pre-registered as bare point-estimate comparisons -- H1 against Build
+    AI's own published figures, H1b between the two P0 prompt arms -- with no confidence
+    interval in their pre-registered definition, so these are reported as-is, not wrapped in a
+    `PrevalenceEstimate`. H1's pre-registered criterion is that ALL three figures land within
+    +/-2pp; the honest reading of a 2-of-3 result is that the hypothesis as stated does not
+    hold, not that it "mostly" holds -- PRE-REGISTRATION.md's own words: "Outside that band is
+    a replication failure, reported as one."
+    """
+    e2 = json.loads(_E2_RESULTS_PATH.read_text())
+    h1 = e2["H1"]
+    h1b = e2["H1b"]
+    all_within_tolerance = all(v["within_2pp_tolerance"] for v in h1.values())
+    failing = [k for k, v in h1.items() if not v["within_2pp_tolerance"]]
+    h1_statement = (
+        "H1 (D042 reframe: live Qwen3-VL judge vs. Build AI's own published figures, "
+        f"P0a, N={e2['per_variant']['P0a']['n_total']}): "
+        + "; ".join(
+            f"{k} observed {v['observed_P0a']:.4f} vs published {v['published']:.4f} "
+            f"(diff {v['diff_pp']:.2f}pp, {'within' if v['within_2pp_tolerance'] else 'OUTSIDE'} "
+            "+/-2pp)"
+            for k, v in h1.items()
+        )
+        + f". Pre-registered criterion is ALL THREE within tolerance; {len(failing)}/3 is not "
+        + f"({', '.join(failing)}). Per PRE-REGISTRATION.md's own rule, H1 as stated does "
+        + ("hold." if all_within_tolerance else "NOT hold: this is a replication failure.")
+    )
+    h1b_statement = (
+        f"H1b (N={e2['per_variant']['P0b']['n_total']} each arm): P0a active-manipulation rate "
+        f"{h1b['p0a_active_manipulation_rate']:.4f} vs P0b {h1b['p0b_active_manipulation_rate']:.4f}, "
+        f"diff {h1b['diff_pp']:.2f}pp. Pre-registered threshold is >=1pp disagreement; "
+        f"{'met' if h1b['p0_variants_disagree'] else 'not met'} -- H1b is "
+        + ("real: the prompt variants disagree." if h1b["p0_variants_disagree"] else "null.")
+    )
+    return [
+        Claim(statement=h1_statement, record_type="E2Comparison", record_ref=f"{_E2_RESULTS_REF}#H1"),
+        Claim(statement=h1b_statement, record_type="E2Comparison", record_ref=f"{_E2_RESULTS_REF}#H1b"),
+    ]
+
+
+def _h3_claim() -> Claim:
+    """Real, checked finding from the full-N (2,000/8 variant-passes) `e5_prompt_sweep.py` run
+    (D054/D055). Pre-registered as a bare spread comparison, no confidence interval, so reported
+    as-is rather than as a `PrevalenceEstimate`."""
+    e5 = json.loads(_E5_RESULTS_PATH.read_text())
+    h3 = e5["H3"]
+    spread_met = h3["manipulation_spread_at_least_5pp"]
+    exceeds = h3["manipulation_spread_exceeds_hand_count_spread"]
+    prediction_supported = spread_met and exceeds
+    magnitude_clause = (
+        f"clears the pre-registered floor ({h3['manipulation_spread_pp']:.2f}pp >= 5pp)"
+        if spread_met
+        else f"does not clear the pre-registered floor ({h3['manipulation_spread_pp']:.2f}pp < 5pp)"
+    )
+    direction_clause = (
+        f"holds ({h3['manipulation_spread_pp']:.2f}pp > {h3['hand_count_spread_pp']:.2f}pp)"
+        if exceeds
+        else f"does not hold ({h3['manipulation_spread_pp']:.2f}pp <= {h3['hand_count_spread_pp']:.2f}pp)"
+    )
+    statement = (
+        f"H3 (N={e5['n_frames_drawn']} per variant): hand-count spread across 5 prompt variants "
+        f"{h3['hand_count_spread_pp']:.2f}pp; manipulation spread across 3 variants "
+        f"{h3['manipulation_spread_pp']:.2f}pp. Pre-registered criterion is manipulation spread "
+        f">=5pp AND exceeding the hand-count spread. The direction {direction_clause}; the "
+        f"magnitude {magnitude_clause} -- H3's headline prediction is "
+        + ("supported" if prediction_supported else "not supported")
+        + " at this judge/prompt set. "
+        f"Also checked: P3 (gloves) alone moves the hand-count figure by "
+        f"{h3['p3_glove_diff_pp']:.2f}pp against a pre-registered >=2pp threshold -- "
+        + ("met." if h3["p3_glove_moves_hand_count_by_at_least_2pp"] else "not met.")
+    )
+    return Claim(statement=statement, record_type="E5PromptSweep", record_ref=f"{_E5_RESULTS_REF}#H3")
+
+
 def _unmet_claims() -> list[UncheckedItem]:
-    # Real infra exists and is live for H1/H1b/H3 (docs/HANDOFF.md): scripts/e2_replication.py
-    # and scripts/e5_prompt_sweep.py both ran real preliminary batches (n=100, n=5) against the
-    # deployed Qwen3-VL judge with every call status "ok". What's missing is scale, not
-    # plumbing -- these hypotheses are pre-registered at N=10,000/full prompt-variant sets, and
-    # running near that size needs a separate, explicit decision from Caio (the approved
-    # reframe plan scoped this session to smoke-testing, not a production run).
-    e2_scale = (
-        "BLOCKER: pre-registered N=10,000 not run. Real infra is deployed and live "
-        "(scripts/e2_replication.py) -- a real n=100 preliminary run exists "
-        "(data/e2_n100.json, gitignored) with every call status 'ok', but running at "
-        "pre-registered scale needs a separate, explicit decision from Caio, not more code"
-    )
-    e5_scale = (
-        "BLOCKER: pre-registered N/full prompt-variant coverage not run. Real infra is "
-        "deployed and live (scripts/e5_prompt_sweep.py) -- a real n=5 preliminary run exists "
-        "(data/e5_smoke_n5.json, gitignored) with every call status 'ok', but running at "
-        "pre-registered scale needs a separate, explicit decision from Caio, not more code"
-    )
     # H2/Result 2's blocker is no longer "credentials not configured" -- HF_TOKEN *is*
     # configured and does authenticate; the account is simply not on the gated dataset's
     # authorized list (docs/DECISIONS.md D044), a real, checked, outstanding access gap, and
@@ -95,22 +167,8 @@ def _unmet_claims() -> list[UncheckedItem]:
     )
     return [
         UncheckedItem(
-            item="H1 -- the live judge's aggregate rates land within +/-2pp of Build AI's "
-            "three published figures (E10k-ego, docs/DECISIONS.md D042's reframe of this "
-            "hypothesis from a gemini-2.5-flash replication to a live-judge comparison)",
-            reason=e2_scale,
-        ),
-        UncheckedItem(
-            item="H1b -- P0a and P0b disagree on the manipulation figure by >=1pp",
-            reason=e2_scale,
-        ),
-        UncheckedItem(
             item="H2 -- cluster-bootstrap design effect >=2 on S10k-U/S10k-S",
             reason=gated_corpus,
-        ),
-        UncheckedItem(
-            item="H3 -- prompt sensitivity spread >=5pp for manipulation across P1-P7",
-            reason=e5_scale,
         ),
         UncheckedItem(
             item="H4 -- AC1(judge, human) higher for hand-count than manipulation",
@@ -144,17 +202,19 @@ def _unmet_claims() -> list[UncheckedItem]:
 
 def main() -> int:
     card = build_card(
-        claims=[_h8_claim()],
+        claims=[_h8_claim(), *_h1_h1b_claims(), _h3_claim()],
         what_could_not_be_checked=_unmet_claims(),
         sample_definition=(
             "E10k-ego/E10k-ego4d/E10k-epic (10,000 each), P2k (2,000), "
             "G200-ego/G200-ego4d/G200-epic (200 each), and R100 (100) are drawn and persisted "
-            "(scripts/draw_all_samples.py, docs/DECISIONS.md D045) -- but no PrevalenceEstimate "
-            "has been computed from any of them yet, only real preliminary judge calls outside "
-            "the pre-registered sample sizes (see H1/H1b/H3's reasons below). S10k-U/S10k-S "
-            "are not drawn: the raw Egocentric-10K corpus this account has confirmed access to "
-            "read metadata for but not download (docs/DECISIONS.md D044). H8 needs no sample "
-            "at all -- public participant counts only."
+            "(scripts/draw_all_samples.py, docs/DECISIONS.md D045). E10k-ego (N=10,000, both "
+            "P0a/P0b) and P2k (N=2,000, 8 prompt-variant-passes) have real, complete live-judge "
+            "runs behind the H1/H1b/H3 claims above (docs/DECISIONS.md D054/D055) -- but no "
+            "`PrevalenceEstimate`/PPI-corrected estimate has been computed from any sample yet; "
+            "that needs Wave 3's human labels (see H2/H4-H7/Result 2's reasons below). "
+            "S10k-U/S10k-S are not drawn: the raw Egocentric-10K corpus this account has "
+            "confirmed access to read metadata for but not download (docs/DECISIONS.md D044). "
+            "H8 needs no sample at all -- public participant counts only."
         ),
         rubric_rev="1.2.0",
         judge_revisions={},
