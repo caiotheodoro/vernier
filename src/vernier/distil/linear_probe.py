@@ -48,6 +48,16 @@ class LinearProbe:
             raise RuntimeError("LinearProbe.predict called before fit")
         return [int(p) for p in self._model.predict(np.asarray(features))]
 
+    def predict_proba(self, features: Any) -> list[float]:
+        """Max class probability per row -- the confidence source `cascade.py`'s own docstring
+        names as the anticipated extension point (`AbstentionCascade`'s `confidence_fn` is
+        injected specifically because this method didn't exist yet). Real `sklearn`
+        `predict_proba`, not invented: this just surfaces it and reduces to the winning class's
+        probability, matching what `predict` itself reports."""
+        if self._model is None:
+            raise RuntimeError("LinearProbe.predict_proba called before fit")
+        return [float(row.max()) for row in self._model.predict_proba(np.asarray(features))]
+
 
 def fidelity(probe: LinearProbe, held_out_features: Any, teacher_labels: list[JudgeResponse]) -> float:
     """Point estimate of teacher fidelity: probe agreement with `gemini-2.5-flash` P0a

@@ -69,6 +69,39 @@ def test_predict_before_fit_raises() -> None:
         probe.predict(np.array([[0.0]]))
 
 
+def test_predict_proba_before_fit_raises() -> None:
+    probe = LinearProbe()
+    with pytest.raises(RuntimeError):
+        probe.predict_proba(np.array([[0.0]]))
+
+
+def test_predict_proba_is_high_for_a_point_deep_in_its_own_cluster() -> None:
+    features = np.array([[x] for x in (-5, -4, -3, -2, 5, 6, 7, 8, 15, 16, 17, 18)], dtype=float)
+    hands_visible = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+    judge_labels = [make_judge_response(hands_visible=hv) for hv in hands_visible]
+
+    probe = LinearProbe()
+    probe.fit(features, judge_labels)
+
+    # Deep inside class 0's own cluster, far from any decision boundary -- confidence must be
+    # high (this is the AbstentionCascade's real confidence_fn source, D061).
+    [confidence] = probe.predict_proba(np.array([[-5.0]]))
+    assert confidence > 0.9
+
+
+def test_predict_proba_returns_one_value_per_row() -> None:
+    features = np.array([[x] for x in (-5, -4, -3, -2, 5, 6, 7, 8, 15, 16, 17, 18)], dtype=float)
+    hands_visible = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+    judge_labels = [make_judge_response(hands_visible=hv) for hv in hands_visible]
+
+    probe = LinearProbe()
+    probe.fit(features, judge_labels)
+
+    confidences = probe.predict_proba(features)
+    assert len(confidences) == len(features)
+    assert all(0.0 <= c <= 1.0 for c in confidences)
+
+
 def test_fidelity_is_one_when_probe_matches_teacher_on_every_row() -> None:
     features = np.array([[x] for x in (-5, -4, -3, -2, 5, 6, 7, 8, 15, 16, 17, 18)], dtype=float)
     hands_visible = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
