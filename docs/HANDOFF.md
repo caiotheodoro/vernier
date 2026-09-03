@@ -3,31 +3,44 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-02 — full-N E2/E5 run completed for real (D054/D055/D056); the card now
-carries real H1/H1b/H3 claims from that run. Prior baseline (2026-09-01): Wave S, Wave 0, the
-P1 hygiene tier, Wave 1's full 18-unit fan-out (all committed, all independently reviewed),
-real Wave 2 judge-SDK wiring, and a real, committed `MEASUREMENT_CARD.json` —
-`verdict=NOT_VERIFIED`.**
+**Last updated: 2026-09-03 — Wave 3 (reduced target, D057/D058) and Wave 4's real intra-rater/
+H4/H5/PPI analysis (D059) are both complete; the card now carries 13 real claims. Prior
+baseline (2026-09-02): full-N E2/E5 run completed for real (D054/D055/D056). Earlier baseline
+(2026-09-01): Wave S, Wave 0, the P1 hygiene tier, Wave 1's full 18-unit fan-out.**
 
 ## Where this stands
 
 **A real `MeasurementCard` exists and is committed: `MEASUREMENT_CARD.json`, `verdict=
-NOT_VERIFIED`.** Regenerate with `make card`. It now carries four real claims: H8
-(participant-count precision disparity, computable from public counts alone -- a genuine 58.2x
-spread across the three corpora), and **H1, H1b, and H3 from the full-N (10,000/2,000) live
-Qwen3-VL judge run (D056)** -- H1 fails its own pre-registered criterion (the 2-hands figure is
-6.32pp outside the +/-2pp band, though the other two figures replicate), H1b is null (P0a/P0b
-disagree by only 0.32pp, below the >=1pp threshold), and H3's headline prediction is not
-supported (manipulation spread 1.25pp, below the pre-registered >=5pp floor, though the
-predicted direction holds). Six hypotheses remain in `what_could_not_be_checked` (H2, H4, H5,
-H6, H7, Result 2), each with a specific `"BLOCKER:"` reason (gated-corpus access, or that the
-600 human labels don't exist yet) -- so `_derive_verdict` (D038) returns `NOT_VERIFIED` because
-real blockers remain, not vacuously from having nothing to claim. `verify_and_exit` returns
-nonzero, for real, via `make card`. This is the actual deliverable `card/__init__.py`'s own
-docstring names as the point of the whole exercise ("an audit that always exits zero is
-decoration") -- not a placeholder, and not to be conflated with either the H8 computation
-itself (a real result) or the D016 live-data cross-check in the next paragraph (a
-data-integrity sanity check, never presented as a hypothesis result).
+NOT_VERIFIED`.** Regenerate with `make card`. It now carries 13 real claims: H8
+(participant-count disparity), **H1/H1b/H3 from the full-N E2/E5 run (D056)** -- H1 fails its
+own criterion (2-hands 6.32pp outside +/-2pp), H1b is null, H3's headline prediction is not
+supported -- and, new this update, **intra-rater reliability, H4, H5, and six PPI-corrected
+prevalence estimates (D059)**, off Wave 3's real reduced-target human gold (93 primary,
+34-overlap retest) and a real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
+`scripts/judge_gold_sets.py`):
+
+- **Intra-rater (the pre-registration's own first falsification check): passes.** AC1=0.876
+  (hand_count), 0.904 (manipulation), n=34 -- both above the 0.70 gate. The audit is not
+  deferred, at reduced precision (n=34, not the pre-registered 100).
+- **H4: does not hold, direction reversed.** AC1(judge,human) hand_count=0.795,
+  manipulation=0.899 -- the pre-registered prediction (hand_count higher) is not what the real
+  data shows.
+- **H5: does not hold, direction reversed.** Judge error rate on manipulation: Egocentric
+  9.09%, EPIC-KITCHENS-100 0.00% -- EPIC-KITCHENS-100 has the *lower* error, opposite the
+  prediction. Already known underpowered even at full pre-registered size (D035); a null/
+  reversed result here is genuinely ambiguous, not a clean refutation.
+- **PPI-corrected prevalence, all 3 domains x 2 tasks**: real point estimates + 95% CIs for
+  Ego4D and EPIC-KITCHENS-100 for the first time (E2 never touched them), plus a second,
+  PPI-corrected view of Egocentric-10K. Not clustered (D039, still unfixed) -- each interval is
+  a disclosed lower bound on true width.
+
+Four hypotheses remain in `what_could_not_be_checked` (H2, H6, H7, Result 2), each with a
+specific `"BLOCKER:"` reason -- H2/Result 2 need the still-inaccessible gated raw corpus (D044),
+H6 needs the still-gated DINOv3 checkpoint (D051), H7 needs live P7 calls never made -- so
+`_derive_verdict` (D038) returns `NOT_VERIFIED` because real blockers remain, not vacuously.
+`verify_and_exit` returns nonzero, for real, via `make card`. Not a placeholder, and not to be
+conflated with either the H8 computation itself or the D016 live-data cross-check in the next
+paragraph (a data-integrity sanity check, never presented as a hypothesis result).
 
 **Wave S, Wave 0, the P1 tier, and Wave 1 are all done and committed. Wave 2 is real, wireable
 work in progress — but every path to a VERIFIED card needs a credential this environment does
@@ -142,7 +155,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D058 |
+| Decisions | `DECISIONS.md`, D001–D059 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
@@ -226,23 +239,18 @@ now exist and are folded into `MEASUREMENT_CARD.json` (see "Where this stands" a
 `DECISIONS.md` D056 for the exact figures). The n=100/n=5 numbers above are kept as a record of
 what was known at the time, not as the current state.
 
-**Wave 3's primary pass is done for real: 93 labels, balanced 33/30/30 across
-`G200-ego`/`G200-ego4d`/`G200-epic`** (D057's reduced target). **The retest pass needs to be
-redone**, per D058: the original 30 `R100`-drawn retest labels only overlap the primary set on
-4 frames (nowhere near enough for intra-rater AC1, the pre-registration's own first
-falsification check) -- a real consequence of the D057 reduction that wasn't caught before
-Caio spent that labelling time. Real fix, ready now:
+**Wave 3 is done for real: 93 primary labels (balanced 33/30/30 across
+`G200-ego`/`G200-ego4d`/`G200-epic`, D057's reduced target) and 60 retest labels (34
+real-overlapping with primary, via `--retest-from-primary`, D058's fix for the original
+4-overlap gap).** `scripts/judge_gold_sets.py` then real-judged all three `G200-*` sets (600
+frames, `P0b`), and `scripts/wave4_analysis.py` computed the real intra-rater/H4/H5/PPI results
+-- all folded into the card, D059. See "Where this stands" above for the actual numbers.
 
-    python3 scripts/human_labels_cli.py --rater caio --pass retest --retest-from-primary --stop-after 30
-
-`--retest-from-primary` (D058) draws from this rater's own already-primary-labelled frames
-instead of `R100`'s fixed membership, guaranteeing real overlap. The original 30 `R100` labels
-are kept on disk (harmless) but not usable for intra-rater purposes beyond their 4-frame
-overlap. Ctrl-C is always safe; re-running resumes at the next pending frame. Nothing else in
-Wave 2 remains open, and nothing in Wave 4 (PPI-corrected estimates, H5's cross-corpus
-analysis, distillation, calibration) can start until this real retest set exists — and per
-D057, Wave 4's writeup must report H5/AC1's wider real confidence intervals at this reduced N
-honestly, not silently as if the pre-registered precision had been achieved.
+**What's left is genuinely just the four named blockers** (H2, H6, H7, Result 2) -- none
+automatable further without a decision from Caio: H2/Result 2 need access to the gated raw
+Egocentric-10K corpus (D044); H6 needs access to the gated DINOv3 checkpoint (D051); H7 needs a
+live judge run under `P7` (real infra, just never exercised -- `scripts/e2_replication.py`/
+`e5_prompt_sweep.py` only ever covered P0a/P0b/P1-P6). Nothing here is an engineering gap.
 
 **UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
 Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`

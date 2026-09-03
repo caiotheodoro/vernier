@@ -20,10 +20,20 @@ tries to match these against `prevalence_estimates` (still `[]`; that machinery 
 work, gated on Wave 3's human labels for the PPI-corrected estimates this project actually
 intends to publish).
 
-H2, H4, H5, H6, H7, and Result 2 all remain named as unmet, each with a `"BLOCKER:"`-prefixed
-reason (`docs/DECISIONS.md` D038) describing the REAL current blocker, not a stale one --
-ensuring `_derive_verdict` returns `NOT_VERIFIED`, not a vacuous `VERIFIED` from having zero
-prevalence estimates to fail to claim.
+**Refreshed post-Wave-3/D059** -- Wave 3's real (reduced-target, D057/D058) human labels and
+`scripts/judge_gold_sets.py`'s real live-judge run over all three `G200-*` sets are both
+complete. `_intra_rater_claim()`, `_h4_claim()`, `_h5_claim()`, and `_ppi_claims()` below read
+`data/wave4_analysis.json` (gitignored, real artifact from `scripts/wave4_analysis.py`) for the
+real intra-rater AC1 (`R100`'s falsification gate), H4, H5, and six PPI-corrected prevalence
+estimates (3 domains x 2 tasks). Both H4 and H5 are real, checked, **negative** findings --
+reported as such, not reframed. The six `PrevalenceEstimate`s are the first `record_type ==
+"PrevalenceEstimate"` claims this card carries, so `_derive_verdict` (D038) now actually
+exercises its estimate-matching path, not just its blocker-scanning one.
+
+H2, H6, H7, and Result 2 remain named as unmet, each with a `"BLOCKER:"`-prefixed reason
+(`docs/DECISIONS.md` D038) describing the REAL current blocker, not a stale one -- ensuring
+`_derive_verdict` returns `NOT_VERIFIED` because a real blocker is present, not vacuously from
+having nothing to claim.
 """
 
 from __future__ import annotations
@@ -36,13 +46,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from vernier.card import build_card, emit_card, verify_and_exit
 from vernier.estimation.disparity import participant_count_disparity
-from vernier.models import Claim, UncheckedItem
+from vernier.models import Claim, PrevalenceEstimate, UncheckedItem
 
 _ROOT = Path(__file__).resolve().parent.parent
 _E2_RESULTS_PATH = _ROOT / "data" / "e2_full_n10000.json"
 _E5_RESULTS_PATH = _ROOT / "data" / "e5_full_n2000.json"
+_WAVE4_RESULTS_PATH = _ROOT / "data" / "wave4_analysis.json"
 _E2_RESULTS_REF = "data/e2_full_n10000.json"
 _E5_RESULTS_REF = "data/e5_full_n2000.json"
+_WAVE4_RESULTS_REF = "data/wave4_analysis.json"
+
+# scripts/wave4_analysis.py's own domain-name/judge/prompt-variant constants, duplicated here
+# per D033's no-shared-file-edits convention (small constants, not worth a shared import).
+_DOMAIN_LABEL = {"G200-ego": "Egocentric-10K", "G200-ego4d": "Ego4D", "G200-epic": "EPIC-KITCHENS-100"}
+_WAVE4_JUDGE = "qwen3-vl"
+_WAVE4_PROMPT_VARIANT = "P0b"
 
 # docs/BENCHMARK.md R0 / docs/DECISIONS.md D024's corrected counts.
 _REAL_PARTICIPANT_COUNTS = {
@@ -142,6 +160,99 @@ def _h3_claim() -> Claim:
     return Claim(statement=statement, record_type="E5PromptSweep", record_ref=f"{_E5_RESULTS_REF}#H3")
 
 
+def _intra_rater_claim() -> Claim:
+    """Real intra-rater AC1/kappa (`PRE-REGISTRATION.md`'s first-listed falsification check:
+    "Human gold disagrees with itself... AC1 on R100 below 0.70... the audit is deferred").
+    D058's reduced retest (n=34 real overlapping pairs, not the pre-registered 100) -- reported
+    with that real n, not silently as if full precision had been achieved."""
+    wave4 = json.loads(_WAVE4_RESULTS_PATH.read_text())
+    intra = wave4["intra_rater"]
+    below_gate = {task: v["ac1"] < 0.70 for task, v in intra.items()}
+    statement = (
+        f"Intra-rater reliability (R100 falsification gate, n={intra['hand_count']['n_pairs']} "
+        "real overlapping primary/retest pairs, D058's reduced target -- not the pre-registered "
+        "n=100): "
+        + "; ".join(f"{task} AC1={v['ac1']:.4f} (kappa={v['kappa']:.4f})" for task, v in intra.items())
+        + ". Both clear the pre-registered 0.70 gate: the rubric is decidable, the audit is not "
+        "deferred. Real n is small (34, not 100) so this reads as a real positive result at "
+        "reduced precision, not the full-precision one the pre-registration specified."
+    )
+    if any(below_gate.values()):
+        failing = [task for task, below in below_gate.items() if below]
+        statement += f" WARNING: {failing} fell below 0.70 -- PRE-REGISTRATION.md's own rule."
+    return Claim(statement=statement, record_type="IntraRaterAgreement", record_ref=f"{_WAVE4_RESULTS_REF}#intra_rater")
+
+
+def _h4_claim() -> Claim:
+    """Real, checked finding from `scripts/wave4_analysis.py`, off Wave 3's human gold and
+    `scripts/judge_gold_sets.py`'s live-judge run over the three `G200-*` sets. Pre-registered
+    as a bare AC1 comparison, no confidence interval, so reported as-is."""
+    wave4 = json.loads(_WAVE4_RESULTS_PATH.read_text())
+    h4 = wave4["H4"]
+    statement = (
+        f"H4 (N={wave4['n_primary']} primary labels vs. the single judge in the panel, "
+        f"{_WAVE4_JUDGE}, {_WAVE4_PROMPT_VARIANT}): AC1(judge, human) hand_count="
+        f"{h4['hand_count']['ac1']:.4f}, manipulation={h4['manipulation']['ac1']:.4f}. "
+        "Pre-registered prediction is hand_count higher (perceptual vs. interpretative, "
+        "PRE-REGISTRATION.md H3's own framing extended to H4); the real result is the "
+        + ("predicted direction." if h4["holds"] else "OPPOSITE direction: manipulation agreement is higher.")
+    )
+    return Claim(statement=statement, record_type="AgreementComparison", record_ref=f"{_WAVE4_RESULTS_REF}#H4")
+
+
+def _h5_claim() -> Claim:
+    """Real, checked finding from `scripts/wave4_analysis.py`. Pre-registered as a bare error-rate
+    difference against a >=5pp threshold with a predicted direction, no confidence interval."""
+    wave4 = json.loads(_WAVE4_RESULTS_PATH.read_text())
+    h5 = wave4["H5"]
+    statement = (
+        f"H5 (primary-labelled subset: n={h5['egocentric']['n']} Egocentric, "
+        f"n={h5['epic_kitchens']['n']} EPIC-KITCHENS-100): judge error rate on manipulation vs. "
+        f"human gold -- Egocentric {h5['egocentric']['error_rate']:.4f}, EPIC-KITCHENS-100 "
+        f"{h5['epic_kitchens']['error_rate']:.4f}, diff {h5['diff_pp']:.2f}pp. Pre-registered "
+        "criterion is >=5pp with EPIC-KITCHENS-100 higher; "
+        + (
+            "met."
+            if h5["holds"]
+            else (
+                "NOT met" + (" -- the direction is also REVERSED (Egocentric's error rate is higher)." if not h5["epic_kitchens_higher"] else ".")
+            )
+        )
+        + " Real sample is far below the pre-registered balanced-gold size (D057), and H5 was "
+        "already found underpowered even at that full size (docs/DECISIONS.md D035) -- a null "
+        "or reversed result here is genuinely ambiguous between 'no domain-bias effect at this "
+        "threshold' and 'this sample cannot reliably surface one,' not a clean refutation."
+    )
+    return Claim(statement=statement, record_type="AgreementComparison", record_ref=f"{_WAVE4_RESULTS_REF}#H5")
+
+
+def _ppi_claims() -> tuple[list[Claim], list[PrevalenceEstimate]]:
+    """Six real PPI-corrected prevalence estimates (3 domains x 2 tasks) from
+    `scripts/wave4_analysis.py`, each backed by a real `PrevalenceEstimate` record and a
+    matching `Claim` (`record_type="PrevalenceEstimate"`, D038's exact natural-key `record_ref`
+    format) -- the first claims this card ties to `_derive_verdict`'s estimate-matching path,
+    not just its blocker-scanning one."""
+    wave4 = json.loads(_WAVE4_RESULTS_PATH.read_text())
+    claims: list[Claim] = []
+    estimates: list[PrevalenceEstimate] = []
+    for sample, by_task in wave4["ppi"].items():
+        for task, estimate_dict in by_task.items():
+            estimate = PrevalenceEstimate.model_validate(estimate_dict)
+            estimates.append(estimate)
+            ref = f"{estimate.corpus}/{estimate.task}/{estimate.prompt_variant}/{estimate.judge}"
+            statement = (
+                f"PPI-corrected prevalence, {_DOMAIN_LABEL[sample]} ({task}, "
+                f"n_gold={estimate.ppi.n_gold}, n_unlabelled={estimate.ppi.n_unlabelled}): "
+                f"naive (judge-only) {estimate.naive.value:.4f}, PPI++ {estimate.ppi.value:.4f} "
+                f"(95% CI [{estimate.ppi.ci.lo:.4f}, {estimate.ppi.ci.hi:.4f}]), published "
+                f"{estimate.published:.4f}. Not clustered: HumanLabel carries no shared "
+                "participant/cluster id with FrameRef (docs/DECISIONS.md D039, unfixed) -- this "
+                "interval is a lower bound on true width, not the full cluster-aware one."
+            )
+            claims.append(Claim(statement=statement, record_type="PrevalenceEstimate", record_ref=ref))
+    return claims, estimates
+
+
 def _unmet_claims() -> list[UncheckedItem]:
     # H2/Result 2's blocker is no longer "credentials not configured" -- HF_TOKEN *is*
     # configured and does authenticate; the account is simply not on the gated dataset's
@@ -155,32 +266,25 @@ def _unmet_claims() -> list[UncheckedItem]:
         "needs to request/confirm access, or say this arm is out of scope. The corpus is also "
         "WebDataset tar shards, not a parquet -- its real adapter is unwired regardless"
     )
-    # H4/H5/H6/H7's blocker is now purely the human labelling itself -- the tool that will
-    # produce it is real and ready (labels/tool.py's _pending_frames, docs/HANDOFF.md), and the
-    # frame pools it draws from (G200-ego/G200-ego4d/G200-epic, R100) are already drawn and
-    # persisted (scripts/draw_all_samples.py). Nothing left to build; only labelling to do.
-    human_gold = (
-        "BLOCKER: requires the 600 primary + 100 retest human labels (Wave 3), not yet "
-        "collected. The labelling tool itself is real and ready -- next_frame()/record_label() "
-        "wired against real, already-drawn sample membership -- this is purely Caio's own "
-        "manual labelling work remaining, not an engineering gap"
-    )
+    # H4/H5 are now real, checked Claims (D059) -- Wave 3's human labels and
+    # scripts/judge_gold_sets.py's live-judge run both completed for real. H6/H7 remain
+    # blocked: H6's distillation needs the gated DINOv3 checkpoint (D051, still no access);
+    # H7's calibration needs live P7 calls, never made.
     return [
         UncheckedItem(
             item="H2 -- cluster-bootstrap design effect >=2 on S10k-U/S10k-S",
             reason=gated_corpus,
         ),
         UncheckedItem(
-            item="H4 -- AC1(judge, human) higher for hand-count than manipulation",
-            reason=human_gold,
-        ),
-        UncheckedItem(
-            item="H5 -- domain-bias judge error rate differs >=5pp, Egocentric vs EPIC-KITCHENS-100",
-            reason=human_gold,
-        ),
-        UncheckedItem(
             item="H6 -- distilled instrument holds >=0.80 agreement floor at >=0.70 coverage",
-            reason=f"{human_gold} (training targets are judge labels; evaluation is human gold)",
+            reason=(
+                "BLOCKER: requires the gated DINOv3 checkpoint "
+                "(facebook/dinov3-vits16-pretrain-lvd1689m) for the linear-probe rung's real "
+                "features -- confirmed no access (docs/DECISIONS.md D051). Wave 3's human gold "
+                "now exists (D057/D058) but the distillation feature pipeline itself remains "
+                "unbuilt regardless -- Caio needs to request/confirm DINOv3 access, or say this "
+                "arm is out of scope"
+            ),
         ),
         UncheckedItem(
             item="H7 -- calibration (ECE, J/deltaJ) under the P7 confidence-schema variant",
@@ -201,25 +305,36 @@ def _unmet_claims() -> list[UncheckedItem]:
 
 
 def main() -> int:
+    ppi_claims, ppi_estimates = _ppi_claims()
     card = build_card(
-        claims=[_h8_claim(), *_h1_h1b_claims(), _h3_claim()],
+        claims=[
+            _h8_claim(),
+            *_h1_h1b_claims(),
+            _h3_claim(),
+            _intra_rater_claim(),
+            _h4_claim(),
+            _h5_claim(),
+            *ppi_claims,
+        ],
         what_could_not_be_checked=_unmet_claims(),
         sample_definition=(
             "E10k-ego/E10k-ego4d/E10k-epic (10,000 each), P2k (2,000), "
             "G200-ego/G200-ego4d/G200-epic (200 each), and R100 (100) are drawn and persisted "
             "(scripts/draw_all_samples.py, docs/DECISIONS.md D045). E10k-ego (N=10,000, both "
             "P0a/P0b) and P2k (N=2,000, 8 prompt-variant-passes) have real, complete live-judge "
-            "runs behind the H1/H1b/H3 claims above (docs/DECISIONS.md D054/D055) -- but no "
-            "`PrevalenceEstimate`/PPI-corrected estimate has been computed from any sample yet; "
-            "that needs Wave 3's human labels (see H2/H4-H7/Result 2's reasons below). "
-            "S10k-U/S10k-S are not drawn: the raw Egocentric-10K corpus this account has "
-            "confirmed access to read metadata for but not download (docs/DECISIONS.md D044). "
-            "H8 needs no sample at all -- public participant counts only."
+            "runs behind the H1/H1b/H3 claims (docs/DECISIONS.md D054/D055). All three G200-* "
+            "sets (200 each) are also fully live-judged (D059, scripts/judge_gold_sets.py); "
+            "Wave 3's real human gold (93 primary / 34-overlap retest, D057/D058) is matched "
+            "against them for the intra-rater/H4/H5/PPI claims above. R100 needed no separate "
+            "judge run -- it is a subset of the G200-* union. S10k-U/S10k-S are not drawn: the "
+            "raw Egocentric-10K corpus this account has confirmed access to read metadata for "
+            "but not download (docs/DECISIONS.md D044). H8 needs no sample at all -- public "
+            "participant counts only."
         ),
         rubric_rev="1.2.0",
         judge_revisions={},
         agreement_results=[],
-        prevalence_estimates=[],
+        prevalence_estimates=ppi_estimates,
     )
 
     out_path = Path(__file__).resolve().parent.parent / "MEASUREMENT_CARD.json"

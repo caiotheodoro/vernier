@@ -17,7 +17,16 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import emit_card  # noqa: E402
-from emit_card import _h1_h1b_claims, _h3_claim, _h8_claim, _unmet_claims  # noqa: E402
+from emit_card import (  # noqa: E402
+    _h1_h1b_claims,
+    _h3_claim,
+    _h4_claim,
+    _h5_claim,
+    _h8_claim,
+    _intra_rater_claim,
+    _ppi_claims,
+    _unmet_claims,
+)
 
 
 def test_h8_claim_reports_the_real_corrected_counts() -> None:
@@ -38,7 +47,7 @@ def test_h8_claim_is_not_tied_to_a_prevalence_estimate() -> None:
 
 def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
     items = _unmet_claims()
-    assert len(items) == 6  # H2, H4, H5, H6, H7, Result 2 -- H1/H1b/H3 are now real Claims (D054/D055)
+    assert len(items) == 4  # H2, H6, H7, Result 2 -- H1/H1b/H3/H4/H5 are now real Claims (D054-D056, D059)
     for item in items:
         assert item.reason.strip()
         assert "BLOCKER:" in item.reason
@@ -46,23 +55,24 @@ def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
 
 def test_unmet_claims_cover_every_still_blocked_hypothesis() -> None:
     items = {i.item for i in _unmet_claims()}
-    for tag in ["H2 ", "H4 ", "H5 ", "H6 ", "H7 ", "Result 2"]:
+    for tag in ["H2 ", "H6 ", "H7 ", "Result 2"]:
         assert any(tag in item for item in items), f"missing {tag!r} in unmet claims"
-    # H1/H1b/H3 moved to real Claims (D054/D055's full-N run) -- must not still be listed as
-    # blocked, or the card would understate real, completed progress.
-    for tag in ["H1 ", "H1b", "H3 "]:
+    # H1/H1b/H3 (D054/D055) and H4/H5 (D059) moved to real Claims -- must not still be listed
+    # as blocked, or the card would understate real, completed progress.
+    for tag in ["H1 ", "H1b", "H3 ", "H4 ", "H5 "]:
         assert not any(tag in item for item in items), f"{tag!r} should no longer be unmet"
 
 
 def test_blockers_are_named_specifically() -> None:
     # H2/Result 2's blocker is a real, checked access gap (D044), not "HF_TOKEN not configured"
-    # (it is configured); H4-H7's blocker is purely the human labelling itself, the tooling for
-    # which is real and ready.
+    # (it is configured); H6's blocker is the gated DINOv3 checkpoint (D051); H7's is that no
+    # live P7 calls have ever been made.
     items = _unmet_claims()
     reasons = " ".join(i.reason for i in items)
     assert "D044" in reasons
     assert "NOT authorized" in reasons
-    assert "600 primary + 100 retest human labels" in reasons
+    assert "DINOv3" in reasons
+    assert "P7" in reasons
 
 
 # --- H1/H1b/H3: real claims from the full-N run (D054/D055) -----------------------------------
@@ -180,3 +190,161 @@ def test_h3_reports_prediction_supported_when_spread_clears_floor(
     claim = _h3_claim()
 
     assert "not supported" not in claim.statement
+
+
+# --- intra-rater / H4 / H5 / PPI: real Wave 4 claims (D059) ------------------------------------
+
+
+def _ppi_block(*, corpus: str, published: float) -> dict[str, object]:
+    return {
+        "corpus": corpus,
+        "task": "manipulation",
+        "prompt_variant": "P0b",
+        "judge": "qwen3-vl",
+        "naive": {"value": 0.9, "n": 200},
+        "ppi": {
+            "value": 0.85,
+            "ci": {"lo": 0.75, "hi": 0.95, "level": 0.95},
+            "n_gold": 30,
+            "n_unlabelled": 170,
+            "rectifier": 0.0,
+            "method": "ppi++",
+            "clustered": False,
+            "cluster_by": None,
+            "why_not_clustered": "test fixture",
+        },
+        "published": published,
+    }
+
+
+def _write_wave4_fixture(
+    path: Path,
+    *,
+    intra_rater_ac1: float = 0.85,
+    h4_hand_count_ac1: float = 0.90,
+    h4_manipulation_ac1: float = 0.80,
+    h5_ego_error: float = 0.05,
+    h5_epic_error: float = 0.10,
+) -> None:
+    h5_diff_pp = (h5_epic_error - h5_ego_error) * 100
+    path.write_text(
+        json.dumps(
+            {
+                "n_primary": 93,
+                "n_retest": 60,
+                "intra_rater": {
+                    "hand_count": {"ac1": intra_rater_ac1, "kappa": 0.8, "n_pairs": 34},
+                    "manipulation": {"ac1": intra_rater_ac1, "kappa": 0.8, "n_pairs": 34},
+                },
+                "H4": {
+                    "hand_count": {"ac1": h4_hand_count_ac1, "kappa": 0.7, "raw_agreement": 0.9},
+                    "manipulation": {"ac1": h4_manipulation_ac1, "kappa": 0.7, "raw_agreement": 0.9},
+                    "holds": h4_hand_count_ac1 > h4_manipulation_ac1,
+                },
+                "H5": {
+                    "egocentric": {"n": 33, "error_rate": h5_ego_error},
+                    "epic_kitchens": {"n": 30, "error_rate": h5_epic_error},
+                    "diff_pp": h5_diff_pp,
+                    "epic_kitchens_higher": h5_epic_error > h5_ego_error,
+                    "holds": h5_diff_pp >= 5.0,
+                },
+                "ppi": {
+                    "G200-ego": {"manipulation": _ppi_block(corpus="egocentric-10k", published=0.9166)},
+                    "G200-ego4d": {"manipulation": _ppi_block(corpus="ego4d", published=0.5007)},
+                },
+            }
+        )
+    )
+
+
+def test_intra_rater_claim_warns_when_below_the_070_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path, intra_rater_ac1=0.60)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claim = _intra_rater_claim()
+
+    assert "WARNING" in claim.statement
+
+
+def test_intra_rater_claim_no_warning_above_the_070_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path, intra_rater_ac1=0.90)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claim = _intra_rater_claim()
+
+    assert "WARNING" not in claim.statement
+
+
+def test_h4_claim_reports_predicted_direction_when_hand_count_ac1_is_higher(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path, h4_hand_count_ac1=0.90, h4_manipulation_ac1=0.80)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claim = _h4_claim()
+
+    assert "predicted direction" in claim.statement
+    assert "OPPOSITE" not in claim.statement
+
+
+def test_h4_claim_reports_opposite_direction_when_manipulation_ac1_is_higher(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path, h4_hand_count_ac1=0.70, h4_manipulation_ac1=0.90)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claim = _h4_claim()
+
+    assert "OPPOSITE" in claim.statement
+
+
+def test_h5_claim_flags_reversed_direction_when_egocentric_error_is_higher(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path, h5_ego_error=0.10, h5_epic_error=0.0)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claim = _h5_claim()
+
+    assert "REVERSED" in claim.statement
+    assert "NOT met" in claim.statement
+
+
+def test_h5_claim_reports_met_when_threshold_and_direction_both_hold(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path, h5_ego_error=0.05, h5_epic_error=0.15)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claim = _h5_claim()
+
+    assert "REVERSED" not in claim.statement
+    assert "met." in claim.statement
+
+
+def test_ppi_claims_produce_prevalence_estimate_typed_claims_with_the_real_natural_key(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "wave4.json"
+    _write_wave4_fixture(path)
+    monkeypatch.setattr(emit_card, "_WAVE4_RESULTS_PATH", path)
+
+    claims, estimates = _ppi_claims()
+
+    assert len(claims) == 2  # one per fixture domain in _write_wave4_fixture's "ppi" block
+    assert len(estimates) == 2
+    refs = {c.record_ref for c in claims}
+    assert "egocentric-10k/manipulation/P0b/qwen3-vl" in refs
+    assert "ego4d/manipulation/P0b/qwen3-vl" in refs
+    for claim in claims:
+        assert claim.record_type == "PrevalenceEstimate"

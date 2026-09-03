@@ -1542,3 +1542,59 @@ frames excluded, `--retest-from-primary` rejected under `--pass primary` or comb
 `--sample`, `main()` threads the flag through correctly. `make validate` green (370 tests).
 
 **Reverses if:** nothing -- this is a real fix for a real gap, not a provisional one.
+
+---
+
+## D059 — Real Wave 4 results: intra-rater passes; H4 and H5 both real, checked, and negative
+
+Wave 3's real human gold (93 primary, D057/D058's reduced target; 34-overlap retest, D058's
+fix) is now complete, and `scripts/judge_gold_sets.py` real-judged all three `G200-*` sets
+(600 frames, `P0b`) -- E2/E5 never touched these frames themselves (E2 covered only `E10k-ego`,
+E5 only `P2k`; `G200-ego4d`/`G200-epic`'s parent corpora were never judged at all before this).
+`scripts/wave4_analysis.py` computes the real intra-rater/H4/H5/PPI results from both.
+
+**Intra-rater reliability (the pre-registration's own first falsification check): passes.**
+AC1 = 0.876 (hand_count), 0.904 (manipulation), n=34 real overlapping pairs -- both comfortably
+above the pre-registered 0.70 gate. The rubric is decidable; the audit is not deferred. n=34 is
+smaller than the pre-registered 100 (D057/D058's real cost), so this is a real result at
+reduced precision, not the full-precision one pre-registered.
+
+**H4 (AC1(judge, human) higher for hand_count than manipulation): does not hold, and the
+direction is opposite the prediction.** AC1(judge, human) hand_count=0.795, manipulation=0.899
+(N=93 primary labels vs. the panel's one judge, `qwen3-vl`, `P0b`). The pre-registered
+prediction (hand_count more "perceptual," manipulation more "interpretative," so hand_count
+should agree more) is not what the real data shows here -- manipulation agreement is higher.
+Reported as found, not reframed.
+
+**H5 (judge error rate on manipulation differs >=5pp between Egocentric and EPIC-KITCHENS-100,
+with EPIC-KITCHENS-100 higher): does not hold, and the direction is reversed.** Judge error
+rate vs. human gold on manipulation: Egocentric 9.09% (n=33), EPIC-KITCHENS-100 0.00% (n=30),
+diff -9.09pp -- EPIC-KITCHENS-100 has the *lower* real error rate in this sample, the opposite
+of the predicted direction. D035 already found H5 underpowered even at the full pre-registered
+n=200/arm (19-48% power); at n=30-33 this null/reversed result is genuinely ambiguous between
+"no domain-bias effect at this threshold" and "this sample cannot reliably surface one" -- not
+a clean refutation, and the writeup must say so, not present it as a decisive negative.
+
+**PPI-corrected prevalence, all three domains, both tasks (6 estimates, gold = the
+primary-labelled subset of each arm, unlabelled = the rest of that arm's real 200-frame judged
+pool):** real point estimates and 95% CIs now exist for Ego4D and EPIC-KITCHENS-100 for the
+first time this session (E2 never touched them) alongside a second, PPI-corrected view of
+Egocentric-10K beyond E2's naive aggregate. Not clustered -- `HumanLabel` carries no shared
+participant/cluster id with `FrameRef` (D039, still unfixed), so each interval is a real lower
+bound on true width, not the full cluster-aware one; disclosed in every PPI claim's own text,
+not just here.
+
+**`scripts/emit_card.py` updated to match**: `_intra_rater_claim()`, `_h4_claim()`,
+`_h5_claim()`, and `_ppi_claims()` read `data/wave4_analysis.json` (gitignored, real artifact).
+The six PPI estimates are the first `record_type == "PrevalenceEstimate"` claims this card
+carries, with `record_ref` in D038's exact natural-key format (`corpus/task/prompt_variant/
+judge`) -- `_derive_verdict`'s estimate-matching path is now genuinely exercised, not just its
+blocker-scanning one. H4 and H5 are removed from `what_could_not_be_checked`; H2, H6, H7, and
+Result 2 remain, unchanged. Regenerated `MEASUREMENT_CARD.json`: 13 real claims (was 4),
+**`verdict` stays `NOT_VERIFIED`** -- four real hard blockers remain (H2/gated corpus, H6/gated
+DINOv3 checkpoint, H7/no live P7 calls, Result 2/killed). Expected, not a bug: nothing here
+touches those blockers.
+
+**Reverses if:** nothing. Real, complete, honestly-reported results -- including the negative
+and reversed ones -- at the real (reduced) scale this session's human labelling and live-judge
+work actually reached.
