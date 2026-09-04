@@ -16,6 +16,7 @@ from check_corpus_manifest import (  # noqa: E402
     EXPECTED_SHARDS,
     PUBLISHED_FACTORIES,
     PUBLISHED_WORKERS,
+    VERIFIED_WORKERS,
     compare,
     summarize,
 )
@@ -72,11 +73,11 @@ def test_a_complete_manifest_reports_no_problems() -> None:
     worker_n = 0
     shard_n = 0
     for f in range(PUBLISHED_FACTORIES):
-        for _ in range(PUBLISHED_WORKERS // PUBLISHED_FACTORIES):
+        for _ in range(VERIFIED_WORKERS // PUBLISHED_FACTORIES):
             worker_n += 1
             shard_n += 1
             manifest.append(_clip(f"factory_{f:03d}", f"worker_{worker_n:04d}", f"s{shard_n}.tar"))
-    while len({(c["factory_id"], c["worker_id"]) for c in manifest}) < PUBLISHED_WORKERS:
+    while len({(c["factory_id"], c["worker_id"]) for c in manifest}) < VERIFIED_WORKERS:
         worker_n += 1
         shard_n += 1
         manifest.append(_clip("factory_000", f"worker_{worker_n:04d}", f"s{shard_n}.tar"))
@@ -85,3 +86,12 @@ def test_a_complete_manifest_reports_no_problems() -> None:
         manifest.append(_clip("factory_000", "worker_0001", f"s{shard_n}.tar"))
 
     assert compare(summarize(manifest)) == []
+
+
+def test_the_published_worker_count_is_kept_even_though_it_disagrees() -> None:
+    """docs/UPSTREAM-FINDINGS.md F12: the card says 2,153, the corpus ships 2,144. The check
+    reconciles against what ships -- otherwise it is permanently red and stops catching the
+    incomplete scans it exists for -- but the published figure stays in the file so the
+    discrepancy is recorded rather than quietly erased."""
+    assert PUBLISHED_WORKERS != VERIFIED_WORKERS
+    assert PUBLISHED_WORKERS - VERIFIED_WORKERS == 9

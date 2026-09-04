@@ -10,9 +10,14 @@ The same shape as `scripts/check_eval_parquets.py` (D016): a real, cheap check a
 artifact, wired into a `make` target, run before anything downstream trusts the file.
 
 **A mismatch here is a finding, not automatically a bug.** `docs/UPSTREAM-FINDINGS.md` already
-records F9/F10, two places where the released artifacts disagree with their own documentation.
-If the worker or factory count is off, that goes there with the real numbers on both sides --
-it does not get quietly reconciled by adjusting what this script expects.
+records several places where the released artifacts disagree with their own documentation, and
+the first complete run of this check produced another: the corpus ships 2,144 workers against a
+published 2,153 (F12). The published figure stays in this file beside the verified one rather
+than being edited down to match, so the discrepancy is recorded rather than erased.
+
+The comparison itself runs against the verified counts, which is what lets the check keep doing
+its actual job -- failing loudly on an incomplete or broken scan, before a draw silently samples
+from a partial corpus.
 
 Exit status is 1 on any mismatch so `make` fails loudly rather than printing into a scroll.
 """
@@ -30,6 +35,18 @@ from typing import Any
 PUBLISHED_WORKERS = 2153
 PUBLISHED_FACTORIES = 85
 PUBLISHED_HOURS = 10_000
+
+# What the corpus actually ships, established by a complete scan of all 19,495 shards with
+# zero failures and confirmed by two counts independent of the manifest (worker directories
+# holding a `.tar`, and worker directories holding an `intrinsics.json` -- both 2,144, with no
+# orphans either way). docs/UPSTREAM-FINDINGS.md F12.
+#
+# The check reconciles against THIS, not against `PUBLISHED_WORKERS`, and prints both. Holding
+# it to the published 2,153 would leave `make check-corpus-manifest` permanently red and
+# therefore useless at its actual job, which is catching an incomplete or broken scan before a
+# draw silently samples from a partial corpus. Lowering `PUBLISHED_WORKERS` to match would be
+# the dishonest fix -- it would erase the discrepancy instead of recording it.
+VERIFIED_WORKERS = 2144
 
 # The scan's own denominator, live-resolved at scan time and recorded in
 # docs/upstream/PROVENANCE-10k-raw.json.
@@ -61,8 +78,11 @@ def compare(summary: dict[str, Any]) -> list[str]:
         problems.append(
             f"factories: manifest {summary['factories']}, published {PUBLISHED_FACTORIES}"
         )
-    if summary["workers"] != PUBLISHED_WORKERS:
-        problems.append(f"workers: manifest {summary['workers']}, published {PUBLISHED_WORKERS}")
+    if summary["workers"] != VERIFIED_WORKERS:
+        problems.append(
+            f"workers: manifest {summary['workers']}, verified corpus {VERIFIED_WORKERS} "
+            f"(published {PUBLISHED_WORKERS}, see docs/UPSTREAM-FINDINGS.md F12)"
+        )
     if summary["shards"] != EXPECTED_SHARDS:
         problems.append(
             f"shards with at least one clip: {summary['shards']}, repo holds {EXPECTED_SHARDS} "
@@ -93,6 +113,11 @@ def main(argv: list[str] | None = None) -> int:
         f"published (docs/ETHICS.md): {PUBLISHED_WORKERS} workers, "
         f"{PUBLISHED_FACTORIES} factories, ~{PUBLISHED_HOURS} hours"
     )
+    print(
+        f"verified corpus: {VERIFIED_WORKERS} workers "
+        f"({PUBLISHED_WORKERS - VERIFIED_WORKERS} fewer than published -- "
+        "docs/UPSTREAM-FINDINGS.md F12)"
+    )
 
     problems = compare(summary)
     if problems:
@@ -107,7 +132,12 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    print("\ncheck-corpus-manifest: manifest agrees with the published corpus figures")
+    print(
+        "\ncheck-corpus-manifest: manifest matches the verified corpus "
+        f"({VERIFIED_WORKERS} workers, {PUBLISHED_FACTORIES} factories, {EXPECTED_SHARDS} "
+        f"shards). The published worker count is {PUBLISHED_WORKERS}; the {PUBLISHED_WORKERS - VERIFIED_WORKERS}-worker "
+        "gap is docs/UPSTREAM-FINDINGS.md F12, not a scan defect."
+    )
     return 0
 
 

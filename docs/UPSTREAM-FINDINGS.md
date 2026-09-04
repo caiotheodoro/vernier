@@ -230,3 +230,48 @@ assert that it does. It does mean the card text and the shipped file were last t
 different points in a rapid editing session, which is the ordinary way F2's divergence
 happens, and is worth stating so the finding reads as a packaging defect rather than something
 worse. Both remain primary arms.
+
+## F12 — The corpus ships 2,144 workers, not the published 2,153
+
+`docs/ETHICS.md`, quoting the vendor's own dataset card: *"10,000 hours of egocentric video
+from 2,153 workers across 85 factories (Egocentric-10K)"*. `docs/DECISIONS.md` D003 uses the
+same figure -- *"192,900 clips from 2,153 workers"* -- as the physical justification for
+clustering every interval over `worker_id`.
+
+D071's manifest scan read all 19,495 `.tar` shards at revision
+`3e5f87c88c54ce8343865d8e2a8c171f18385a05` and found **2,144** distinct
+`(factory_id, worker_id)` pairs. Three independent counts agree, so this is not a scan defect:
+
+| Source | Count |
+|---|---|
+| Distinct `(factory_id, worker_id)` in the manifest's 192,903 clip sidecars | 2,144 |
+| Worker directories in the repo tree holding at least one `.tar` | 2,144 |
+| Worker directories holding an `intrinsics.json` | 2,144 |
+
+The three sets are identical -- no directory has tars without intrinsics or intrinsics without
+tars -- and the scan recorded **zero failed shards**, so no worker was lost to a read error.
+
+Everything else in the same sentence reconciles essentially exactly, which is what makes the
+one gap legible rather than a sign the scan is wrong:
+
+| Published | Manifest | Delta |
+|---|---|---|
+| 85 factories | 85 | 0 |
+| ~10,000 hours | 10,000.13 recorded hours | +0.001% |
+| 192,900 clips (D003) | 192,903 | +3 |
+| **2,153 workers** | **2,144** | **-9 (-0.42%)** |
+
+**Why it is worth recording rather than rounding away.** `worker_id` is this project's cluster
+unit, and 2,153 is the number every argument about the design effect has been stated against
+-- including `PRE-REGISTRATION.md`'s and D003's. The gap is small enough not to move H2's
+conclusion in any plausible direction (a 0.42% change in cluster count is nowhere near the
+factor of 2 H2 tests) and is reported for completeness, not as a challenge to the headline.
+
+**What it is not.** Not evidence of anything withheld: 9 workers out of 2,153 is consistent
+with ordinary release-time filtering (a consent withdrawal, a corrupted capture, a QA drop)
+that the card was not updated to reflect -- the same class as F11's dropped prompt version. It
+is stated here because vernier's own numbers are computed from the shipped corpus, and a reader
+comparing them against the card's 2,153 should know why they differ by nine.
+
+`scripts/check_corpus_manifest.py` encodes both numbers and reconciles against the verified
+count, reporting the published one alongside, so a future incomplete scan still fails loudly.
