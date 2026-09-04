@@ -14,6 +14,7 @@ data/*
 !data/e5_full_n2000.json
 !data/rung1_stored_labels.json
 !data/rung1_probe.joblib
+!data/eval_baseline_comparison.json
 frames/
 cache/
 *.mp4

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pyarrow.parquet as pq
 
-from vernier.sampling.draw import synthetic_frame_id
+from vernier.sampling.draw import _EVAL_100K_BATCH_SIZE, synthetic_frame_id
 from vernier.sampling.revisions import PINNED_REVISIONS
 
 _EVAL_HF_REPO = "builddotai/Egocentric-10K-Evaluation"
@@ -53,7 +53,13 @@ def published_labels_for_sample(
     computed via the SAME imported function `sampling/draw.py` uses to build its `FrameRef`
     pool, so the join key space matches exactly. A drifted second implementation here would
     silently join every frame to nothing, not raise -- this import is deliberate, not
-    incidental, unlike this file's other constants."""
+    incidental, unlike this file's other constants.
+
+    Reads the 100K-eval arm via `ParquetFile.iter_batches`, not `pq.read_table` -- the same
+    real pyarrow limitation `sampling/draw.py`'s `_frames_from_eval_parquet_100k` documents
+    (a dictionary-encoded `image.path` struct-child field can't be materialized in one batch
+    spanning the whole file); `_EVAL_100K_BATCH_SIZE` is the same checked-safe value, imported
+    rather than re-derived so the two files can never drift to different thresholds."""
     from huggingface_hub import hf_hub_download
 
     repo_id = _EVAL_HF_REPO_FOR_SAMPLE[sample]
@@ -64,20 +70,22 @@ def published_labels_for_sample(
         filename=_PARQUET_FILENAME[sample],
     )
     if sample in _SYNTHETIC_FRAME_ID_SAMPLES:
-        table = pq.read_table(path, columns=["image", "hand_count", "active_labor"])
         out: dict[str, tuple[int, bool]] = {}
-        for image, hc, al in zip(
-            table.column("image").to_pylist(),
-            table.column("hand_count").to_pylist(),
-            table.column("active_labor").to_pylist(),
-            strict=True,
+        for batch in pq.ParquetFile(path).iter_batches(
+            columns=["image", "hand_count", "active_labor"], batch_size=_EVAL_100K_BATCH_SIZE
         ):
-            image_bytes = image.get("bytes") if isinstance(image, dict) else None
-            if not image_bytes:
-                continue
-            fid = synthetic_frame_id(image_bytes)
-            if frame_ids is None or fid in frame_ids:
-                out[fid] = (hc, al == "yes")
+            for image, hc, al in zip(
+                batch.column("image").to_pylist(),
+                batch.column("hand_count").to_pylist(),
+                batch.column("active_labor").to_pylist(),
+                strict=True,
+            ):
+                image_bytes = image.get("bytes") if isinstance(image, dict) else None
+                if not image_bytes:
+                    continue
+                fid = synthetic_frame_id(image_bytes)
+                if frame_ids is None or fid in frame_ids:
+                    out[fid] = (hc, al == "yes")
         return out
 
     table = pq.read_table(path, columns=["frame_id", "hand_count", "active_labor"])

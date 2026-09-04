@@ -364,8 +364,12 @@ def test_normalize_worker_id_preserves_the_raw_value() -> None:
 
 
 def _write_eval_parquet(path: Path, rows: list[tuple[str, bytes | None]]) -> None:
-    """Build a real local parquet matching the real evaluation release's schema (F9): just
-    `frame_id`/`image`, since `_frames_from_eval_parquet` never reads the other two columns."""
+    """Build a real local parquet matching the real evaluation release's schema (F9):
+    `frame_id`/`image`/`source_dataset`. `_frames_from_eval_parquet` never reads
+    `source_dataset`, but `_frames_from_eval_parquet_100k`/`_eval_frame_bytes_by_id`'s
+    100K-eval branch does, alongside `image`, to work around a real pyarrow limitation
+    (`ArrowNotImplementedError` when a struct column is the only one selected from a real
+    multi-chunk file) -- including it here keeps this fixture matching the real schema shape."""
     import pyarrow as pa
     import pyarrow.parquet as pq
 
@@ -376,6 +380,7 @@ def _write_eval_parquet(path: Path, rows: list[tuple[str, bytes | None]]) -> Non
                 [{"bytes": r[1], "path": None} for r in rows],
                 type=pa.struct([("bytes", pa.binary()), ("path", pa.string())]),
             ),
+            "source_dataset": pa.array(["egocentric" for _ in rows], type=pa.string()),
         }
     )
     pq.write_table(table, str(path))
@@ -543,6 +548,42 @@ def test_frames_from_eval_parquet_100k_id_set_is_stable_under_row_reordering(tmp
 
 
 # --- structural consistency: every eval-arm entry stays fully wired across the three dicts ---
+
+
+def test_draw_sample_e100k_ego_routes_to_evaluation_release_not_subset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression guard for a real bug caught by this arm's first real smoke test:
+    `draw_sample`'s dispatch is a hardcoded tuple, separate from `_EVAL_PARQUET_FILENAME`'s
+    dict -- adding a new arm there alone is not enough. Before the fix, `E100k-ego` fell through
+    to `_draw_subset`, which raised `KeyError` on `_PARENT["E100k-ego"]` since this arm has no
+    parent."""
+    pool = [
+        _eval_frame(sample="E100k-ego", uid=str(i), corpus="egocentric-100k", corpus_rev=PINNED_REV_100K)
+        for i in range(3)
+    ]
+    monkeypatch.setattr(draw_mod, "_candidate_frames", lambda sample: list(pool))
+
+    frames = draw_sample("E100k-ego")
+
+    assert len(frames) == 3
+    assert all(f.sample == "E100k-ego" for f in frames)
+
+
+def test_check_revision_uses_the_100k_repo_pin_for_e100k_ego(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression guard for a real bug: `_check_revision` used to hardcode `_EVAL_HF_REPO` (the
+    10K repo) for every sample -- an `E100k-ego` frame's real `corpus_rev` (the 100K repo's own
+    pin) would always fail that check. A frame with the WRONG repo's revision must still be
+    caught, just against the right repo."""
+    pool = [_eval_frame(sample="E100k-ego", uid="0", corpus="egocentric-100k", corpus_rev=PINNED_REV_100K)]
+    monkeypatch.setattr(draw_mod, "_candidate_frames", lambda sample: list(pool))
+
+    draw_sample("E100k-ego")  # must not raise
+
+    bad_pool = [_eval_frame(sample="E100k-ego", uid="0", corpus="egocentric-100k", corpus_rev="deadbeef")]
+    monkeypatch.setattr(draw_mod, "_candidate_frames", lambda sample: list(bad_pool))
+    with pytest.raises(ValueError, match="corpus_rev mismatch"):
+        draw_sample("E100k-ego")
 
 
 def test_every_eval_arm_has_a_matching_repo_and_filename_entry() -> None:

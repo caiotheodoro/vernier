@@ -1973,11 +1973,29 @@ recommended re-running E2 against it. Checked live before acting, not taken on f
 - **Scope, Caio's explicit call**: **E2-only, `E100k-ego` only** -- the single arm that is
   actually new (Build AI's own current-release frames). `ego4d.parquet`/`epic_kitchens.parquet`
   in the 100K-eval repo are Build AI's own reused/replaced files (F10); a real, live
-  content-comparison against the 10K-eval originals (`scripts/compare_eval_baseline_parquets.py`,
-  `data/eval_baseline_comparison.json`) is a parallel, informational check, not a gate on this
-  decision -- re-judging those two arms is out of scope regardless of its result, since the
-  point of this round is Build AI's current product, not re-confirming baselines nobody asked
-  about.
+  content-comparison against the 10K-eval originals
+  (`scripts/compare_eval_baseline_parquets.py`, `data/eval_baseline_comparison.json`) confirms
+  both are **byte-for-byte identical** (10,000/10,000 rows matched by content hash, 0 divergent
+  in either file) -- Build AI reused the old baselines rather than re-judging them, exactly as
+  F10 implied. This was informational, not a gate: re-judging those two arms was already out of
+  scope regardless of the result, since the point of this round is Build AI's current product,
+  not re-confirming baselines nobody asked about -- but the confirmation itself is a real,
+  citable finding, not assumed.
+- **Real, additional bug fixed while wiring this in, caught by the required smoke test, not
+  guessed**: `draw_sample`'s dispatch is a separate hardcoded tuple from
+  `_EVAL_PARQUET_FILENAME`'s dict -- `E100k-ego` fell through to `_draw_subset` (a `KeyError` on
+  a nonexistent parent) until added there too. `_check_revision` hardcoded `_EVAL_HF_REPO` (the
+  10K repo) for every sample -- every real `E100k-ego` frame would have failed its revision
+  check against the wrong repo's pin. Both fixed, both covered by new regression tests.
+- **Real pyarrow limitation, found and fixed against the actual downloaded file (never surfaced
+  by small synthetic test fixtures)**: `egocentric_100k.parquet`'s `image.path` struct-child
+  field is dictionary-encoded (real, checked column metadata) and null on every row; pyarrow 23
+  cannot materialize it when a single batch spans the whole 10,000-row file
+  (`ArrowNotImplementedError: Nested data conversions not implemented for chunked array
+  outputs`, checked live: 10,000 fails, 5,000/2,500/1,000/500/100 all succeed). Fixed by reading
+  via `ParquetFile.iter_batches(batch_size=1_000)` instead of `pq.read_table` in both
+  `_frames_from_eval_parquet_100k` and `_eval_frame_bytes_by_id`'s 100K branch -- a 10x-plus
+  safety margin below the real row count, not a value tuned to the exact failure boundary.
 - **Additive, not a hypothesis reopen**: `PRE-REGISTRATION.md`'s frozen text (naming
   `Egocentric-10K-Evaluation` at a pinned revision explicitly) is untouched. New `SampleName`
   `E100k-ego`; new `--sample` flag on `scripts/e2_replication.py` (default `E10k-ego`, today's

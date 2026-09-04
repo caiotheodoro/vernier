@@ -1,0 +1,18 @@
+{
+  "ego4d.parquet": {
+    "filename": "ego4d.parquet",
+    "rows_a": 10000,
+    "rows_b": 10000,
+    "identical_multiset": true,
+    "only_in_a": 0,
+    "only_in_b": 0
+  },
+  "epic_kitchens.parquet": {
+    "filename": "epic_kitchens.parquet",
+    "rows_a": 10000,
+    "rows_b": 10000,
+    "identical_multiset": true,
+    "only_in_a": 0,
+    "only_in_b": 0
+  }
+}

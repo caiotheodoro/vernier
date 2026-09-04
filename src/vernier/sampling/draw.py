@@ -129,6 +129,16 @@ _EVAL_PARQUET_FILENAME: dict[str, str] = {
 # live-reconfirmed): a disjoint, explicit set, never inferred from repo id alone.
 _SYNTHETIC_FRAME_ID_SAMPLES: frozenset[str] = frozenset({"E100k-ego"})
 
+# docs/DECISIONS.md D066: real, verified threshold -- requesting the 100K-eval parquet's
+# `image` struct column in ONE batch spanning the whole file (10,000 rows) raises
+# `ArrowNotImplementedError: Nested data conversions not implemented for chunked array
+# outputs` (pyarrow 23, a real bug in combining a dictionary-encoded struct-child field
+# (`image.path`, null on every row) across internal chunks); any batch_size strictly less than
+# the file's row count avoids it, checked live at 5,000/2,500/1,000/500/100 (all succeeded) vs.
+# 10,000 (failed) on the real downloaded file. 1,000 is a 10x-plus safety margin below the real
+# row count (10,000), not a value tuned to the exact failure boundary.
+_EVAL_100K_BATCH_SIZE = 1_000
+
 # Every E10k-* frame is null-together on the same six fields for the same reason (F9/D040): a
 # bare-UUID4 evaluation release with no factory/worker/clip/timestamp/fps/codec at all.
 _EVAL_ARM_WHY_NO_PROVENANCE = (
@@ -236,34 +246,48 @@ def _frames_from_eval_parquet_100k(path: str, sample: SampleName, corpus_rev: st
 
     `frame_id=synthetic_frame_id(image_bytes)` in place of a real column read. Every other
     `FrameRef` field is derived exactly the way `_frames_from_eval_parquet` already derives it
-    (image-decoded width/height, `None` + a `why_no_provenance` reason for everything else)."""
-    table = pq.read_table(path, columns=["image"])
-    images = table.column("image").to_pylist()
+    (image-decoded width/height, `None` + a `why_no_provenance` reason for everything else).
+
+    Reads via `ParquetFile.iter_batches(batch_size=_EVAL_100K_BATCH_SIZE)`, NOT `pq.read_table`
+    -- a real bug caught against the real downloaded parquet (never surfaced by small synthetic
+    test fixtures, which have far fewer rows than any batch_size worth using): this file's
+    `image.path` struct-child field is dictionary-encoded (real, checked: `RLE_DICTIONARY` in
+    its own column metadata, most likely because it's null on every row), and pyarrow 23 raises
+    `ArrowNotImplementedError: Nested data conversions not implemented for chunked array
+    outputs` when asked to materialize that field across a batch spanning the WHOLE file in one
+    shot (verified live: requesting all 10,000 rows as one batch fails; 5,000/2,500/1,000/500/
+    100 all succeed) -- unrelated to column count or row-group count (this file has exactly
+    one row group). See `_EVAL_100K_BATCH_SIZE`'s own comment for the real, checked threshold
+    values."""
     frames: list[FrameRef] = []
-    for frame_index, image in enumerate(images):
-        image_bytes = image.get("bytes") if isinstance(image, dict) else None
-        if not image_bytes:
-            continue
-        width, height = _decode_dimensions(image_bytes)
-        frames.append(
-            FrameRef(
-                frame_id=synthetic_frame_id(image_bytes),
-                corpus="egocentric-100k",
-                corpus_rev=corpus_rev,
-                factory_id=None,
-                worker_id=None,
-                clip_id=None,
-                frame_index=frame_index,
-                timestamp_s=None,
-                width=width,
-                height=height,
-                fps=None,
-                codec=None,
-                sample=sample,
-                stratum="unstratified",
-                why_no_provenance=_EVAL_ARM_WHY_NO_PROVENANCE_100K,
+    frame_index = 0
+    for batch in pq.ParquetFile(path).iter_batches(columns=["image"], batch_size=_EVAL_100K_BATCH_SIZE):
+        for image in batch.column("image").to_pylist():
+            row_index = frame_index
+            frame_index += 1
+            image_bytes = image.get("bytes") if isinstance(image, dict) else None
+            if not image_bytes:
+                continue
+            width, height = _decode_dimensions(image_bytes)
+            frames.append(
+                FrameRef(
+                    frame_id=synthetic_frame_id(image_bytes),
+                    corpus="egocentric-100k",
+                    corpus_rev=corpus_rev,
+                    factory_id=None,
+                    worker_id=None,
+                    clip_id=None,
+                    frame_index=row_index,
+                    timestamp_s=None,
+                    width=width,
+                    height=height,
+                    fps=None,
+                    codec=None,
+                    sample=sample,
+                    stratum="unstratified",
+                    why_no_provenance=_EVAL_ARM_WHY_NO_PROVENANCE_100K,
+                )
             )
-        )
     return frames
 
 
@@ -326,13 +350,15 @@ def _eval_frame_bytes_by_id(sample: str) -> dict[str, bytes]:
     """
     path = _download_eval_parquet(sample)
     if sample in _SYNTHETIC_FRAME_ID_SAMPLES:
-        table = pq.read_table(path, columns=["image"])
-        images = table.column("image").to_pylist()
+        # Read via iter_batches, not pq.read_table -- same real pyarrow limitation
+        # `_frames_from_eval_parquet_100k` documents (a dictionary-encoded struct-child field
+        # can't be combined across chunks by `read_table`/`ParquetFile.read`).
         synthetic_result: dict[str, bytes] = {}
-        for image in images:
-            image_bytes = image.get("bytes") if isinstance(image, dict) else None
-            if image_bytes:
-                synthetic_result[synthetic_frame_id(image_bytes)] = image_bytes
+        for batch in pq.ParquetFile(path).iter_batches(columns=["image"], batch_size=_EVAL_100K_BATCH_SIZE):
+            for image in batch.column("image").to_pylist():
+                image_bytes = image.get("bytes") if isinstance(image, dict) else None
+                if image_bytes:
+                    synthetic_result[synthetic_frame_id(image_bytes)] = image_bytes
         return synthetic_result
     table = pq.read_table(path, columns=["frame_id", "image"])
     frame_ids = table.column("frame_id").to_pylist()
@@ -410,10 +436,18 @@ def _apportion(weights: dict[str, float], total: int) -> dict[str, int]:
 
 
 def _check_revision(sample: SampleName, frames: list[FrameRef]) -> None:
-    """Enforce the HF revision pin against every distinct `corpus_rev` in `frames`."""
+    """Enforce the HF revision pin against every distinct `corpus_rev` in `frames`.
+
+    Subset samples (`P2k`, `G200-*`, `R100`) inherit `corpus_rev` from an `E10k-*` parent, so
+    `_EVAL_HF_REPO` (the default) is correct for them too -- they are never keys in
+    `_EVAL_HF_REPO_FOR_SAMPLE`. `E100k-ego` (D066) IS a key there and must check against its
+    own repo's pin, not the 10K one -- a real bug caught by this arm's first real smoke test:
+    every `E100k-ego` frame would otherwise fail this check against the wrong repo's revision.
+    """
+    repo_id = _EVAL_HF_REPO_FOR_SAMPLE.get(sample, _EVAL_HF_REPO)
     revs = sorted({f.corpus_rev for f in frames})
     for rev in revs:
-        assert_pinned_revision(_EVAL_HF_REPO, rev)
+        assert_pinned_revision(repo_id, rev)
 
 
 def _draw_uniform_corpus(sample: SampleName, seed: int) -> list[FrameRef]:
@@ -507,7 +541,7 @@ def draw_sample(sample: SampleName, *, seed: int = PRE_REGISTRATION_SEED) -> lis
         frames = _draw_uniform_corpus(sample, seed)
     elif sample == "S10k-S":
         frames = _draw_stratified_corpus(sample, seed)
-    elif sample in ("E10k-ego", "E10k-ego4d", "E10k-epic"):
+    elif sample in ("E10k-ego", "E10k-ego4d", "E10k-epic", "E100k-ego"):
         frames = _draw_evaluation_release(sample)
     elif sample == "R100":
         frames = _draw_r100(seed)
