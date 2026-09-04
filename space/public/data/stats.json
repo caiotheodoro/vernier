@@ -596,7 +596,7 @@
  },
  "repo": {
   "n_decisions": 71,
-  "n_tests": 353
+  "n_tests": 354
  },
  "rows_api": {
   "config": "default",
