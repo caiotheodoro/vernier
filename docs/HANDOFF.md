@@ -427,27 +427,27 @@ default Xet transfer backend (confirmed reproducible, not a one-off) — set
 this environment) to force the plain HTTP path, which completed both downloads reliably
 (with its own automatic resume-on-timeout, observed working).
 
-Still unwired, and a materially bigger task than the evaluation-parquet adapter was — **two
-real findings from checking, not assuming, this session**:
+Still unwired, but as of D065, no longer unverified:
 
-1. **`HF_TOKEN` does NOT actually unblock the raw `Egocentric-10K` corpus.** An earlier note in
-   this file claimed it did; that was wrong, corrected here after actually trying a real
-   download. `HfApi().dataset_info(...)`/`list_repo_files(...)` succeed (HF exposes gated-repo
-   *metadata* regardless of access), but a real `hf_hub_download` of any file 403s:
-   `GatedRepoError: ... you are not in the authorized list`. This account has not been granted
-   access — a real, outstanding blocker, not a code gap. Caio needs to either request/confirm
-   access on the dataset page or say this arm is out of scope.
-2. **The raw corpus is not a parquet at all.** `list_repo_files` (metadata access, which does
-   work) shows `factory_{NNN}/workers/worker_{NNN}/factory{NNN}worker{NNN}_part{NN}.tar` —
-   WebDataset-style tar shards, one `intrinsics.json` per worker, no parquet anywhere. Real
-   contents unverified (blocked by finding 1 above), but this is enough to know
-   `S10k-U`/`S10k-S`'s real adapter will need tar extraction and (if the shards hold video
-   rather than stills) frame extraction — a different, larger shape of work than
-   `_frames_from_eval_parquet`'s single `pq.read_table` call, not a same-pattern port of it.
+1. **`HF_TOKEN` now DOES unblock the raw `Egocentric-10K`/`Egocentric-100K` corpora.** Caio
+   accepted the gated-access terms; live-confirmed (`dataset_info()` succeeds, real
+   `intrinsics.json` bytes actually downloaded from both repos). The earlier 403
+   `GatedRepoError` this file used to report here is resolved, not a current blocker.
+2. **The raw corpus is real WebDataset video shards, inspected live for the first time
+   (D065)**: one real shard = 2 clips (`.mp4`, h265, 1920x1080, 30fps, ~7 min each) + 2
+   companion per-clip `.json` files (`worker_id`/`factory_id`/`duration_sec`/`fps`, no per-frame
+   `timestamp_s`/`frame_index`) + one per-worker `intrinsics.json` (camera calibration only).
+   **Confirmed: video, not stills** — a real adapter needs real video decoding (extract a frame
+   at a chosen timestamp from an h265 MP4), a materially bigger and structurally different task
+   than `_frames_from_eval_parquet`'s single `pq.read_table` call, and a genuinely new kind of
+   dependency this project doesn't have yet (no `av`/`decord`/`ffmpeg`-wrapper in
+   `pyproject.toml`). One shard out of 19,495 — D065's own "Reverses if" names what would
+   overturn this.
 
 `_factory_worker_hours` is the same gap. `WAVES.md`'s "Egocentric-10K streaming draw for the
-sampling-design arm" line item is this — scope it as its own investigation once access is
-resolved, not an extension of the E10k-* adapter's pattern.
+sampling-design arm" line item is this — scope it as its own investigation once a broader,
+multi-shard spike confirms D065's shape holds generally, not as an extension of the E10k-*
+adapter's pattern (parquet vs. video-shard decoding are different problems).
 
 ## Open questions
 

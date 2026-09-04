@@ -1888,3 +1888,61 @@ succeeded."
 promise reachable again, worth re-adding as its own target then); or a fourth real `difficulty`
 value is ever legitimately needed (a `RUBRIC.md` change, logged there first, same as any other
 closed-list addition).
+
+## D065 — Egocentric-10K raw shard contents, inspected live for the first time
+
+Caio accepted the gated-access terms for `Egocentric-10K` and `Egocentric-100K` on HF. An
+external review found D044's 403 was "terms never accepted," not a real denial (`gated='auto'`,
+confirmed live: `dataset_info()` now succeeds for both raw repos, and a real per-worker
+`intrinsics.json` was actually downloaded from each). This does not by itself make H2's real
+adapter a known-size task -- D044's own claim about the raw corpus's internal structure was
+inferred from `list_repo_files` filenames alone, never from an opened shard, and its own
+reversal clause called for exactly this check once access existed. `scripts/inspect_raw_shard.py`
+(new, throwaway, read-only -- not wired into `draw.py`'s real `SampleName`/`_candidate_frames`
+machinery) does that check now, against `builddotai/Egocentric-10K` (resolved commit sha
+`3e5f87c88c54ce8343865d8e2a8c171f18385a05`, 19,495 real `.tar` shards).
+
+**Real result, one real shard** (`factory_001/workers/worker_001/factory001_worker001_part00.tar`,
+816,568,320 bytes on disk):
+
+- **4 members: two `.mp4` files, two companion `.json` files** (`factory001_worker001_00000.mp4`
+  / `.json`, `factory001_worker001_00001.mp4` / `.json`) -- a WebDataset same-stem key pairing,
+  confirmed real, but only **2 video clips per shard**, not thousands of frame-level entries.
+- **Confirmed: video, not stills.** The one inspected media member is a real h265-encoded MP4,
+  1920x1080, 30fps, 433.4 seconds long, 216,756,946 bytes. `docs/HANDOFF.md`'s own hedge ("if
+  the shards hold video rather than still frames, frame extraction on top") is now a confirmed
+  fact for this shard, not a hedge. **This raises the real adapter's scope materially**: it
+  needs real video decoding (extracting a specific frame at a specific timestamp from an h265
+  MP4), not a WebDataset-image-unpack -- a new kind of dependency this project does not
+  currently have in `pyproject.toml` (no `av`/`decord`/`opencv`/`ffmpeg`-wrapper anywhere today).
+- **Companion JSON is per-clip, not per-frame**: real keys are `codec, duration_sec, factory_id,
+  fps, height, size_bytes, video_index, width, worker_id` -- confirms `worker_id`/`factory_id`
+  are present explicitly in metadata (redundant with the file path, but now confirmed from
+  content too, not just inferred). **No `frame_index` or `timestamp_s` per frame exists
+  anywhere** -- only `duration_sec`/`fps` for the whole clip. A real adapter must pick a
+  timestamp within `[0, duration_sec)` itself and derive `frame_index` from `timestamp_s * fps`;
+  neither is a value the raw data hands over directly.
+- **`intrinsics.json`** is real camera calibration only (`cx, cy, fx, fy, k1, k2, k3, k4, model,
+  image_height, image_width`) -- static per-worker calibration, no timestamps, no per-frame
+  data, no additional identifiers beyond what the path/companion JSON already give.
+
+**What this settles vs. what it doesn't**: settled, for this one shard: video-not-stills,
+`worker_id`/`factory_id` real and redundant-but-confirmed, no per-frame timestamp/index
+provided. NOT settled: whether every one of the 19,495 shards holds exactly this shape (2 clips,
+same schema, same codec) -- one shard cannot license a corpus-wide claim, and this entry makes
+no such claim.
+
+**Real cost of this spike**: one ~780MB download, well under two minutes wall-clock
+(`HF_HUB_DISABLE_XET=1` per `docs/HANDOFF.md`'s own recorded fix), no GPU, no paid API, no Modal.
+
+**Explicit non-promise**: the real `S10k-U`/`S10k-S` adapter's cost/scope is now KNOWN to be
+larger than a stills-parquet port (real video decode infrastructure needed, not previously
+budgeted anywhere in this project), but still cannot be fully estimated from one shard alone.
+No H2 delivery timeline is set by this entry. The `SampleName`/`_candidate_frames`/
+`_factory_worker_hours` wiring decision remains explicitly out of scope here -- a separate,
+later planning pass, once a broader (multi-shard, multi-factory) real sample confirms this
+shape holds generally.
+
+**Reverses if:** a later spike across multiple shards/factories finds this shard's shape
+(clip count, codec, per-clip-not-per-frame metadata) is not representative of the corpus as a
+whole.
