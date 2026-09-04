@@ -22,6 +22,9 @@ cache/
 *.parquet
 data/dinov2_features.json
 data/*.checkpoint.json
+# per-frame judge responses (D069): ignored by default; a run whose jsonl backs a card claim
+# gets its own !data/<name>.responses.jsonl negation above, per D062's per-file pattern
+data/*.responses.jsonl
 data/*.log
 data/e2_n100.json
 data/e2_smoke_n20.json

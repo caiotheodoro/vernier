@@ -190,3 +190,65 @@ def test_resume_state_carries_forward_cost_and_status_counts() -> None:
     assert resumed["status_counts"] == {"ok": 10}
     # cost accumulates on top of what the checkpoint already spent, not from zero.
     assert resumed["total_cost_usd"] > resume_state["total_cost_usd"]
+
+# --- D069: per-frame JudgeResponse persistence alongside the checkpoint ---------------------
+
+def test_responses_path_gets_one_line_per_frame_in_frame_order(tmp_path: Path) -> None:
+    frames = [_frame(str(i)) for i in range(10)]
+    responses_path = tmp_path / "r.jsonl"
+
+    _run_variant(frames, "P0a", _FakeJudge(), published={}, responses_path=responses_path)
+
+    lines = responses_path.read_text().splitlines()
+    assert len(lines) == 10
+    parsed = [JudgeResponse.model_validate(json.loads(line)) for line in lines]
+    assert [r.frame_id for r in parsed] == [f.frame_id for f in frames]
+    assert {r.prompt_variant for r in parsed} == {"P0a"}
+
+def test_resume_truncates_the_jsonl_back_to_the_checkpoint_then_appends(tmp_path: Path) -> None:
+    """A crash between checkpoints leaves the jsonl *ahead* of the checkpoint (appended every
+    frame, checkpointed every 3). The resume must drop the lead, not double-record it."""
+    frames = [_frame(str(i)) for i in range(10)]
+    checkpoint_path = tmp_path / "ckpt.json"
+    responses_path = tmp_path / "r.jsonl"
+
+    class _CrashOnEighthCall(_PatternJudge):
+        calls = 0
+
+        def judge_frame(self, frame: FrameRef, prompt_variant: PromptVariant) -> JudgeResponse:
+            type(self).calls += 1
+            if type(self).calls == 8:
+                raise RuntimeError("simulated transient server error")
+            return super().judge_frame(frame, prompt_variant)
+
+    with pytest.raises(RuntimeError):
+        _run_variant(
+            frames,
+            "P0b",
+            _CrashOnEighthCall(),
+            published={},
+            checkpoint_path=checkpoint_path,
+            checkpoint_every=3,
+            responses_path=responses_path,
+        )
+
+    assert len(responses_path.read_text().splitlines()) == 7
+    checkpoint = json.loads(checkpoint_path.read_text())
+    assert checkpoint["n_processed"] == 6
+
+    _run_variant(
+        frames,
+        "P0b",
+        _PatternJudge(),
+        published={},
+        checkpoint_path=checkpoint_path,
+        checkpoint_every=3,
+        resume_state=checkpoint,
+        responses_path=responses_path,
+    )
+
+    lines = responses_path.read_text().splitlines()
+    assert len(lines) == 10
+    frame_ids = [JudgeResponse.model_validate(json.loads(line)).frame_id for line in lines]
+    assert frame_ids == [f"uuid-{i}" for i in range(10)]  # the 7th was truncated, then re-judged
+    assert len(set(frame_ids)) == 10

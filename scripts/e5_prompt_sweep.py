@@ -32,7 +32,9 @@ import itertools
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
+
+from judge_responses_io import append_response, read_responses
 
 from vernier.judges.base import JudgeAdapter
 from vernier.judges.prompts import PromptVariant
@@ -54,6 +56,7 @@ def _rates_per_variant(
     answer: Any,
     checkpoint_path: Path | None = None,
     resume: bool = False,
+    responses_path: Path | None = None,
 ) -> tuple[dict[str, float], dict[str, dict[str, Any]]]:
     """Run every variant against every frame; return (per-variant positive rate, per-frame
     per-variant answer -- the latter feeds `_ipr_par`, kept only for `"ok"` responses).
@@ -67,6 +70,14 @@ def _rates_per_variant(
     rate and per-frame answers. `resume=True` loads it first and skips any variant already
     recorded -- so a crash mid-sweep costs one variant's calls, not all of them (D054). The
     default (`None`) leaves the old behaviour and the old callers byte-for-byte unchanged.
+
+    `responses_path`, if given, receives every `JudgeResponse` as one JSON line, appended
+    before the `status != "ok"` guard below so refusals and unparseable answers are kept
+    verbatim, never dropped (CONTRACTS.md rule 2; D069). The checkpoint above is per-variant,
+    so on resume the file is rewritten to keep only lines whose `prompt_variant` is already in
+    the checkpoint -- a partial variant's lines from the crashed attempt are discarded, since
+    that variant is about to be re-judged in full -- and then appended to. A fresh run opens
+    it with `"w"`.
     """
     rates: dict[str, float] = {}
     per_frame_answers: dict[str, dict[str, Any]] = {f.frame_id: {} for f in frames}
@@ -82,31 +93,48 @@ def _rates_per_variant(
         if saved:
             print(f"[e5] resuming: {sorted(saved)} already done, skipping", flush=True)
 
-    for variant in variants:
-        if variant in saved:
-            continue
-        n_ok = 0
-        n_positive = 0
-        for frame in frames:
-            resp = judge.judge_frame(frame, variant)
-            if resp.status != "ok":
-                continue
-            n_ok += 1
-            value = answer(resp)
-            if value:
-                n_positive += 1
-            per_frame_answers[frame.frame_id][variant] = value
-        rates[variant] = n_positive / n_ok if n_ok else 0.0
+    fh: TextIO | None = None
+    if responses_path is not None:
+        if saved:
+            kept = [r for r in read_responses(responses_path) if r.prompt_variant in saved]
+            with responses_path.open("w") as rewrite:
+                for r in kept:
+                    append_response(rewrite, r)
+            fh = responses_path.open("a")
+        else:
+            fh = responses_path.open("w")
 
-        if checkpoint_path is not None:
-            saved[variant] = {
-                "rate": rates[variant],
-                "answers": {
-                    fid: ans[variant] for fid, ans in per_frame_answers.items() if variant in ans
-                },
-            }
-            checkpoint_path.write_text(json.dumps({"variants": saved}, indent=2))
-            print(f"[e5] {variant} done ({rates[variant]:.3f}), checkpointed", flush=True)
+    try:
+        for variant in variants:
+            if variant in saved:
+                continue
+            n_ok = 0
+            n_positive = 0
+            for frame in frames:
+                resp = judge.judge_frame(frame, variant)
+                if fh is not None:
+                    append_response(fh, resp)
+                if resp.status != "ok":
+                    continue
+                n_ok += 1
+                value = answer(resp)
+                if value:
+                    n_positive += 1
+                per_frame_answers[frame.frame_id][variant] = value
+            rates[variant] = n_positive / n_ok if n_ok else 0.0
+
+            if checkpoint_path is not None:
+                saved[variant] = {
+                    "rate": rates[variant],
+                    "answers": {
+                        fid: ans[variant] for fid, ans in per_frame_answers.items() if variant in ans
+                    },
+                }
+                checkpoint_path.write_text(json.dumps({"variants": saved}, indent=2))
+                print(f"[e5] {variant} done ({rates[variant]:.3f}), checkpointed", flush=True)
+    finally:
+        if fh is not None:
+            fh.close()
 
     return rates, per_frame_answers
 
@@ -167,6 +195,10 @@ def main(argv: list[str] | None = None) -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     hand_ckpt = args.out.parent / f"{args.out.stem}.hand.checkpoint.json"
     manip_ckpt = args.out.parent / f"{args.out.stem}.manip.checkpoint.json"
+    # D069: every per-frame JudgeResponse of each sweep lands next to its checkpoint, one JSON
+    # line per call, so the rates below are re-derivable later without re-spending the calls.
+    hand_responses = args.out.parent / f"{args.out.stem}.hand.responses.jsonl"
+    manip_responses = args.out.parent / f"{args.out.stem}.manip.responses.jsonl"
 
     hand_rates, hand_answers = _rates_per_variant(
         frames,
@@ -175,6 +207,7 @@ def main(argv: list[str] | None = None) -> int:
         answer=lambda resp: resp.hands_visible is not None and resp.hands_visible >= 1,
         checkpoint_path=hand_ckpt,
         resume=args.resume,
+        responses_path=hand_responses,
     )
     manip_rates, manip_answers = _rates_per_variant(
         frames,
@@ -183,6 +216,7 @@ def main(argv: list[str] | None = None) -> int:
         answer=lambda resp: bool(resp.manipulation),
         checkpoint_path=manip_ckpt,
         resume=args.resume,
+        responses_path=manip_responses,
     )
 
     hand_spread_pp = (max(hand_rates.values()) - min(hand_rates.values())) * 100
@@ -206,6 +240,7 @@ def main(argv: list[str] | None = None) -> int:
         "hand_count_ipr_par": _ipr_par(hand_answers, _HAND_COUNT_VARIANTS),
         "manipulation_ipr_par": _ipr_par(manip_answers, _MANIPULATION_VARIANTS),
         "H3": h3,
+        "responses_paths": {"hand": str(hand_responses), "manip": str(manip_responses)},
     }
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

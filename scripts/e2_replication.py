@@ -24,8 +24,9 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
+from judge_responses_io import append_response, truncate_to_lines
 from published_labels import published_labels_for_sample
 
 from vernier.judges.base import JudgeAdapter
@@ -67,6 +68,7 @@ def _run_variant(
     checkpoint_path: Path | None = None,
     checkpoint_every: int = 100,
     resume_state: dict[str, Any] | None = None,
+    responses_path: Path | None = None,
 ) -> dict[str, Any]:
     """`checkpoint_path`, if given, is overwritten with the running aggregate every
     `checkpoint_every` frames -- real insurance for a real, many-hour run: without it, an
@@ -83,6 +85,16 @@ def _run_variant(
     `hand_count_exact_agreement_rate`, or `active_labor_agreement_rate` exactly (those weren't
     part of the periodic checkpoint payload) -- resuming re-derives them from that point forward
     only, which is flagged in the final result via `resumed_from`.
+
+    `responses_path`, if given, receives every `JudgeResponse` this call makes as one JSON line
+    each, appended immediately after the judge returns and before any status check, so refused
+    and unparseable responses are kept verbatim rather than dropped (CONTRACTS.md rule 2). This
+    is what D067 was missing: the aggregate alone could not be re-derived once a parser bug was
+    found, because nothing per-frame survived the run (D069). A fresh run opens the file with
+    `"w"` (stale lines from an abandoned earlier attempt are discarded); a resume truncates it
+    to `n_processed` lines first, then appends -- the loop checkpoints every `checkpoint_every`
+    frames but appends here every frame, so a crash leaves lines the resume is about to
+    re-judge. `None` (the default) writes nothing, keeping existing callers unchanged.
     """
     n_ok = 0
     hand_ge1 = hand_eq2 = active_yes = 0
@@ -108,49 +120,63 @@ def _run_variant(
             flush=True,
         )
 
-    for i, frame in enumerate(frames[start_index:], start=start_index + 1):
-        resp = judge.judge_frame(frame, variant)
-        total_cost_usd += resp.cost_usd
-        total_latency_ms += resp.latency_ms
-        status_counts[resp.status] = status_counts.get(resp.status, 0) + 1
-        if resp.status == "ok":
-            n_ok += 1
-            if resp.hands_visible is not None and resp.hands_visible >= 1:
-                hand_ge1 += 1
-            if resp.hands_visible == 2:
-                hand_eq2 += 1
-            if resp.manipulation:
-                active_yes += 1
+    fh: TextIO | None = None
+    if responses_path is not None:
+        if resume_state is None:
+            fh = responses_path.open("w")
+        else:
+            truncate_to_lines(responses_path, start_index)
+            fh = responses_path.open("a")
 
-            label = published.get(frame.frame_id)
-            if label is not None:
-                n_comparable += 1
-                published_hand_count, published_active = label
-                if resp.hands_visible == published_hand_count:
-                    hand_count_agree += 1
-                if resp.manipulation == published_active:
-                    active_labor_agree += 1
+    try:
+        for i, frame in enumerate(frames[start_index:], start=start_index + 1):
+            resp = judge.judge_frame(frame, variant)
+            if fh is not None:
+                append_response(fh, resp)
+            total_cost_usd += resp.cost_usd
+            total_latency_ms += resp.latency_ms
+            status_counts[resp.status] = status_counts.get(resp.status, 0) + 1
+            if resp.status == "ok":
+                n_ok += 1
+                if resp.hands_visible is not None and resp.hands_visible >= 1:
+                    hand_ge1 += 1
+                if resp.hands_visible == 2:
+                    hand_eq2 += 1
+                if resp.manipulation:
+                    active_yes += 1
 
-        if checkpoint_path is not None and (i % checkpoint_every == 0 or i == len(frames)):
-            denom = n_ok or 1
-            comparable_denom = n_comparable or 1
-            checkpoint_path.write_text(
-                json.dumps(
-                    {
-                        "n_processed": i,
-                        "n_total": len(frames),
-                        "n_ok": n_ok,
-                        "status_counts": status_counts,
-                        "hand_ge1_rate": hand_ge1 / denom,
-                        "hand_eq2_rate": hand_eq2 / denom,
-                        "active_manipulation_rate": active_yes / denom,
-                        "total_cost_usd": total_cost_usd,
-                        "total_latency_ms": total_latency_ms,
-                    },
-                    indent=2,
+                label = published.get(frame.frame_id)
+                if label is not None:
+                    n_comparable += 1
+                    published_hand_count, published_active = label
+                    if resp.hands_visible == published_hand_count:
+                        hand_count_agree += 1
+                    if resp.manipulation == published_active:
+                        active_labor_agree += 1
+
+            if checkpoint_path is not None and (i % checkpoint_every == 0 or i == len(frames)):
+                denom = n_ok or 1
+                comparable_denom = n_comparable or 1
+                checkpoint_path.write_text(
+                    json.dumps(
+                        {
+                            "n_processed": i,
+                            "n_total": len(frames),
+                            "n_ok": n_ok,
+                            "status_counts": status_counts,
+                            "hand_ge1_rate": hand_ge1 / denom,
+                            "hand_eq2_rate": hand_eq2 / denom,
+                            "active_manipulation_rate": active_yes / denom,
+                            "total_cost_usd": total_cost_usd,
+                            "total_latency_ms": total_latency_ms,
+                        },
+                        indent=2,
+                    )
                 )
-            )
-            print(f"[{variant}] {i}/{len(frames)} checkpointed", flush=True)
+                print(f"[{variant}] {i}/{len(frames)} checkpointed", flush=True)
+    finally:
+        if fh is not None:
+            fh.close()
 
     denom = n_ok or 1  # denominator excludes non-ok responses (CONTRACTS.md rule 2: absence
     # is explicit); n_ok == 0 makes every rate below vacuously 0.0, not a division error.
@@ -229,6 +255,7 @@ def _variant_result(
     checkpoint_path: Path,
     checkpoint_every: int,
     resume: bool,
+    responses_path: Path | None = None,
 ) -> dict[str, Any]:
     """Run (or resume, or reconstruct) one prompt variant. Without `--resume` this is a plain
     `_run_variant` call; with it, `_resume_decision` picks the path."""
@@ -250,6 +277,7 @@ def _variant_result(
         checkpoint_path=checkpoint_path,
         checkpoint_every=checkpoint_every,
         resume_state=resume_state,
+        responses_path=responses_path,
     )
 
 
@@ -327,8 +355,13 @@ def main(argv: list[str] | None = None) -> int:
     checkpoint_dir = args.out.parent
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     variants: tuple[PromptVariant, ...] = ("P0a", "P0b")
-    results = {
-        variant: _variant_result(
+    results: dict[str, dict[str, Any]] = {}
+    for variant in variants:
+        # D069: every per-frame JudgeResponse lands next to the checkpoint, one JSON line per
+        # call, so the aggregate below is re-derivable later (D067 could not be). The path is
+        # recorded in the output so a reader of the aggregate knows where the records are.
+        responses_path = checkpoint_dir / f"{args.out.stem}.{variant}.responses.jsonl"
+        results[variant] = _variant_result(
             frames,
             variant,
             judge,
@@ -336,9 +369,9 @@ def main(argv: list[str] | None = None) -> int:
             checkpoint_path=checkpoint_dir / f"{args.out.stem}.{variant}.checkpoint.json",
             checkpoint_every=args.checkpoint_every,
             resume=args.resume,
+            responses_path=responses_path,
         )
-        for variant in variants
-    }
+        results[variant]["responses_path"] = str(responses_path)
 
     output: dict[str, Any] = {
         "sample": args.sample,

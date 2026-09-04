@@ -214,11 +214,19 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D068 |
+| Decisions | `DECISIONS.md`, D001–D069 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
 | Waves | `WAVES.md` — the fan-out → independent-review paradigm and every wave's acceptance/review/eval/rubric criteria |
+
+A live E2 or E5 run now also leaves per-frame records behind, next to its checkpoints: one
+`JudgeResponse` per JSON line in `data/<out-stem>.<variant>.responses.jsonl` for E2 (`P0a`,
+`P0b`) and `data/<out-stem>.{hand,manip}.responses.jsonl` for E5, written by
+`scripts/judge_responses_io.py` and read back with its `read_responses` (which dedupes on
+`(frame_id, prompt_variant)`). Gitignored by default; a run that backs a card claim gets a
+per-file negation. Forward-only -- the committed aggregates predate this and have no jsonl.
+`docs/DECISIONS.md` D069.
 
 ## The next action
 

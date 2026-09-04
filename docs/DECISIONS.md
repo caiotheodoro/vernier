@@ -2113,3 +2113,60 @@ are deliberately left untouched -- both are working exactly as designed, not sta
 access-blocker language this round already corrected in `emit_card.py`, `README.md`, and
 `docs/BENCHMARK.md` -- check `docs/PRE-REGISTRATION.md`'s and `docs/REVIEW.md`'s exemption
 reasoning still holds before assuming those need the same fix.
+
+## D069 — Per-frame judge responses persisted as JSONL (forward-only)
+
+D067 is the motivating failure: when the `active_labor` parser bug was found, the affected
+`active_labor_agreement_rate` in `data/e2_100k_eval.json` could only be nulled with a reason,
+never corrected, because `scripts/e2_replication.py` folded each `JudgeResponse` into a running
+total and discarded it -- a $9/~9h run left nothing per-frame that a fixed parser could re-read.
+`scripts/e5_prompt_sweep.py` had the same shape (only per-variant rates and boolean answers
+survive). Meanwhile `space/SPEC.md`'s per-frame view needs exactly the records those runs threw
+away, and `scripts/judge_gold_sets.py` had already shown the round-trip is real:
+`response.model_dump(mode="json")` per frame, read back by `scripts/wave4_analysis.py` with
+`JudgeResponse.model_validate`.
+
+**What changed.** New `scripts/judge_responses_io.py` (`append_response`, `read_responses`,
+`truncate_to_lines`), shared by both runners. `e2_replication._run_variant` and
+`e5_prompt_sweep._rates_per_variant` each gain a keyword-only `responses_path: Path | None =
+None`; `None` writes nothing, so every existing caller and test is unchanged. When set, every
+`JudgeResponse` is appended as one JSON line *immediately after the judge returns and before any
+status check* -- refused and unparseable responses are kept verbatim, not dropped (CONTRACTS.md
+rule 2, the same rule the cards apply to excluded records). `main()` derives the paths next to
+the existing checkpoints with no new CLI flag: `data/<out-stem>.<variant>.responses.jsonl` for
+E2 (`P0a`, `P0b`) and `data/<out-stem>.{hand,manip}.responses.jsonl` for E5, and records them in
+the output JSON (`per_variant[<variant>]["responses_path"]`, `responses_paths`) so a reader of
+the aggregate knows where the records are. `JudgeResponse` is frozen with `extra="forbid"` and
+only after-validators, so the dumped dict is written bare -- no run metadata is added to it,
+because it would be rejected on read.
+
+**Truncate vs append.** A fresh run opens the file with `"w"`, discarding any stale lines from
+an abandoned attempt. E2 appends every frame but checkpoints every `--checkpoint-every` frames,
+so a crash leaves the jsonl *ahead* of the checkpoint; on resume it is truncated to
+`n_processed` lines and then appended to, so the re-judged frames are recorded once. E5's
+checkpoint is per-variant, so on resume the file is rewritten to keep only lines whose
+`prompt_variant` is already in the checkpoint (a partial variant's lines are discarded, since
+that variant is re-judged in full) and then appended to.
+
+**Dedupe on read.** `read_responses` deduplicates on `(frame_id, prompt_variant)`, keeping the
+first occurrence. Duplicates are expected, not a bug: `scripts/run_full_e2_e5.sh` re-invokes the
+same command with `--resume` up to 6 times on a nonzero exit, and a reader must not depend on
+the truncation above having happened (an interrupted truncation, or a file written by a future
+runner that doesn't truncate). First-occurrence-wins makes a re-read deterministic. A line that
+fails to parse raises rather than being skipped.
+
+**What is deliberately not done.** Today's committed aggregates (`data/e2_full_n10000.json`,
+`data/e5_full_n2000.json`, `data/e2_100k_eval.json`) predate this and are neither re-run nor
+modified -- re-spending the judge calls to obtain per-frame records for results already reported
+would be real, unjustified cost; this is forward-only insurance for the next run.
+`scripts/judge_gold_sets.py`'s whole-file JSON-array rewrite keyed by `frame_id` is left alone:
+it is a different shape (one variant, resumed by set membership rather than by index), already
+consumed by `wave4_analysis.py`, and converting it would change a working, consumed format for
+consistency's sake alone. `scripts/run_full_e2_e5.sh` is unchanged. The jsonl files are
+gitignored by default (`data/*.responses.jsonl`); a run whose jsonl backs a card claim gets its
+own `!data/<name>.responses.jsonl` negation, per D062's per-file pattern.
+
+**Reverses if:** a future re-run of E2 or E5 finds the per-frame jsonl is never read by any
+analysis (in which case the `data/` footprint is pure cost and the default should flip to off),
+or if `judge_gold_sets.py` is next rewritten for another reason -- that is the moment to move it
+onto the shared helper rather than keeping two persistence formats.
