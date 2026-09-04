@@ -64,6 +64,9 @@ fixtures:      ## Wave 0: regenerate tests/fixtures/{valid,malformed}/*.json fro
 check-eval-parquets:  ## D016: verify evaluation parquets contain the frames the published labels refer to.
 	python3 scripts/check_eval_parquets.py
 
+check-corpus-manifest:  ## D071: reconcile the raw-corpus clip manifest against the published 2,153-worker/85-factory figures.
+	python3 scripts/check_corpus_manifest.py
+
 check-stale-prose:  ## D050/REVIEW.md R10: fail if a retired design (e.g. the pre-D042 multi-judge panel) is still described as current anywhere public.
 	python3 scripts/check_stale_prose.py
 
