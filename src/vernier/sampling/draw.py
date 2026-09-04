@@ -18,10 +18,13 @@ parquet file per sub-corpus, not one file filtered by a column (verified live vi
 `HfApi().list_repo_files` -- `_EVAL_PARQUET_FILENAME` records the real mapping).
 `_frames_from_eval_parquet` is the offline-testable half (a local parquet path in, a `FrameRef`
 pool out); `_candidate_frames` itself is the thin real-network wrapper
-(`huggingface_hub.hf_hub_download`) around it. `S10k-U`/`S10k-S` (the raw, contact-gated
-Egocentric-10K corpus, with real factory/worker/clip/timestamp/fps/codec) and
-`_factory_worker_hours` remain unwired -- a different, still-ungated-in-this-repo dataset whose
-real schema hasn't been inspected yet.
+(`huggingface_hub.hf_hub_download`) around it.
+
+`S10k-U`/`S10k-S` are the raw Egocentric-10K corpus -- a different dataset in a different
+format (WebDataset tars of h265 video, not a parquet of stills), so they get their own module
+rather than an extension of the parquet path: `sampling/corpus_frames.py` (D071). They are the
+only samples in this project carrying real `factory_id`/`worker_id`/`clip_id`, which is the
+whole reason H2 is measured on them.
 """
 
 from __future__ import annotations
@@ -94,11 +97,19 @@ _EVAL_HF_REPO = "builddotai/Egocentric-10K-Evaluation"
 # repo, not a file within `_EVAL_HF_REPO`.
 _EVAL_HF_REPO_100K = "builddotai/Egocentric-100K-Evaluation"
 
+# docs/DECISIONS.md D065/D071: the RAW corpus, not an evaluation release. Different repo,
+# different format, different adapter (`sampling/corpus_frames.py`).
+_RAW_CORPUS_HF_REPO = "builddotai/Egocentric-10K"
+
+_RAW_CORPUS_SAMPLES: frozenset[str] = frozenset({"S10k-U", "S10k-S"})
+
 _EVAL_HF_REPO_FOR_SAMPLE: dict[str, str] = {
     "E10k-ego": _EVAL_HF_REPO,
     "E10k-ego4d": _EVAL_HF_REPO,
     "E10k-epic": _EVAL_HF_REPO,
     "E100k-ego": _EVAL_HF_REPO_100K,
+    "S10k-U": _RAW_CORPUS_HF_REPO,
+    "S10k-S": _RAW_CORPUS_HF_REPO,
 }
 
 # Where a subset sample's parent membership is read from. `write_membership`/`load_membership`
@@ -297,13 +308,13 @@ def _download_eval_parquet(sample: str) -> str:
     needed (`huggingface_hub` dedupes by content hash -- a second call for the same sample in
     the same process/machine is a cache hit, not a re-download).
 
-    Raises `NotImplementedError` for `S10k-U`/`S10k-S`: a different, contact-gated dataset whose
-    real schema hasn't been inspected yet.
+    `S10k-U`/`S10k-S` have no parquet at all and are routed away by `_candidate_frames` before
+    reaching here; a call that gets this far is a routing bug, not a missing dataset.
     """
     if sample not in _EVAL_PARQUET_FILENAME:
-        raise NotImplementedError(
-            f"{sample!r} needs the raw Egocentric-10K corpus adapter (S10k-U/S10k-S) -- a "
-            "different, still-unwired dataset, see docs/HANDOFF.md"
+        raise ValueError(
+            f"{sample!r} has no evaluation parquet -- raw-corpus samples are served by "
+            "vernier.sampling.corpus_frames, not this function"
         )
     from huggingface_hub import hf_hub_download
 
@@ -322,11 +333,21 @@ def _candidate_frames(sample: SampleName) -> list[FrameRef]:
     Real for the `E10k-*` family (Build AI's evaluation-release frame list) -- see
     `_frames_from_eval_parquet` for the actual parsing. `E100k-ego` (D066) uses the sibling
     `_frames_from_eval_parquet_100k` parser, since that repo's schema has no `frame_id` column.
-    `S10k-U`/`S10k-S` (fresh Egocentric-10K corpus metadata) remain unwired: a different dataset
-    whose real schema was only just inspected for the first time (D065), still not adapted.
+    `S10k-U`/`S10k-S` come from `corpus_frames.candidate_frames` instead (D071), built from the
+    clip manifest rather than a parquet. Their pool is seeded with `PRE_REGISTRATION_SEED`, not
+    with the draw's seed: the pool is a property of the corpus, and it is `_draw_uniform_corpus`
+    /`_draw_stratified_corpus` that then apply the caller's seed to select from it.
     Wave 1 unit tests monkeypatch this whole function with synthetic in-memory `FrameRef`
     pools, independent of either path.
     """
+    if sample in _RAW_CORPUS_SAMPLES:
+        from vernier.sampling.corpus_frames import candidate_frames
+
+        return candidate_frames(
+            sample,
+            corpus_rev=PINNED_REVISIONS[_RAW_CORPUS_HF_REPO],
+            seed=PRE_REGISTRATION_SEED,
+        )
     path = _download_eval_parquet(sample)
     corpus_rev = PINNED_REVISIONS[_EVAL_HF_REPO_FOR_SAMPLE[sample]]
     if sample in _SYNTHETIC_FRAME_ID_SAMPLES:
@@ -384,19 +405,18 @@ def image_bytes_for(frame: FrameRef) -> bytes:
     different root arms, so `frame.sample` alone can never disambiguate which file to search.
     `frame_id` (a UUID4) is unique across the whole release, so it is the only reliable key.
 
-    `S10k-U`/`S10k-S` frames get their own explicit `NotImplementedError` (a different,
-    unwired dataset), not folded into the same "not found" path as a real missing frame.
+    `S10k-U`/`S10k-S` frames are decoded out of the corpus video instead (D071), never looked
+    up in a parquet -- a different dataset with a different access path, not a missing frame.
 
     Raises `KeyError` if `frame.frame_id` isn't present or has empty image bytes in ANY of the
     three evaluation parquets. `scripts/check_eval_parquets.py` (D016) is the place to check
     this in bulk, ahead of time, across a whole drawn sample's membership; this seam trusts that
     check already passed and fails loud, not silently, if it didn't.
     """
-    if frame.sample in ("S10k-U", "S10k-S"):
-        raise NotImplementedError(
-            f"image_bytes_for for sample {frame.sample!r} needs the raw Egocentric-10K corpus "
-            "adapter -- a different, still-unwired dataset, see docs/HANDOFF.md"
-        )
+    if frame.sample in _RAW_CORPUS_SAMPLES:
+        from vernier.sampling.corpus_frames import image_bytes_for_corpus_frame
+
+        return image_bytes_for_corpus_frame(frame)
     for root_sample in _EVAL_PARQUET_FILENAME:
         by_id = _eval_frame_bytes_by_id(root_sample)
         if frame.frame_id in by_id:
@@ -412,9 +432,17 @@ def _factory_worker_hours(sample: SampleName) -> dict[str, float]:
 
     Not a `FrameRef` field -- Build AI's corpus metadata carries factory worker-hours
     separately from any single frame, so this is its own seam alongside `_candidate_frames`.
-    Returns ``{factory_id: worker_hours}``. Real wiring is Wave 2's job.
+    Returns ``{factory_id: worker_hours}``.
+
+    Real since D071, summed from the clip manifest's own `duration_sec`. That is *recorded
+    video duration*, the only worker-hours measure this corpus actually ships -- not hours
+    worked, and any claim weighted by it says so.
     """
-    raise NotImplementedError
+    if sample not in _RAW_CORPUS_SAMPLES:
+        raise ValueError(f"{sample!r} has no factory worker-hours; only raw-corpus draws do")
+    from vernier.sampling.corpus_frames import factory_worker_hours
+
+    return factory_worker_hours()
 
 
 def _apportion(weights: dict[str, float], total: int) -> dict[str, int]:

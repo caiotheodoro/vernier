@@ -19,6 +19,11 @@ PINNED_REVISIONS: dict[str, str] = {
     # live-resolved via HfApi().dataset_info(...).sha, sourced from
     # docs/upstream/PROVENANCE-100k-eval.json, never invented.
     "builddotai/Egocentric-100K-Evaluation": "d0f69a56b0525c1bead80d918dc57ef83dcac899",
+    # docs/DECISIONS.md D065/D071: the RAW corpus S10k-U/S10k-S draw from -- a different repo
+    # and a different format (WebDataset tars of h265 video) from the two evaluation releases
+    # above. Real revision sha, live-resolved via HfApi().dataset_info(...).sha, sourced from
+    # docs/upstream/PROVENANCE-10k-raw.json, never invented.
+    "builddotai/Egocentric-10K": "3e5f87c88c54ce8343865d8e2a8c171f18385a05",
 }
 
 

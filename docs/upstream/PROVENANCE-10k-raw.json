@@ -1,0 +1,14 @@
+{
+  "repo": "builddotai/Egocentric-10K",
+  "repo_type": "dataset",
+  "revision": "3e5f87c88c54ce8343865d8e2a8c171f18385a05",
+  "license": "apache-2.0",
+  "gated": "auto",
+  "retrieved_utc": "2026-09-04T18:20:00Z",
+  "shape": {
+    "tar_shards": 19495,
+    "worker_intrinsics_json": 2144,
+    "downloads_30d": 28891
+  },
+  "note": "The RAW corpus, not an evaluation release. docs/DECISIONS.md D065 accepted the gated terms and inspected one shard; D071 indexed all 19,495 with ranged reads and never downloaded one. Shards are WebDataset tars holding h265 MP4s plus a per-clip JSON sidecar carrying factory_id/worker_id/duration_sec/fps/width/height/codec -- the only real worker_id in this project, and the reason H2's cluster bootstrap is measured here. Every field above is live-resolved via HfApi().dataset_info(), never transcribed. gated='auto' means terms-acceptance, not manual approval: D044's 403 was un-accepted terms, not a denial."
+}

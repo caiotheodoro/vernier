@@ -2215,3 +2215,79 @@ edits were re-applied from the session's own record afterwards; untracked files 
 Hub first, then fix the export test that let it through); or Build AI's evaluation datasets
 are removed or re-licensed such that linking them into the collection is no longer
 appropriate.
+
+## D071 — The `S10k-U`/`S10k-S` raw-corpus adapter is built; H2 is unblocked
+
+D065 established that the raw Egocentric-10K corpus is 19,495 WebDataset `.tar` shards of h265
+video, concluded that a real adapter "needs real video decoding ... a new kind of dependency
+this project does not currently have", and explicitly declined to size it: *"No H2 delivery
+timeline is set by this entry."* `scripts/emit_card.py`'s blocker text (D068) put the decision
+to Caio as whether to fund building it. This entry is that decision, taken against
+measurements rather than against D065's single shard.
+
+**The three facts that made it small, each verified live before any code was written.**
+
+1. **No new dependency.** ffmpeg's `subfile` protocol presents a byte window of another URL as
+   a seekable file, so one frame comes out of an mp4 inside a tar over HTTP range requests:
+   `ffmpeg -protocol_whitelist file,https,tls,tcp,crypto,subfile -ss 250 -i
+   "subfile,,start,512,end,N,,:<signed-cdn-url>" -frames:v 1` returned a 145 KB JPEG in 1.93 s
+   without downloading the 816 MB shard. `-ss` *before* `-i` is the load-bearing detail: it is
+   an input seek, so ffmpeg consults the moov index and range-requests only the GOP it needs.
+   PyAV was the expected route and is unavailable here regardless -- no cp313 macOS-arm64 wheel
+   exists for any release up to 18.1.0, checked against PyPI's own index.
+2. **Cluster labels are free, and so is the sampling frame.** A tar member header is 512 bytes
+   at a computable offset, so `scripts/build_corpus_manifest.py` indexes the whole corpus with
+   small ranged reads and never downloads a shard: the corpus is ~16 TB, the scan that indexes
+   it moves ~150 MB. Each clip's `.json` sidecar supplies `factory_id`/`worker_id`/
+   `duration_sec`/`fps`/`width`/`height`/`codec` -- and summing `duration_sec` per factory is
+   `_factory_worker_hours`, the second of the three seams, at no extra cost.
+3. **D065's shard is not representative, which fires D065's own reversal clause.** It reported
+   "2 clips per shard, 433 s and 1200 s." Five shards sampled across the corpus hold 1, 2, 5, 5
+   and 11 clips, with durations of 180 s, 433 s and 1200 s. The adapter therefore reads shape
+   per shard and assumes nothing; D065's own "NOT settled" question is answered, negatively.
+
+**Two values are constructed here and neither exists in the raw data.** D065 established that
+the corpus ships `duration_sec`/`fps` per clip and nothing per frame. `timestamp_s` and
+`frame_index` are therefore chosen by `sampling/corpus_frames.py`, seeded, from
+`range(int(duration_sec * fps))`. This is a real construction and is disclosed as one: an
+`S10k-*` frame's timestamp is vernier's, not Build AI's.
+
+**The two pools differ by sample, and the difference is statistical.** `PRE-REGISTRATION.md`
+specifies `S10k-U` as "uniform over frames". The corpus holds order-1e9 frames, so a literal
+frame-level pool cannot be materialised, and one candidate per clip -- the obvious
+implementation -- would silently make the draw uniform over *clips*, over-weighting a 180 s
+clip against a 1200 s one by 6.7x. Instead clips are drawn with probability proportional to
+their frame count and given a uniform in-clip frame index, which gives every frame in the
+corpus equal selection probability; the pool is a 10x over-sample so `_draw_uniform_corpus`'s
+own seeded `rng.sample` still does real work rather than returning a permutation. `S10k-S` gets
+one candidate per clip instead, because `_draw_stratified_corpus` dedupes to <=1 frame per clip
+before apportioning by worker-hours -- a multi-candidate pool would let the dedupe step, not
+the apportionment, decide how many frames a factory of few long clips can contribute.
+
+**A real bug this found, worth recording because it would not have failed loudly.** The corpus
+numbers workers *within* a factory: `worker_001` exists in all 85 of them. A partial manifest
+held 37 distinct bare `worker_id`s across 216 real (factory, worker) pairs. `models.py` states
+that "`worker_id` is the cluster unit for every reported interval" and every consumer reads
+that one field, so shipping the sidecar's own `worker_id` would have collapsed ~2,144 clusters
+into ~85 and *inflated* H2's design effect -- producing a large number that looked like a
+strong positive result for the project's central hypothesis. `worker_id` is now qualified as
+`{factory_id}/{worker_id}` through the `normalize_worker_id` seam `docs/ARCHITECTURE.md`
+already declared for exactly this. Caught by running a real draw, not by review.
+
+**Also landed:** `builddotai/Egocentric-10K` is pinned in `sampling/revisions.py` at
+`3e5f87c88c54ce8343865d8e2a8c171f18385a05`, sourced from the new
+`docs/upstream/PROVENANCE-10k-raw.json` and live-resolved, never invented -- and
+`_EVAL_HF_REPO_FOR_SAMPLE` now maps the `S10k-*` arms to it, so `_check_revision` stops
+checking them against the *evaluation* release's sha, which it silently did before.
+
+**What this entry does NOT claim.** No H2 result. The draw, the frame extraction, the judge run
+and the design effect are all still ahead; this is the adapter and its sampling frame, tested
+and live-exercised end to end (real frames drawn from the real corpus decoded to 1920x1080
+JPEGs matching their manifest-declared dimensions), not a measurement. It also makes no claim
+about Result 2, which D048 dropped for two further reasons this adapter does not touch.
+
+**Reverses if:** ffmpeg's `subfile` behaviour changes or HF stops serving range requests
+against dataset objects (then a real decode dependency has to be budgeted after all, and the
+`PyAV`-wheel gap becomes live again); or a broader read of the corpus shows `duration_sec` is
+not a usable proxy for worker-hours, in which case `S10k-S`'s stratification weights need a
+different source and the sample is redrawn.

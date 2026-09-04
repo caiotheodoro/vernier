@@ -28,6 +28,10 @@ EVAL_REPO = "builddotai/Egocentric-10K-Evaluation"
 PINNED_REV = PINNED_REVISIONS[EVAL_REPO]
 EVAL_REPO_100K = "builddotai/Egocentric-100K-Evaluation"
 PINNED_REV_100K = PINNED_REVISIONS[EVAL_REPO_100K]
+# S10k-U/S10k-S draw from the RAW corpus (D071), a different repo with its own pin. Synthetic
+# corpus frames must carry it, or `_check_revision` correctly rejects them.
+RAW_REPO = "builddotai/Egocentric-10K"
+PINNED_REV_RAW = PINNED_REVISIONS[RAW_REPO]
 
 
 def _corpus_frame(
@@ -36,11 +40,11 @@ def _corpus_frame(
     worker_id: str,
     clip_id: str,
     frame_index: int,
-    corpus_rev: str = PINNED_REV,
+    corpus_rev: str = PINNED_REV_RAW,
 ) -> FrameRef:
     return FrameRef(
         frame_id=f"ego10k/f{factory_id}/w{worker_id}/v{clip_id}/{frame_index:06d}",
-        corpus="egocentric-10k",
+        corpus="egocentric-10k-raw",
         corpus_rev=corpus_rev,
         factory_id=factory_id,
         worker_id=worker_id,
@@ -314,6 +318,9 @@ def test_r100_is_subset_of_union_of_three_g200_sets(monkeypatch: pytest.MonkeyPa
 
 
 def test_draw_sample_calls_assert_pinned_revision(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`S10k-U` draws from the RAW corpus, a different repo with a different sha from the
+    evaluation release. Before D071 wired `_EVAL_HF_REPO_FOR_SAMPLE`, this arm fell through to
+    the eval repo's default and would have accepted a frame carrying the wrong revision."""
     pool = [
         _corpus_frame(factory_id="1", worker_id=f"w{i}", clip_id=f"c{i}", frame_index=i)
         for i in range(10)
@@ -329,7 +336,7 @@ def test_draw_sample_calls_assert_pinned_revision(monkeypatch: pytest.MonkeyPatc
 
     draw_sample("S10k-U", seed=PRE_REGISTRATION_SEED)
 
-    assert calls == [(EVAL_REPO, PINNED_REV)]
+    assert calls == [(RAW_REPO, PINNED_REV_RAW)]
 
 
 def test_draw_sample_propagates_revision_drift(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -596,11 +603,32 @@ def test_every_eval_arm_has_a_matching_repo_and_filename_entry() -> None:
         assert repo_id in PINNED_REVISIONS, (sample, repo_id)
 
 
-def test_candidate_frames_raises_not_implemented_for_unwired_corpus_samples() -> None:
-    from vernier.sampling.draw import _candidate_frames
+def test_candidate_frames_routes_raw_corpus_samples_to_the_corpus_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D071 wired this. The routing itself is what is asserted -- the adapter has its own
+    tests (`tests/test_sampling_corpus_frames.py`), and reaching the parquet path for an
+    S10k sample would be the real regression."""
+    import vernier.sampling.corpus_frames as corpus_mod
+    import vernier.sampling.draw as draw_mod
 
-    with pytest.raises(NotImplementedError, match="S10k-U"):
-        _candidate_frames("S10k-U")
+    seen: dict[str, object] = {}
+
+    def _fake(sample: str, *, corpus_rev: str, seed: int) -> list[FrameRef]:
+        seen.update(sample=sample, corpus_rev=corpus_rev, seed=seed)
+        return []
+
+    monkeypatch.setattr(corpus_mod, "candidate_frames", _fake)
+    monkeypatch.setattr(
+        draw_mod, "_download_eval_parquet", lambda s: pytest.fail("parquet path for S10k")
+    )
+
+    assert draw_mod._candidate_frames("S10k-U") == []
+    assert seen == {
+        "sample": "S10k-U",
+        "corpus_rev": PINNED_REV_RAW,
+        "seed": PRE_REGISTRATION_SEED,
+    }
 
 
 # --- image_bytes_for: searches all three eval files by frame_id, not by frame.sample --------
@@ -696,10 +724,29 @@ def test_image_bytes_for_r100_frame_found_regardless_of_which_root_arm(
     assert result == jpeg
 
 
-def test_image_bytes_for_raises_not_implemented_for_s10k_samples() -> None:
+def test_image_bytes_for_routes_s10k_frames_to_the_corpus_decoder(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D071: an `S10k-*` frame is decoded out of the corpus video, never looked up in a
+    parquet. Asserted as routing -- reaching the parquet search for a raw-corpus frame would
+    silently 404 it as "not found" rather than decoding it."""
+    import vernier.sampling.corpus_frames as corpus_mod
+
+    frame = _corpus_frame(factory_id="1", worker_id="w0", clip_id="c0", frame_index=7)
+    monkeypatch.setattr(
+        corpus_mod, "image_bytes_for_corpus_frame", lambda f: b"JPEG:" + f.frame_id.encode()
+    )
+
+    assert draw_mod.image_bytes_for(frame) == b"JPEG:" + frame.frame_id.encode()
+
+
+def test_image_bytes_for_rejects_an_s10k_frame_with_no_clip_provenance() -> None:
+    """The null-together validator permits a frame labelled `S10k-U` that carries no
+    provenance (an eval-arm frame relabelled by hand, say). It cannot be decoded, and saying so
+    is better than resolving a CDN URL for a clip id of `None`."""
     frame = _eval_frame(sample="S10k-U", uid="f0")
 
-    with pytest.raises(NotImplementedError, match="S10k-U"):
+    with pytest.raises(ValueError, match="no clip provenance"):
         draw_mod.image_bytes_for(frame)
 
 

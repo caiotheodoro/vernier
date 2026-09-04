@@ -13,10 +13,12 @@ Dependency order, per `docs/PRE-REGISTRATION.md`'s "Samples" table:
 `G200-ego` (parent `P2k`), `G200-ego4d` (parent `E10k-ego4d`), `G200-epic` (parent `E10k-epic`)
 -> `R100` (union of the three `G200-*` sets).
 
-`S10k-U`/`S10k-S` are real, expected failures here (`docs/DECISIONS.md` D044: the raw
-Egocentric-10K corpus adapter is unwired, blocked on an HF access grant this account doesn't
-have) -- skipped with a clear message, not a reason to fail the rest of the DAG. Absence is
-explicit (`CONTRACTS.md` rule 2), not silently swallowed.
+`S10k-U`/`S10k-S` are real draws since D071 (`vernier.sampling.corpus_frames`), and they need
+`data/corpus_manifest_10k.jsonl` to exist -- build it with `scripts/build_corpus_manifest.py`
+first. The `NotImplementedError` skip below is kept as a general property of this runner, not
+as a statement about those two samples: a sample that cannot be drawn is reported as skipped
+with its reason and does not fail the rest of the DAG. Absence is explicit (`CONTRACTS.md`
+rule 2), not silently swallowed.
 """
 
 from __future__ import annotations
@@ -55,8 +57,8 @@ _DRAW_ORDER: tuple[SampleName, ...] = (
 def draw_and_persist_all(root: Path = _MEMBERSHIP_ROOT) -> dict[str, int | str]:
     """Draw every sample in `_DRAW_ORDER`, persisting each as it succeeds so later samples in
     the order can read it back as parent membership. Returns `{sample: n_frames}` for each
-    sample actually drawn, or `{sample: "skipped: <reason>"}` for one that couldn't be
-    (currently only `S10k-U`/`S10k-S`, per D044).
+    sample actually drawn, or `{sample: "skipped: <reason>"}` for one that couldn't be.
+    No sample is expected to skip as of D071; the branch is a guard, not a plan.
     """
     results: dict[str, int | str] = {}
     for sample in _DRAW_ORDER:

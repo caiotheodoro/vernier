@@ -262,21 +262,6 @@ def test_judge_frame_never_raises_on_garbage_logprob_type(monkeypatch: pytest.Mo
 # it, verified below.
 
 
-def test_image_bytes_for_seam_unwired_for_s10k_raises_not_implemented() -> None:
-    judge = Qwen3VLJudge()
-    with pytest.raises(NotImplementedError):
-        judge._image_bytes_for(_frame())
-
-
-def test_call_qwen3vl_propagates_the_unwired_image_seam_for_s10k() -> None:
-    # _call_qwen3vl itself is real (wired to the openai client against the self-hosted vLLM
-    # server); it still raises here only because it calls the still-unwired S10k-U image seam
-    # before ever touching the network.
-    judge = Qwen3VLJudge()
-    with pytest.raises(NotImplementedError):
-        judge._call_qwen3vl(_frame(), "some prompt text")
-
-
 def test_image_bytes_for_delegates_to_the_real_sampling_seam(monkeypatch: pytest.MonkeyPatch) -> None:
     import vernier.judges.qwen3vl as qwen3vl_mod
 
