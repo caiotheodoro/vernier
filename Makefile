@@ -7,7 +7,7 @@
 # `agreement` -- see that target's recipe. `docs/DECISIONS.md` D064 removed the standalone
 # stub, since its own help text promised a design-effect column this repo's non-clustered PPI
 # path (D039) cannot structurally supply, not just an unwired one.)
-.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose \
+.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model \
         domain-bias distil calibrate probe card validate privacy-gate \
         test typecheck fixtures check-eval-parquets install-hooks
 
@@ -66,6 +66,12 @@ check-eval-parquets:  ## D016: verify evaluation parquets contain the frames the
 
 check-stale-prose:  ## D050/REVIEW.md R10: fail if a retired design (e.g. the pre-D042 multi-judge panel) is still described as current anywhere public.
 	python3 scripts/check_stale_prose.py
+
+hf-dataset:    ## Build the Hugging Face dataset release under hf/dataset/ from committed data/ (no images).
+	python3 scripts/export_hf_dataset.py
+
+hf-model:      ## Build the Hugging Face model release (rung-1 probe + card) under hf/model/.
+	python3 scripts/export_hf_model.py
 
 validate: privacy-gate test typecheck fixtures check-stale-prose  ## All gates: structure, no placeholders, internal consistency, privacy, no stale design language.
 

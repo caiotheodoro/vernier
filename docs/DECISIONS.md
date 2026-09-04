@@ -2170,3 +2170,48 @@ own `!data/<name>.responses.jsonl` negation, per D062's per-file pattern.
 analysis (in which case the `data/` footprint is pure cost and the default should flip to off),
 or if `judge_gold_sets.py` is next rewritten for another reason -- that is the moment to move it
 onto the shared helper rather than keeping two persistence formats.
+
+## D070 — Published to Hugging Face: dataset, rung-1 probe, collection; writeup drafted
+
+The outreach plan (`docs/private/OUTREACH.md`, sequence step 1: "publish first") and the
+scorecard review both named the same gap: every result lived in this repository and nowhere
+else, while every sibling project already had a dataset, a Space and a collection on the Hub.
+Published this session, all public, all Apache-2.0, **no frame bytes anywhere**
+(`docs/ETHICS.md` section 4 — checked by `tests/test_export_hf_dataset.py`'s leak test, which
+also refuses `docs/private`, tokens and local paths):
+
+- **Dataset `caiotheodoro/vernier`** — built by the new `scripts/export_hf_dataset.py`
+  (`make hf-dataset`) from committed `data/` only: `human_labels` (153), `gold_judged` (600,
+  live Qwen3-VL on the three `G200-*` pools), `stored_labels` (29,400, Build AI's own
+  `gemini-2.5-flash` output), `membership` (32,700 `FrameRef`s), `results` (one row per card
+  claim), plus the raw result JSONs and copies of `RUBRIC.md`, `PRE-REGISTRATION.md`,
+  `CONTRACTS.md`, `MEASUREMENT_CARD.json`. The README's numbers are read from the result files
+  at export time and asserted against them in the test — `AGENTS.md` rule 2 applied to a
+  dataset card. Row counts are asserted equal to the source counts. ~29 MB.
+- **Model `caiotheodoro/vernier-rung1-probe`** — `scripts/export_hf_model.py`
+  (`make hf-model`): `data/rung1_probe.joblib` (D064), `data/rung1_distillation.json`, and a
+  card whose first line is "Not an instrument yet." Published *because* it fails: the dataset
+  and the card claim the artifact exists with these numbers, and a loadable probe with a stated
+  failure is checkable where a missing one is not.
+- **Collection** `vernier: same judge, same +6pp on 2-hands, both releases` — the dataset,
+  the model, and Build AI's two evaluation datasets (linking theirs is the second surfacing
+  path besides the Space's `datasets:` front-matter line). The Space is added when it lands.
+- **`docs/WRITEUP.md`** — the HF community blog draft, framed per the outreach plan as
+  confirmation-with-intervals, not audit. Every number names its source file. Not yet posted:
+  community blogs are created through the Hub UI, not the CLI.
+
+`hf/` (the staging output of both export scripts) is gitignored — derived, regenerable, and
+tested. `docs/DATASET_CARD.md` / `docs/MODEL_CARD.md` remain the pre-experiment shapes they
+always were; each now carries one line pointing at the published card, which is generated, so
+the two cannot drift apart silently.
+
+**GitHub.** The commit history carried an employer email on 48 of 50 commits; it was rewritten
+to the account's noreply address with `git filter-repo` (user-run; pre-rewrite bundle kept
+locally) before the first push to `github.com/caiotheodoro/vernier`. The rewrite reset every
+tracked file's uncommitted edits in the working tree — this entry and four small doc/Makefile
+edits were re-applied from the session's own record afterwards; untracked files were unaffected.
+
+**Reverses if:** a leak is found in any published file (delete the affected revision on the
+Hub first, then fix the export test that let it through); or Build AI's evaluation datasets
+are removed or re-licensed such that linking them into the collection is no longer
+appropriate.

@@ -157,5 +157,8 @@ under the 1pp threshold). Real cost: $9.06. `docs/DECISIONS.md` D066/D067.
 | What is inherited, and from where | `docs/LINEAGE.md` |
 | Decisions and what would reverse them | `docs/DECISIONS.md` |
 | Where the work currently stands | `docs/HANDOFF.md` |
+| The data, on the Hub (labels, membership, judge output, results; no images) | [`caiotheodoro/vernier`](https://huggingface.co/datasets/caiotheodoro/vernier) |
+| The rung-1 probe, a published negative result | [`caiotheodoro/vernier-rung1-probe`](https://huggingface.co/caiotheodoro/vernier-rung1-probe) |
+| Everything above in one place | [collection](https://huggingface.co/collections/caiotheodoro/vernier-same-judge-same-6pp-on-2-hands-both-releases-6a9b1bc9fac182a7a2d9c997) |
 
 Apache-2.0.
