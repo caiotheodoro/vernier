@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import emit_card  # noqa: E402
 from emit_card import (  # noqa: E402
+    _e100k_ego_claims,
     _h1_h1b_claims,
     _h3_claim,
     _h4_claim,
@@ -164,6 +165,72 @@ def test_h1b_reports_real_disagreement_when_threshold_is_met(
 
     assert "disagree" in h1b_claim.statement
     assert "null" not in h1b_claim.statement
+
+
+def _write_e2_100k_fixture(path: Path, *, hand_eq2_outside_tolerance: bool) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "sample": "E100k-ego",
+                "per_variant": {"P0a": {"n_total": 10_000}, "P0b": {"n_total": 10_000}},
+                "published_comparison": {
+                    "hand_ge1_rate": {
+                        "published": 0.9695,
+                        "observed_P0a": 0.9680,
+                        "diff_pp": 0.15,
+                        "within_2pp_tolerance": True,
+                    },
+                    "hand_eq2_rate": {
+                        "published": 0.7905,
+                        "observed_P0a": 0.85 if hand_eq2_outside_tolerance else 0.795,
+                        "diff_pp": 6.0 if hand_eq2_outside_tolerance else 0.5,
+                        "within_2pp_tolerance": not hand_eq2_outside_tolerance,
+                    },
+                    "active_manipulation_rate": {
+                        "published": 0.9276,
+                        "observed_P0a": 0.9250,
+                        "diff_pp": 0.26,
+                        "within_2pp_tolerance": True,
+                    },
+                },
+                "prompt_variant_comparison": {
+                    "p0a_active_manipulation_rate": 0.9250,
+                    "p0b_active_manipulation_rate": 0.9200,
+                    "diff_pp": 0.50,
+                    "p0_variants_disagree": False,
+                },
+            }
+        )
+    )
+
+
+def test_e100k_ego_claims_are_never_labelled_as_h1_h1b(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "e2_100k.json"
+    _write_e2_100k_fixture(path, hand_eq2_outside_tolerance=False)
+    monkeypatch.setattr(emit_card, "_E2_100K_RESULTS_PATH", path)
+
+    published_claim, prompt_variant_claim = _e100k_ego_claims()
+
+    for claim in (published_claim, prompt_variant_claim):
+        assert claim.record_type == "E100kAdditionalCheck"
+        assert claim.record_type not in ("E2Comparison", "PrevalenceEstimate")
+        assert "not pre-registered" in claim.statement.lower()
+    assert "0/3 outside tolerance" in published_claim.statement
+
+
+def test_e100k_ego_claims_reports_real_out_of_tolerance_figures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "e2_100k.json"
+    _write_e2_100k_fixture(path, hand_eq2_outside_tolerance=True)
+    monkeypatch.setattr(emit_card, "_E2_100K_RESULTS_PATH", path)
+
+    published_claim, _ = _e100k_ego_claims()
+
+    assert "1/3 outside tolerance" in published_claim.statement
+    assert "hand_eq2_rate" in published_claim.statement
 
 
 def test_h3_reports_prediction_not_supported_below_5pp_floor(

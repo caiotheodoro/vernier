@@ -1946,3 +1946,53 @@ shape holds generally.
 **Reverses if:** a later spike across multiple shards/factories finds this shard's shape
 (clip count, codec, per-clip-not-per-frame metadata) is not representative of the corpus as a
 whole.
+
+## D066 — E2 extended to `Egocentric-100K-Evaluation`, Build AI's current product (E2-only, disclosed)
+
+An external review found `Egocentric-100K-Evaluation` exists and is Build AI's current product
+(the pre-registered protocol only ever covered the superseded `Egocentric-10K-Evaluation`) and
+recommended re-running E2 against it. Checked live before acting, not taken on faith:
+
+- **Repo real, accessible**: `gated=False`, resolved commit sha
+  `d0f69a56b0525c1bead80d918dc57ef83dcac899` (`docs/upstream/PROVENANCE-100k-eval.json`).
+- **Schema regressed, already known (F10)**: `image, source_dataset, hand_count, active_labor`
+  -- no `frame_id`, confirmed live via `pyarrow` footer read, matching this project's own prior
+  finding exactly. Fixed via a new, exported `synthetic_frame_id(image_bytes) -> str` (sha256
+  content hash, `e100k-synth-sha256:` prefix) -- shared between `sampling/draw.py` and
+  `scripts/published_labels.py` so both stay in the same id space by construction, disclosed in
+  every `FrameRef.why_no_provenance` this arm produces.
+- **Real published headline, fetched live from the repo's own dataset card, not assumed**: hand
+  >=1 96.95%, 2 hands 79.05%, active manipulation 92.76% -- matches the external review's figures
+  exactly, now independently confirmed rather than taken secondhand.
+  `docs/upstream/dataset-card-snapshot-100k.md` is the real saved snapshot.
+- **Corrected cost estimate, named explicitly so the wrong number is never reused**: a full
+  n=10,000, both-prompt-variant run costs **$8.56 / ~10-11h wall-clock**, per this project's own
+  already-recorded real cost for the identically-shaped `E10k-ego` run
+  (`data/e2_full_n10000.json`, D056) -- not the external review's "~$2, a few hours," which
+  undershot by ~4x and didn't account for the missing-`frame_id` fix above.
+- **Scope, Caio's explicit call**: **E2-only, `E100k-ego` only** -- the single arm that is
+  actually new (Build AI's own current-release frames). `ego4d.parquet`/`epic_kitchens.parquet`
+  in the 100K-eval repo are Build AI's own reused/replaced files (F10); a real, live
+  content-comparison against the 10K-eval originals (`scripts/compare_eval_baseline_parquets.py`,
+  `data/eval_baseline_comparison.json`) is a parallel, informational check, not a gate on this
+  decision -- re-judging those two arms is out of scope regardless of its result, since the
+  point of this round is Build AI's current product, not re-confirming baselines nobody asked
+  about.
+- **Additive, not a hypothesis reopen**: `PRE-REGISTRATION.md`'s frozen text (naming
+  `Egocentric-10K-Evaluation` at a pinned revision explicitly) is untouched. New `SampleName`
+  `E100k-ego`; new `--sample` flag on `scripts/e2_replication.py` (default `E10k-ego`, today's
+  exact behavior unchanged); output uses generic `"published_comparison"`/
+  `"prompt_variant_comparison"` keys, never `"H1"`/`"H1b"`, so this can never be mistaken for a
+  re-run of the pre-registered hypothesis. New `_e100k_ego_claims()` in `emit_card.py`,
+  `record_type="E100kAdditionalCheck"` -- written but not yet wired into `main()`'s claims list;
+  that happens in the follow-up entry once the real run below completes.
+  New tests: `synthetic_frame_id`, `_frames_from_eval_parquet_100k` (golden cases + a
+  row-reordering id-stability check), a structural consistency check across
+  `_N`/`_EVAL_HF_REPO_FOR_SAMPLE`/`_EVAL_PARQUET_FILENAME`, `tests/test_published_labels.py`
+  (new file -- a real, pre-existing gap, not introduced by this change), and
+  `tests/test_sampling_revisions.py` extended for the new pin.
+
+**Reverses if:** Build AI ever restores a real `frame_id` column to this release (the synthetic
+scheme becomes unnecessary, not wrong); or the baseline-comparison check above finds real
+divergence significant enough that Caio decides the ego4d/epic arms are worth judging after
+all, reopening scope beyond E2-only.

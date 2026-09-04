@@ -26,6 +26,7 @@ real schema hasn't been inspected yet.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import random
 from functools import lru_cache
@@ -49,6 +50,10 @@ SampleName = Literal[
     "G200-ego4d",
     "G200-epic",
     "R100",
+    # docs/DECISIONS.md D066: Build AI's current-product evaluation release, a disclosed,
+    # non-pre-registered additional check -- not a root arm any P2k/G200-*/R100 subset draws
+    # from.
+    "E100k-ego",
 ]
 
 PRE_REGISTRATION_SEED = 777
@@ -65,6 +70,7 @@ _N: dict[SampleName, int] = {
     "G200-ego4d": 200,
     "G200-epic": 200,
     "R100": 100,
+    "E100k-ego": 10_000,
 }
 
 # Every sample here is a random subset of exactly one other, already-drawn sample's membership
@@ -80,9 +86,20 @@ _PARENT: dict[SampleName, SampleName] = {
 _R100_PARENTS: tuple[SampleName, ...] = ("G200-ego", "G200-ego4d", "G200-epic")
 
 # docs/UPSTREAM-FINDINGS.md F5 / sampling/revisions.py: the evaluation release redistributes
-# the Ego4D and EPIC-KITCHENS-100 frames directly, so this one HF repo id covers every corpus
-# arm `draw_sample` draws from -- there is (so far) exactly one entry in `PINNED_REVISIONS`.
+# the Ego4D and EPIC-KITCHENS-100 frames directly, so this one HF repo id covers every
+# pre-registered corpus arm `draw_sample` draws from.
 _EVAL_HF_REPO = "builddotai/Egocentric-10K-Evaluation"
+
+# docs/DECISIONS.md D066: Build AI's current-product evaluation release -- a second, separate
+# repo, not a file within `_EVAL_HF_REPO`.
+_EVAL_HF_REPO_100K = "builddotai/Egocentric-100K-Evaluation"
+
+_EVAL_HF_REPO_FOR_SAMPLE: dict[str, str] = {
+    "E10k-ego": _EVAL_HF_REPO,
+    "E10k-ego4d": _EVAL_HF_REPO,
+    "E10k-epic": _EVAL_HF_REPO,
+    "E100k-ego": _EVAL_HF_REPO_100K,
+}
 
 # Where a subset sample's parent membership is read from. `write_membership`/`load_membership`
 # take an explicit `path` (sampling/membership.py); `draw_sample`'s signature is frozen with no
@@ -105,7 +122,12 @@ _EVAL_PARQUET_FILENAME: dict[str, str] = {
     "E10k-ego": "egocentric_10k.parquet",
     "E10k-ego4d": "ego4d.parquet",
     "E10k-epic": "epic_kitchens.parquet",
+    "E100k-ego": "egocentric_100k.parquet",
 }
+
+# Real arms this project treats as having no `frame_id` column (docs/UPSTREAM-FINDINGS.md F10,
+# live-reconfirmed): a disjoint, explicit set, never inferred from repo id alone.
+_SYNTHETIC_FRAME_ID_SAMPLES: frozenset[str] = frozenset({"E100k-ego"})
 
 # Every E10k-* frame is null-together on the same six fields for the same reason (F9/D040): a
 # bare-UUID4 evaluation release with no factory/worker/clip/timestamp/fps/codec at all.
@@ -114,6 +136,37 @@ _EVAL_ARM_WHY_NO_PROVENANCE = (
     "clip, or timestamp component, and no source-video fps/codec at all "
     "(docs/UPSTREAM-FINDINGS.md F9, docs/DECISIONS.md D040)"
 )
+
+# docs/DECISIONS.md D066: the 100K-eval parquet has no frame_id column at all (Build AI's own
+# deliberate removal, docs/UPSTREAM-FINDINGS.md F10, live-reconfirmed) -- distinct text from
+# `_EVAL_ARM_WHY_NO_PROVENANCE` above since the *id itself*, not just factory/worker/clip
+# metadata, is synthetic here.
+_EVAL_ARM_WHY_NO_PROVENANCE_100K = (
+    "Build AI's 100K-eval parquet ships no frame_id column at all, deliberately removed "
+    "(docs/UPSTREAM-FINDINGS.md F10) -- frame_id here is vernier's own sha256 content hash "
+    "(synthetic_frame_id), never a vendor-issued id, and there is no factory/worker/clip/"
+    "timestamp/fps/codec either (docs/DECISIONS.md D066)"
+)
+
+
+def synthetic_frame_id(image_bytes: bytes) -> str:
+    """A stable, disclosed stand-in for a real `frame_id` on evaluation-release arms that ship
+    none (`docs/DECISIONS.md` D066) -- a pure content hash, never a vendor-issued id.
+
+    Reproducible across re-downloads (a pure function of the image bytes) and robust to row
+    reordering (unlike a row-index id, which would silently reassign every id if the vendor
+    ever re-uploads the file in a different row order -- already observed once, per F10's own
+    delete-and-replace history). The `e100k-synth-sha256:` prefix is neither valid UUID4 syntax
+    nor anything Build AI would emit, so it can never be confused with a real id, and
+    `image_bytes_for`'s cross-arm search (which checks every evaluation file for a given
+    `frame_id`) can never accidentally match a synthetic id against a real one.
+
+    Known, disclosed limitation: two rows with byte-identical images collide onto the same id.
+    This does not introduce a new failure mode -- nothing in this module asserts `frame_id`
+    uniqueness today even for the real-UUID4 arms -- it only gives an existing structural
+    possibility a name.
+    """
+    return f"e100k-synth-sha256:{hashlib.sha256(image_bytes).hexdigest()}"
 
 
 def _decode_dimensions(image_bytes: bytes) -> tuple[int, int]:
@@ -176,6 +229,44 @@ def _frames_from_eval_parquet(path: str, sample: SampleName, corpus_rev: str) ->
     return frames
 
 
+def _frames_from_eval_parquet_100k(path: str, sample: SampleName, corpus_rev: str) -> list[FrameRef]:
+    """`_frames_from_eval_parquet`'s sibling for the 100K-eval schema (no `frame_id` column,
+    `docs/UPSTREAM-FINDINGS.md` F10) -- a separate function, not a branch inside the reviewed
+    original, so that function's own tested behavior is untouched by this addition.
+
+    `frame_id=synthetic_frame_id(image_bytes)` in place of a real column read. Every other
+    `FrameRef` field is derived exactly the way `_frames_from_eval_parquet` already derives it
+    (image-decoded width/height, `None` + a `why_no_provenance` reason for everything else)."""
+    table = pq.read_table(path, columns=["image"])
+    images = table.column("image").to_pylist()
+    frames: list[FrameRef] = []
+    for frame_index, image in enumerate(images):
+        image_bytes = image.get("bytes") if isinstance(image, dict) else None
+        if not image_bytes:
+            continue
+        width, height = _decode_dimensions(image_bytes)
+        frames.append(
+            FrameRef(
+                frame_id=synthetic_frame_id(image_bytes),
+                corpus="egocentric-100k",
+                corpus_rev=corpus_rev,
+                factory_id=None,
+                worker_id=None,
+                clip_id=None,
+                frame_index=frame_index,
+                timestamp_s=None,
+                width=width,
+                height=height,
+                fps=None,
+                codec=None,
+                sample=sample,
+                stratum="unstratified",
+                why_no_provenance=_EVAL_ARM_WHY_NO_PROVENANCE_100K,
+            )
+        )
+    return frames
+
+
 def _download_eval_parquet(sample: str) -> str:
     """Real network I/O, shared by `_candidate_frames` and `image_bytes_for`: resolve one
     E10k-* sample's own evaluation-release file to a local path, downloading and caching it if
@@ -192,10 +283,11 @@ def _download_eval_parquet(sample: str) -> str:
         )
     from huggingface_hub import hf_hub_download
 
+    repo_id = _EVAL_HF_REPO_FOR_SAMPLE[sample]
     return hf_hub_download(
-        repo_id=_EVAL_HF_REPO,
+        repo_id=repo_id,
         repo_type="dataset",
-        revision=PINNED_REVISIONS[_EVAL_HF_REPO],
+        revision=PINNED_REVISIONS[repo_id],
         filename=_EVAL_PARQUET_FILENAME[sample],
     )
 
@@ -204,26 +296,44 @@ def _candidate_frames(sample: SampleName) -> list[FrameRef]:
     """Wave 2 seam: the pool `draw_sample` samples from.
 
     Real for the `E10k-*` family (Build AI's evaluation-release frame list) -- see
-    `_frames_from_eval_parquet` for the actual parsing. `S10k-U`/`S10k-S` (fresh Egocentric-10K
-    corpus metadata) remain unwired: a different, contact-gated dataset whose real schema
-    hasn't been inspected yet. Wave 1 unit tests monkeypatch this whole function with
-    synthetic in-memory `FrameRef` pools, independent of either path.
+    `_frames_from_eval_parquet` for the actual parsing. `E100k-ego` (D066) uses the sibling
+    `_frames_from_eval_parquet_100k` parser, since that repo's schema has no `frame_id` column.
+    `S10k-U`/`S10k-S` (fresh Egocentric-10K corpus metadata) remain unwired: a different dataset
+    whose real schema was only just inspected for the first time (D065), still not adapted.
+    Wave 1 unit tests monkeypatch this whole function with synthetic in-memory `FrameRef`
+    pools, independent of either path.
     """
     path = _download_eval_parquet(sample)
-    return _frames_from_eval_parquet(path, sample, PINNED_REVISIONS[_EVAL_HF_REPO])
+    corpus_rev = PINNED_REVISIONS[_EVAL_HF_REPO_FOR_SAMPLE[sample]]
+    if sample in _SYNTHETIC_FRAME_ID_SAMPLES:
+        return _frames_from_eval_parquet_100k(path, sample, corpus_rev)
+    return _frames_from_eval_parquet(path, sample, corpus_rev)
 
 
 @lru_cache(maxsize=None)
 def _eval_frame_bytes_by_id(sample: str) -> dict[str, bytes]:
-    """Real, process-cached `frame_id -> image bytes` lookup for one E10k-* sample's
-    evaluation parquet, built once per (process, sample) and reused.
+    """Real, process-cached `frame_id -> image bytes` lookup for one evaluation-release
+    sample's parquet, built once per (process, sample) and reused.
 
     `_candidate_frames` already reads and discards the whole `image` column per draw; this is
     the separate, deliberate seam for actually judging a frame (`image_bytes_for` below) --
     without the cache, a real judging run (two calls per frame, many frames) would re-read a
     file up to ~1.8GB from disk on every single call.
+
+    `E100k-ego` (D066) has no `frame_id` column to key by -- keys by `synthetic_frame_id`
+    instead, computed the same way `_frames_from_eval_parquet_100k` computes it, so the two
+    stay in the same id space by construction.
     """
     path = _download_eval_parquet(sample)
+    if sample in _SYNTHETIC_FRAME_ID_SAMPLES:
+        table = pq.read_table(path, columns=["image"])
+        images = table.column("image").to_pylist()
+        synthetic_result: dict[str, bytes] = {}
+        for image in images:
+            image_bytes = image.get("bytes") if isinstance(image, dict) else None
+            if image_bytes:
+                synthetic_result[synthetic_frame_id(image_bytes)] = image_bytes
+        return synthetic_result
     table = pq.read_table(path, columns=["frame_id", "image"])
     frame_ids = table.column("frame_id").to_pylist()
     images = table.column("image").to_pylist()

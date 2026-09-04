@@ -65,10 +65,12 @@ _E2_RESULTS_PATH = _ROOT / "data" / "e2_full_n10000.json"
 _E5_RESULTS_PATH = _ROOT / "data" / "e5_full_n2000.json"
 _WAVE4_RESULTS_PATH = _ROOT / "data" / "wave4_analysis.json"
 _RUNG1_RESULTS_PATH = _ROOT / "data" / "rung1_distillation.json"
+_E2_100K_RESULTS_PATH = _ROOT / "data" / "e2_100k_eval.json"
 _E2_RESULTS_REF = "data/e2_full_n10000.json"
 _E5_RESULTS_REF = "data/e5_full_n2000.json"
 _WAVE4_RESULTS_REF = "data/wave4_analysis.json"
 _RUNG1_RESULTS_REF = "data/rung1_distillation.json"
+_E2_100K_RESULTS_REF = "data/e2_100k_eval.json"
 
 # scripts/wave4_analysis.py's own domain-name/judge/prompt-variant constants, duplicated here
 # per D033's no-shared-file-edits convention (small constants, not worth a shared import).
@@ -137,6 +139,58 @@ def _h1_h1b_claims() -> list[Claim]:
     return [
         Claim(statement=h1_statement, record_type="E2Comparison", record_ref=f"{_E2_RESULTS_REF}#H1"),
         Claim(statement=h1b_statement, record_type="E2Comparison", record_ref=f"{_E2_RESULTS_REF}#H1b"),
+    ]
+
+
+def _e100k_ego_claims() -> list[Claim]:
+    """NOT one of the pre-registered H1-H8 hypotheses. A disclosed, additive extension of E2's
+    protocol (`docs/DECISIONS.md` D066) to Build AI's current-product evaluation release,
+    `Egocentric-100K-Evaluation` -- `frame_id` is Build AI's own deliberate removal
+    (`docs/UPSTREAM-FINDINGS.md` F10), synthesized here as a sha256 content hash
+    (`sampling.draw.synthetic_frame_id`), never presented as a vendor-issued id. Reported
+    with `record_type="E100kAdditionalCheck"`, never `"E2Comparison"` or `"PrevalenceEstimate"`,
+    so this can never be mistaken for H1/H1b itself or routed through estimate-matching."""
+    e100k = json.loads(_E2_100K_RESULTS_PATH.read_text())
+    published_comparison = e100k["published_comparison"]
+    prompt_variant_comparison = e100k["prompt_variant_comparison"]
+    failing = [k for k, v in published_comparison.items() if not v["within_2pp_tolerance"]]
+    published_statement = (
+        "Additional check, NOT pre-registered (D066): live Qwen3-VL judge vs. Build AI's own "
+        f"published figures for their CURRENT-PRODUCT release, Egocentric-100K-Evaluation, "
+        f"P0a, N={e100k['per_variant']['P0a']['n_total']} "
+        f"(sample={e100k['sample']}, real published headline read directly from the repo's own "
+        "dataset card, docs/upstream/PROVENANCE-100k-eval.json): "
+        + "; ".join(
+            f"{k} observed {v['observed_P0a']:.4f} vs published {v['published']:.4f} "
+            f"(diff {v['diff_pp']:.2f}pp, {'within' if v['within_2pp_tolerance'] else 'OUTSIDE'} "
+            "+/-2pp)"
+            for k, v in published_comparison.items()
+        )
+        + f". {len(failing)}/3 outside tolerance"
+        + (f" ({', '.join(failing)})" if failing else "")
+        + ". This is a disclosed extension of E2's protocol to a different, current corpus, "
+        "not a re-run of the pre-registered H1 -- H1 itself, on Egocentric-10K-Evaluation, is "
+        "reported unchanged above."
+    )
+    prompt_variant_statement = (
+        f"Prompt-variant check on Egocentric-100K-Evaluation (N="
+        f"{e100k['per_variant']['P0b']['n_total']} each arm): P0a active-manipulation rate "
+        f"{prompt_variant_comparison['p0a_active_manipulation_rate']:.4f} vs P0b "
+        f"{prompt_variant_comparison['p0b_active_manipulation_rate']:.4f}, diff "
+        f"{prompt_variant_comparison['diff_pp']:.2f}pp. Not pre-registered (that is H1b, on "
+        "Egocentric-10K-Evaluation, reported unchanged above); a disclosed additional check only."
+    )
+    return [
+        Claim(
+            statement=published_statement,
+            record_type="E100kAdditionalCheck",
+            record_ref=f"{_E2_100K_RESULTS_REF}#published_comparison",
+        ),
+        Claim(
+            statement=prompt_variant_statement,
+            record_type="E100kAdditionalCheck",
+            record_ref=f"{_E2_100K_RESULTS_REF}#prompt_variant_comparison",
+        ),
     ]
 
 

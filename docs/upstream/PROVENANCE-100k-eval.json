@@ -1,0 +1,11 @@
+{
+  "repo": "builddotai/Egocentric-100K-Evaluation",
+  "repo_type": "dataset",
+  "revision": "d0f69a56b0525c1bead80d918dc57ef83dcac899",
+  "license": "apache-2.0",
+  "retrieved_utc": "2026-09-05T22:00:00Z",
+  "files": {
+    "dataset-card-snapshot-100k.md": "README.md"
+  },
+  "note": "docs/DECISIONS.md D066: Build AI's current product, not the superseded Egocentric-10K-Evaluation release this project's pre-registered H1/H1b/H3 already cover. Real published headline (hand ge1 96.95%, 2 hands 79.05%, active manipulation 92.76%) read directly from this snapshot's own table. Schema is `mp4`/`json` per the dataset_info block, but the actual parquet columns (image, source_dataset, hand_count, active_labor -- no frame_id, docs/UPSTREAM-FINDINGS.md F10) are confirmed live via pyarrow, not from this card."
+}

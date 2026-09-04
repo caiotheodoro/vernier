@@ -179,6 +179,18 @@ def test_h1_flags_within_and_outside_tolerance() -> None:
     assert h1["active_manipulation_rate"]["within_2pp_tolerance"] is True
 
 
+def test_h1_accepts_an_explicit_published_dict_for_a_non_pre_registered_sample() -> None:
+    """docs/DECISIONS.md D066: E100k-ego uses its own real published figures, never the
+    pre-registered E10k-ego ones -- the default parameter preserves existing no-arg callers
+    (test above), this covers the new explicit-argument path."""
+    results_p0a = {"hand_ge1_rate": 0.9695}
+
+    h1 = _h1(results_p0a, {"hand_ge1_rate": 0.9695})
+
+    assert h1["hand_ge1_rate"]["published"] == 0.9695
+    assert h1["hand_ge1_rate"]["diff_pp"] == pytest.approx(0.0, abs=1e-9)
+
+
 def test_h1b_flags_disagreement_at_the_one_pp_boundary() -> None:
     results_p0a = {"active_manipulation_rate": 0.90}
     results_p0b_disagreeing = {"active_manipulation_rate": 0.89}  # exactly 1pp

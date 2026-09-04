@@ -45,6 +45,10 @@ _DRAW_ORDER: tuple[SampleName, ...] = (
     "G200-ego4d",
     "G200-epic",
     "R100",
+    # docs/DECISIONS.md D066: Build AI's current-product evaluation release -- a root, no
+    # parent, and no subset sample reads membership from it (a disclosed, non-pre-registered
+    # additional check, not part of the P2k/G200-*/R100 dependency chain above).
+    "E100k-ego",
 )
 
 

@@ -16,11 +16,18 @@ import pytest
 from vernier.models import FrameRef
 from vernier.sampling import draw as draw_mod
 from vernier.sampling import membership as membership_mod
-from vernier.sampling.draw import PRE_REGISTRATION_SEED, draw_sample, normalize_worker_id
+from vernier.sampling.draw import (
+    _EVAL_ARM_WHY_NO_PROVENANCE,
+    PRE_REGISTRATION_SEED,
+    draw_sample,
+    normalize_worker_id,
+)
 from vernier.sampling.revisions import PINNED_REVISIONS
 
 EVAL_REPO = "builddotai/Egocentric-10K-Evaluation"
 PINNED_REV = PINNED_REVISIONS[EVAL_REPO]
+EVAL_REPO_100K = "builddotai/Egocentric-100K-Evaluation"
+PINNED_REV_100K = PINNED_REVISIONS[EVAL_REPO_100K]
 
 
 def _corpus_frame(
@@ -434,6 +441,120 @@ def test_frames_from_eval_parquet_excludes_empty_image_bytes(tmp_path: Path) -> 
     assert [f.frame_id for f in frames] == ["has-image"]
 
 
+# --- synthetic_frame_id (D066): the 100K-eval schema has no frame_id column -----------------
+
+
+def test_synthetic_frame_id_is_deterministic() -> None:
+    from vernier.sampling.draw import synthetic_frame_id
+
+    jpeg = _real_jpeg_bytes(16, 16)
+    assert synthetic_frame_id(jpeg) == synthetic_frame_id(jpeg)
+
+
+def test_synthetic_frame_id_differs_for_different_bytes() -> None:
+    from vernier.sampling.draw import synthetic_frame_id
+
+    assert synthetic_frame_id(_real_jpeg_bytes(16, 16)) != synthetic_frame_id(_real_jpeg_bytes(8, 8))
+
+
+def test_synthetic_frame_id_format_and_never_matches_a_uuid4() -> None:
+    import re
+
+    from vernier.sampling.draw import synthetic_frame_id
+
+    frame_id = synthetic_frame_id(_real_jpeg_bytes(4, 4))
+    assert frame_id.startswith("e100k-synth-sha256:")
+    digest = frame_id.removeprefix("e100k-synth-sha256:")
+    assert re.fullmatch(r"[0-9a-f]{64}", digest)
+    uuid4_pattern = r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    assert not re.fullmatch(uuid4_pattern, frame_id)
+
+
+# --- _frames_from_eval_parquet_100k (D066): no frame_id column, synthetic id used instead ----
+
+
+def test_frames_from_eval_parquet_100k_decodes_real_dimensions(tmp_path: Path) -> None:
+    from vernier.sampling.draw import _frames_from_eval_parquet_100k, synthetic_frame_id
+
+    path = tmp_path / "eval_100k.parquet"
+    frame_a = _real_jpeg_bytes(64, 48)
+    frame_b = _real_jpeg_bytes(32, 32)
+    _write_eval_parquet(path, [("unused-frame-id", frame_a), ("unused-frame-id-2", frame_b)])
+
+    frames = _frames_from_eval_parquet_100k(str(path), "E100k-ego", PINNED_REV_100K)
+
+    assert [f.frame_id for f in frames] == [synthetic_frame_id(frame_a), synthetic_frame_id(frame_b)]
+    assert (frames[0].width, frames[0].height) == (64, 48)
+    assert (frames[1].width, frames[1].height) == (32, 32)
+    for f in frames:
+        assert f.corpus == "egocentric-100k"
+        assert f.corpus_rev == PINNED_REV_100K
+        assert f.sample == "E100k-ego"
+        assert f.factory_id is None
+        assert f.worker_id is None
+        assert f.clip_id is None
+        assert f.timestamp_s is None
+        assert f.fps is None
+        assert f.codec is None
+        assert f.why_no_provenance is not None
+        assert f.why_no_provenance != _EVAL_ARM_WHY_NO_PROVENANCE
+
+
+def test_frames_from_eval_parquet_100k_frame_index_is_row_position(tmp_path: Path) -> None:
+    from vernier.sampling.draw import _frames_from_eval_parquet_100k
+
+    path = tmp_path / "eval_100k.parquet"
+    jpeg = _real_jpeg_bytes(16, 16)
+    _write_eval_parquet(path, [("_", jpeg), ("_", jpeg), ("_", jpeg)])
+
+    frames = _frames_from_eval_parquet_100k(str(path), "E100k-ego", PINNED_REV_100K)
+
+    assert [f.frame_index for f in frames] == [0, 1, 2]
+
+
+def test_frames_from_eval_parquet_100k_excludes_empty_image_bytes(tmp_path: Path) -> None:
+    from vernier.sampling.draw import _frames_from_eval_parquet_100k, synthetic_frame_id
+
+    path = tmp_path / "eval_100k.parquet"
+    jpeg = _real_jpeg_bytes(16, 16)
+    _write_eval_parquet(path, [("_", jpeg), ("_", None), ("_", b"")])
+
+    frames = _frames_from_eval_parquet_100k(str(path), "E100k-ego", PINNED_REV_100K)
+
+    assert [f.frame_id for f in frames] == [synthetic_frame_id(jpeg)]
+
+
+def test_frames_from_eval_parquet_100k_id_set_is_stable_under_row_reordering(tmp_path: Path) -> None:
+    """A content-hash id (unlike a row-index id) must produce the same SET of frame_ids
+    regardless of row order -- the exact property this scheme was chosen for, since Build AI's
+    own commit history (F10) already shows a delete-and-replace can reorder rows."""
+    from vernier.sampling.draw import _frames_from_eval_parquet_100k
+
+    jpeg_a, jpeg_b, jpeg_c = _real_jpeg_bytes(16, 16), _real_jpeg_bytes(8, 8), _real_jpeg_bytes(4, 4)
+    path_forward = tmp_path / "forward.parquet"
+    path_reversed = tmp_path / "reversed.parquet"
+    _write_eval_parquet(path_forward, [("_", jpeg_a), ("_", jpeg_b), ("_", jpeg_c)])
+    _write_eval_parquet(path_reversed, [("_", jpeg_c), ("_", jpeg_b), ("_", jpeg_a)])
+
+    forward_ids = {f.frame_id for f in _frames_from_eval_parquet_100k(str(path_forward), "E100k-ego", PINNED_REV_100K)}
+    reversed_ids = {f.frame_id for f in _frames_from_eval_parquet_100k(str(path_reversed), "E100k-ego", PINNED_REV_100K)}
+
+    assert forward_ids == reversed_ids
+
+
+# --- structural consistency: every eval-arm entry stays fully wired across the three dicts ---
+
+
+def test_every_eval_arm_has_a_matching_repo_and_filename_entry() -> None:
+    import vernier.sampling.draw as draw_mod
+
+    for sample in draw_mod._EVAL_PARQUET_FILENAME:
+        assert sample in draw_mod._EVAL_HF_REPO_FOR_SAMPLE, sample
+        assert sample in draw_mod._N, sample
+        repo_id = draw_mod._EVAL_HF_REPO_FOR_SAMPLE[sample]
+        assert repo_id in PINNED_REVISIONS, (sample, repo_id)
+
+
 def test_candidate_frames_raises_not_implemented_for_unwired_corpus_samples() -> None:
     from vernier.sampling.draw import _candidate_frames
 
@@ -460,7 +581,12 @@ def _patch_eval_downloads(
 ) -> None:
     """`contents` maps root sample name ("E10k-ego" etc.) -> rows to write into that sample's
     synthetic local parquet; `_download_eval_parquet` is monkeypatched to return that file's
-    path instead of hitting the real network."""
+    path instead of hitting the real network.
+
+    Any real evaluation-release arm NOT named in `contents` (e.g. `E100k-ego`, D066) is
+    auto-filled with an empty synthetic parquet -- `image_bytes_for` searches every arm in
+    `_EVAL_PARQUET_FILENAME` unconditionally, so a caller testing one arm shouldn't have to
+    enumerate every other one just to keep that search from hitting the real network."""
     import vernier.sampling.draw as draw_mod
 
     paths: dict[str, Path] = {}
@@ -468,6 +594,11 @@ def _patch_eval_downloads(
         path = tmp_path / f"{sample}.parquet"
         _write_eval_parquet(path, rows)
         paths[sample] = path
+    for sample in draw_mod._EVAL_PARQUET_FILENAME:
+        if sample not in paths:
+            path = tmp_path / f"{sample}.parquet"
+            _write_eval_parquet(path, [])
+            paths[sample] = path
 
     monkeypatch.setattr(draw_mod, "_download_eval_parquet", lambda sample: str(paths[sample]))
 

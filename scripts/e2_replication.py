@@ -43,6 +43,20 @@ _PUBLISHED = {
 _H1_TOLERANCE_PP = 2.0
 _H1B_TOLERANCE_PP = 1.0
 
+# docs/DECISIONS.md D066: Build AI's current-product evaluation release -- NOT H1's
+# pre-registered corpus. Real headline read directly from the repo's own dataset card
+# (docs/upstream/PROVENANCE-100k-eval.json), never assumed. Kept fully separate from
+# `_PUBLISHED`: this is a disclosed, additive check, not a re-scoping of H1 itself.
+_PUBLISHED_100K = {
+    "hand_ge1_rate": 0.9695,
+    "hand_eq2_rate": 0.7905,
+    "active_manipulation_rate": 0.9276,
+}
+_PUBLISHED_BY_SAMPLE: dict[str, dict[str, float]] = {
+    "E10k-ego": _PUBLISHED,
+    "E100k-ego": _PUBLISHED_100K,
+}
+
 
 def _run_variant(
     frames: list[FrameRef],
@@ -239,13 +253,13 @@ def _variant_result(
     )
 
 
-def _h1(results_p0a: dict[str, Any]) -> dict[str, Any]:
+def _h1(results_p0a: dict[str, Any], published: dict[str, float] = _PUBLISHED) -> dict[str, Any]:
     h1: dict[str, Any] = {}
-    for key, published in _PUBLISHED.items():
+    for key, published_value in published.items():
         observed = results_p0a[key]
-        diff_pp = abs(observed - published) * 100
+        diff_pp = abs(observed - published_value) * 100
         h1[key] = {
-            "published": published,
+            "published": published_value,
             "observed_P0a": observed,
             "diff_pp": diff_pp,
             "within_2pp_tolerance": diff_pp <= _H1_TOLERANCE_PP,
@@ -279,6 +293,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--out", type=Path, default=Path("data/e2_results.json"))
     parser.add_argument(
+        "--sample",
+        default="E10k-ego",
+        help=(
+            "which evaluation-release arm to run. E10k-ego (default) is the pre-registered "
+            "H1/H1b arm, unchanged behavior. E100k-ego is a disclosed, non-pre-registered "
+            "additional check against Build AI's current-product release (docs/DECISIONS.md "
+            "D066) -- its output uses generic comparison keys, never 'H1'/'H1b', so it can "
+            "never be mistaken for a re-run of the pre-registered hypothesis itself."
+        ),
+    )
+    parser.add_argument(
         "--checkpoint-every",
         type=int,
         default=100,
@@ -295,8 +320,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    frames = draw_sample("E10k-ego")[: args.n]
-    published = published_labels_for_sample("E10k-ego", {f.frame_id for f in frames})
+    frames = draw_sample(args.sample)[: args.n]
+    published = published_labels_for_sample(args.sample, {f.frame_id for f in frames})
     judge = Qwen3VLJudge()
 
     checkpoint_dir = args.out.parent
@@ -315,14 +340,22 @@ def main(argv: list[str] | None = None) -> int:
         for variant in variants
     }
 
-    output = {
+    output: dict[str, Any] = {
+        "sample": args.sample,
         "n_frames_requested": args.n,
         "n_frames_drawn": len(frames),
         "n_published_labels_matched": len(published),
         "per_variant": results,
-        "H1": _h1(results["P0a"]),
-        "H1b": _h1b(results["P0a"], results["P0b"]),
     }
+    # docs/DECISIONS.md D066: "H1"/"H1b" keys are reserved for the pre-registered E10k-ego arm
+    # -- any other sample uses generic keys, so a reader can never mistake a new-corpus run for
+    # a re-run of the pre-registered hypothesis itself.
+    if args.sample == "E10k-ego":
+        output["H1"] = _h1(results["P0a"])
+        output["H1b"] = _h1b(results["P0a"], results["P0b"])
+    else:
+        output["published_comparison"] = _h1(results["P0a"], _PUBLISHED_BY_SAMPLE[args.sample])
+        output["prompt_variant_comparison"] = _h1b(results["P0a"], results["P0b"])
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(output, indent=2))

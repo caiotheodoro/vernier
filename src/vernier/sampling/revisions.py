@@ -15,6 +15,10 @@ from __future__ import annotations
 
 PINNED_REVISIONS: dict[str, str] = {
     "builddotai/Egocentric-10K-Evaluation": "d74b7883c998dd360e3f051830fcc792a83985e6",
+    # docs/DECISIONS.md D066: Build AI's current-product evaluation release. Real revision sha,
+    # live-resolved via HfApi().dataset_info(...).sha, sourced from
+    # docs/upstream/PROVENANCE-100k-eval.json, never invented.
+    "builddotai/Egocentric-100K-Evaluation": "d0f69a56b0525c1bead80d918dc57ef83dcac899",
 }
 
 
