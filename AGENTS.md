@@ -9,8 +9,8 @@ persisted; the live judge has made thousands of real calls across full-N replica
 prompt sweep, and gold-set judging. Real human labels are collected and committed (93 primary
 + retest, D057/D058). A real rung-1 model (DINOv2 features + linear probe + abstention
 cascade) has been trained and evaluated (D061) -- a disclosed negative result, not a missing
-one. `docs/HANDOFF.md` is the resume point; H2 and Result 2 remain blocked on gated corpus
-access.
+one. `docs/HANDOFF.md` is the resume point; H2 and Result 2 remain open -- not on corpus access,
+which is granted (D065), but on the raw-corpus frame-extraction adapter neither has yet.
 
 ## The claim
 

@@ -143,9 +143,10 @@ construction. `pytest` passing is not sufficient acceptance for these units on i
 - Evaluation-parquet adapter, and D016's first check made real: the parquets actually contain
   the frames the published labels refer to. **Done** (`sampling.draw._candidate_frames`/
   `image_bytes_for`), live-verified against the deployed Qwen3-VL judge (`docs/HANDOFF.md`).
-- Egocentric-10K streaming draw for the sampling-design arm. **Blocked**, not done: `S10k-U`/
-  `S10k-S` need the raw, contact-gated corpus, which this account doesn't have access to and
-  which turns out to be WebDataset tar shards, not a parquet (`docs/DECISIONS.md` D044).
+- Egocentric-10K streaming draw for the sampling-design arm. **Not done**: access to the raw
+  corpus is granted (`docs/DECISIONS.md` D065), but the shards are WebDataset tars of h265
+  video rather than a parquet, so `S10k-U`/`S10k-S` need a frame-extraction adapter that does
+  not exist yet.
 - Live judge harness with cost and latency accounting. **Done** — `JudgeResponse.cost_usd`/
   `latency_ms`, populated for real by every live call, plus `scripts/e2_replication.py`/
   `scripts/e5_prompt_sweep.py` aggregating both across a run.

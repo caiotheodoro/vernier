@@ -88,3 +88,26 @@ def test_gemini_2_5_flash_alone_is_not_flagged(tmp_path: Path) -> None:
     )
 
     assert find_stale_prose(tmp_path) == {}
+
+
+def test_catches_the_pre_d065_gated_access_claims(tmp_path: Path) -> None:
+    """D065 granted raw-corpus access; D068 fixed the card but left five prose files still
+    asserting the opposite. None of the pre-existing patterns saw them -- this is the
+    regression test for that gap, not a hypothetical case."""
+    (tmp_path / "AGENTS.md").write_text(
+        "H2 and Result 2 remain blocked on gated corpus access.\n"
+        "this account is not authorized for the raw, gated corpus\n"
+        "the still-inaccessible gated raw corpus (D044)\n"
+        "Nothing here is an engineering gap.\n"
+    )
+
+    hits = find_stale_prose(tmp_path)
+
+    assert hits == {
+        "AGENTS.md": [
+            (1, "blocked on gated corpus"),
+            (2, "not authorized for the raw"),
+            (3, "still-inaccessible gated raw corpus"),
+            (4, "Nothing here is an engineering gap"),
+        ]
+    }

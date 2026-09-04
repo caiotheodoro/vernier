@@ -90,8 +90,8 @@ real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
   named in `distill_rung1.py`'s own docstring, not packaged as a separate inference script.
 
 Two hypotheses remain in `what_could_not_be_checked` (H2, Result 2), both with a specific
-`"BLOCKER:"` reason -- the still-inaccessible gated raw corpus (D044), which (unlike H6's
-backbone) has no real substitute available -- so `_derive_verdict` (D038) returns
+`"BLOCKER:"` reason -- since D065, the missing raw-corpus frame-extraction adapter rather than
+access, which is granted -- so `_derive_verdict` (D038) returns
 `NOT_VERIFIED` because real blockers remain, not vacuously. **This "2 unmet" count is a
 different bucket from "checked and negative"**: H1 (2-hands fails), H1b (null), H4/H5
 (reversed), H6 (does not hold), and H7 (weak calibration) are all real, checked claims in
@@ -315,9 +315,9 @@ results -- all folded into the card, D059/D060. See "Where this stands" above fo
 numbers.
 
 **What's left is genuinely just two named blockers** (H2, Result 2) -- not automatable further
-without a decision from Caio: both need access to the gated raw Egocentric-10K corpus (D044),
-which has no real substitute the way H6's DINOv3 pin did (D061 swapped in an ungated backbone
-for that one). Nothing here is an engineering gap.
+without a decision from Caio: both need a real frame-extraction adapter over the raw
+Egocentric-10K corpus, whose access is granted since D065. This *is* an engineering gap, which
+is what makes it a decision about funding the work rather than about requesting access.
 
 **UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
 Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`

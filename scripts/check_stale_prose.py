@@ -32,6 +32,14 @@ _STALE_PATTERNS = (
     "no human label exists",
     "no model has been trained",
     "no model trained",
+    # D065 granted raw-corpus access, superseding D044's 403. Every phrase below asserts the
+    # opposite as a *current* state. Added after D065/D068 fixed the card but left five prose
+    # files still saying H2 was blocked on access -- the exact drift class R10 exists to catch,
+    # invisible to the lint because no earlier pattern covered it.
+    "blocked on gated corpus",
+    "not authorized for the raw",
+    "still-inaccessible gated raw corpus",
+    "Nothing here is an engineering gap",
 )
 
 # Historical-record files: DECISIONS.md documents what WAS true and when it changed, by design;

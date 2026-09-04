@@ -73,10 +73,10 @@ H1: all three figures land within **±2 pp** of published under `P0a`. H1b: `P0a
 differ on the manipulation figure by ≥ 1 pp, which would mean the published number is
 under-determined by the published artifacts.
 
-Then the sampling-design arm: `P0a` on `S10k-U` and `S10k-S` — **blocked** (`docs/DECISIONS.md`
-D044: this account is not authorized for the raw, gated Egocentric-10K corpus). That gap is
-reported whatever its size once access resolves, and it is a different question from the
-comparison above.
+Then the sampling-design arm: `P0a` on `S10k-U` and `S10k-S` — **not yet run** (`docs/DECISIONS.md`
+D065: corpus access is granted; what is missing is a frame-extraction adapter over the raw h265
+shards). That gap is reported whatever its size once the adapter lands, and it is a different
+question from the comparison above.
 
 A comparison landing outside tolerance is reported as such. It is not investigated until it
 goes away.
@@ -228,10 +228,10 @@ actually computed at scale. Empty bins stay empty.
 ## E9 — Transfer probe — dropped, gate never reached (`docs/DECISIONS.md` D048)
 
 Entry was to be a timeboxed spike: can a matched three-corpus frozen-feature probe run inside
-the compute budget? The gate is never reached: the raw Egocentric-10K corpus is inaccessible to
-this account (D044), EPIC-KITCHENS-100 registration requires an institutional email this
-project does not have (`SURVEY.md`), and the evaluation release ships no downstream-task labels
-to probe against regardless of access. Result 2 is dropped and Result 1 ships alone.
+the compute budget? The gate is never reached. Raw Egocentric-10K access has since been granted
+(D065), but the other two reasons stand and either alone is sufficient: EPIC-KITCHENS-100
+registration requires an institutional email this project does not have (`SURVEY.md`), and the
+evaluation release ships no downstream-task labels to probe against regardless of access. Result 2 is dropped and Result 1 ships alone.
 
 *Cost: zero -- the timeboxed spike this entry describes never ran.*
 
