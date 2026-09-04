@@ -3,7 +3,13 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-03 — a scorecard-driven cleanup round (D062/D063): real result data
+**Last updated: 2026-09-03 — a second scorecard round (D064): `HumanLabel.difficulty` is now a
+real closed `Literal["easy","medium","hard"]` (a real, disclosed "emedium" typo in committed
+label data corrected); the dead `make estimate` target (its own help text promised a
+design-effect column this repo's non-clustered PPI structurally cannot supply) is removed, not
+wired; the rung-1 probe is now a real, loadable artifact (`LinearProbe.save`/`.load`, joblib,
+`data/rung1_probe.joblib`, tracked in git), not just a metrics JSON. Prior round (D062/D063):
+real result data
 (`data/membership`, `data/labels`, `data/gold_judged`, and every small computed-result JSON) is
 now tracked in git, not just local; stale pre-data/pre-model prose in README/AGENTS/Makefile is
 fixed and `check_stale_prose.py`'s reach widened (it now also scans `Makefile`, not just
@@ -60,11 +66,19 @@ real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
   0.80 floor is now reported **unreachable at any coverage > 0, at 95% confidence**. Same
   overall outcome as before (H6 does not hold), reached more honestly this time; D061's original
   point-estimate result had instead reported floor 0.8421 (met) at coverage 0.4043 (not met).
+  As of D064, the fitted probe is a real, loadable artifact -- `LinearProbe.save`/`.load`
+  (joblib), `data/rung1_probe.joblib`, ~5-20KB, tracked in git -- not just this metrics JSON;
+  loading it back still needs the backbone name, `_preprocess`, and the pooling choice, all
+  named in `distill_rung1.py`'s own docstring, not packaged as a separate inference script.
 
 Two hypotheses remain in `what_could_not_be_checked` (H2, Result 2), both with a specific
 `"BLOCKER:"` reason -- the still-inaccessible gated raw corpus (D044), which (unlike H6's
 backbone) has no real substitute available -- so `_derive_verdict` (D038) returns
-`NOT_VERIFIED` because real blockers remain, not vacuously. `verify_and_exit` returns nonzero,
+`NOT_VERIFIED` because real blockers remain, not vacuously. **This "2 unmet" count is a
+different bucket from "checked and negative"**: H1 (2-hands fails), H1b (null), H4/H5
+(reversed), H6 (does not hold), and H7 (weak calibration) are all real, checked claims in
+`claims`, not blocked ones -- `what_could_not_be_checked` counts only items that could not run
+at all, never a tally of "everything that isn't wrong." `verify_and_exit` returns nonzero,
 for real, via `make card`. Not a placeholder, and not to be conflated with either the H8
 computation itself or the D016 live-data cross-check in the next paragraph (a data-integrity
 sanity check, never presented as a hypothesis result).
@@ -182,7 +196,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D063 |
+| Decisions | `DECISIONS.md`, D001–D064 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |

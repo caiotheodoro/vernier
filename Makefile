@@ -1,11 +1,14 @@
 # vernier -- targets are the table of contents. `sample`, `human-labels`, `prompt-sweep`,
 # `agreement`, `distil`, `card`, `test`, `typecheck`, `fixtures` and `validate` are real and run
 # real code against real, collected data (docs/HANDOFF.md). `effective-n`, `survey`, `replicate`,
-# `judge`, `domain-bias`, `probe`, and `estimate` (as a standalone target -- PPI estimation itself
-# runs, folded into `agreement`) are not wired to a target yet; they fail loudly (not silently)
-# until the wave that implements them replaces the recipe -- see docs/HANDOFF.md.
+# `judge`, `domain-bias`, and `probe` are not wired to a target yet; they fail loudly (not
+# silently) until the wave that implements them replaces the recipe -- see docs/HANDOFF.md.
+# (There is deliberately no `estimate` target: PPI prevalence already runs, folded into
+# `agreement` -- see that target's recipe. `docs/DECISIONS.md` D064 removed the standalone
+# stub, since its own help text promised a design-effect column this repo's non-clustered PPI
+# path (D039) cannot structurally supply, not just an unwired one.)
 .PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose \
-        domain-bias distil calibrate estimate probe card validate privacy-gate \
+        domain-bias distil calibrate probe card validate privacy-gate \
         test typecheck fixtures check-eval-parquets install-hooks
 
 NOT_YET = @echo "not yet implemented -- see docs/HANDOFF.md for which wave lands this" >&2 && exit 1
@@ -45,8 +48,6 @@ distil:        ## Train the rung-1 open instrument (DINOv2 features + linear pro
 calibrate:     ## Folded into `make distil`: AbstentionCascade.calibrate_threshold runs there, not as a separate step.
 	@echo "calibration is not a separate step -- scripts/distill_rung1.py calls AbstentionCascade.calibrate_threshold as part of 'make distil'. Run that instead." >&2
 probe:         ## Result 2: transfer probe. Kill-gated -- see docs/METHOD.md.
-	$(NOT_YET)
-estimate:      ## PPI prevalence: naive, rectified, interval, design effect.
 	$(NOT_YET)
 card:          ## Emit the measurement card, including "what could not be checked".
 	python3 scripts/emit_card.py

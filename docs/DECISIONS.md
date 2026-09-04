@@ -1825,3 +1825,66 @@ Result 2 unchanged, both still blocked on gated corpus access -- untouched by th
 **Reverses if:** a future, real Learn-then-Test/conformal implementation (D049's complete fix)
 replaces the Wilson-bound interim step; or `held_out_gold` grows large enough that the
 finite-sample gap this closes becomes negligible in practice.
+
+## D064 — `difficulty` closed, `make estimate` removed, the rung-1 probe is a real artifact
+
+A second external scorecard pass, after D062/D063 landed, named three more real gaps, plus two
+prose spots worth a clarifying sentence (no entry needed for those -- see below).
+
+**`HumanLabel.difficulty` tightened to `Literal["easy", "medium", "hard"]`** (`models.py`).
+It was deliberately left a bare `str` ("not a closed list... kept as free text"); nothing
+validated it, and a real typo -- `"difficulty":"emedium"` -- existed in the committed
+`data/labels/caio/primary.json` (1 of 93 records; confirmed the only bad value across both label
+files). `docs/RUBRIC.md` already treats it as closed in practice ("set `difficulty` to at least
+`medium`"; "set `difficulty: hard`"), so `CONTRACTS.md` is updated first to state the closed set
+explicitly, per `models.py`'s own stated policy of only encoding a `Literal` when the contract
+document itself says "X ∈ {...}". **Data correction, disclosed, not silent, per Caio's own
+call**: the one `"emedium"` record is corrected to `"medium"` -- a stray keystroke (the CLI's
+free-text `input()` defaulted a blank answer to `"medium"`, so a lone leading `e` produces
+exactly this), not a re-judged label; `difficulty` feeds no statistic (H1-H8, AC1, and PPI all
+read `hands_visible`/`manipulation` only), so this touches no scored result. Root cause fixed in
+`scripts/human_labels_cli.py`: a new `_prompt_difficulty` re-prompts on an out-of-set answer
+(same discipline as the existing `_prompt_int_choice`/`_prompt_edge_case_tags`), replacing the
+old free-text `input()` that made the typo possible. A sibling malformed fixture,
+`HumanLabel.difficulty_outside_closed_list`, mirrors the existing `edge_case` one.
+
+**`make estimate` removed, not wired.** Its own help text promised "design effect", which is
+structurally impossible for Wave 4's PPI path: `bootstrap.py`'s real `design_effect()` requires
+a cluster-bootstrap CI, and that PPI is computed with `cluster_by=None` (D039, no shared cluster
+id on `HumanLabel`) by design. PPI prevalence itself already runs for real, folded into
+`agreement` (`wave4_analysis.py`'s `_ppi_per_domain`) -- wiring `estimate` to anything beyond a
+duplicate re-run of that would add nothing; fixing the design-effect gap for real needs a real
+cluster id on human labels first, a much larger change than this round. `docs/REPRODUCTION.md`'s
+pipeline block and prose updated to match -- it also over-claimed "design effects" as something
+the open-judge-only path yields, when H2's design effect specifically needs the raw, gated
+corpus (`S10k-U`/`S10k-S`, D044, still blocked) and was never reachable via this path at all;
+corrected in the same edit.
+
+**The rung-1 probe is now a real, loadable artifact, not just a metrics JSON.**
+`LinearProbe.save`/`.load` (new, `joblib`) persist and restore the fitted
+`LogisticRegression`. `scripts/distill_rung1.py` calls `probe.save("data/rung1_probe.joblib")`
+right after fitting and records `"probe_path"` in its output for provenance. Real file: 9.9KB,
+tracked in git (`.gitignore` negation, same pattern as D062). Real load-and-predict check run
+live: `LinearProbe.load(path)` on a real DINOv2 feature vector returns the identical prediction
+class and confidence the in-process probe would. Loading the weights back is still not the whole
+instrument by itself -- the backbone name (`facebook/dinov2-small`), `_preprocess`'s exact
+steps, and the mean-pooling-over-patch-tokens choice are needed too, all already named in
+`distill_rung1.py`'s own docstring; no new inference script or abstraction was built this round.
+`pyproject.toml`'s `probes` extra gains `joblib>=1.3` (pinned explicitly now, previously only
+transitively available via scikit-learn), and mypy gets a `joblib` `ignore_missing_imports`
+override (no published stubs).
+
+**Two prose spots clarified, not corrected — no separate decision, same reasoning as D062's
+Fix 2 prose-only corrections**: `docs/REPRODUCTION.md`'s "without a single dollar of API spend"
+already correctly scoped to API spend, not the whole pipeline, but gained one clause noting
+real (small) Modal/AWS GPU compute cost, closing the gap for a skimming reader.
+`docs/HANDOFF.md`'s "2 unmet" sentence was already factually accurate about
+`what_could_not_be_checked`'s contents, but gained one sentence distinguishing that bucket
+(blocked, 2 items) from `claims` that ran and came back negative (H1 partial fail, H1b null,
+H4/H5 reversed, H6 fails, H7 weak) -- so "2 unmet" can't be misread as "everything else
+succeeded."
+
+**Reverses if:** a real cluster id is added to `HumanLabel` (making `estimate`'s design-effect
+promise reachable again, worth re-adding as its own target then); or a fourth real `difficulty`
+value is ever legitimately needed (a `RUBRIC.md` change, logged there first, same as any other
+closed-list addition).

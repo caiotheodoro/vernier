@@ -1,0 +1,13 @@
+{
+  "frame_id": "ego10k/f0051/w00243/v0007/000418",
+  "rater": "R1",
+  "pass_": "primary",
+  "rubric_rev": "1.2.0",
+  "hands_visible": 2,
+  "manipulation": true,
+  "edge_case": [],
+  "difficulty": "emedium",
+  "note": "",
+  "labelled_at": "2026-01-15T12:00:00Z",
+  "seconds_spent": 22
+}

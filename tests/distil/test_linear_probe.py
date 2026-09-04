@@ -7,6 +7,8 @@ H6 claim -- exact-match accuracy against `teacher_labels`, nothing more elaborat
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -112,6 +114,28 @@ def test_fidelity_is_one_when_probe_matches_teacher_on_every_row() -> None:
 
     teacher_labels = [make_judge_response(hands_visible=hv) for hv in probe.predict(features)]
     assert fidelity(probe, features, teacher_labels) == 1.0
+
+
+def test_save_before_fit_raises(tmp_path: Path) -> None:
+    probe = LinearProbe()
+    with pytest.raises(RuntimeError):
+        probe.save(tmp_path / "probe.joblib")
+
+
+def test_save_then_load_round_trips_identical_predictions(tmp_path: Path) -> None:
+    features = np.array([[x] for x in (-5, -4, -3, -2, 5, 6, 7, 8, 15, 16, 17, 18)], dtype=float)
+    hands_visible = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+    judge_labels = [make_judge_response(hands_visible=hv) for hv in hands_visible]
+
+    probe = LinearProbe()
+    probe.fit(features, judge_labels)
+    path = tmp_path / "probe.joblib"
+    probe.save(path)
+
+    loaded = LinearProbe.load(path)
+
+    assert loaded.predict(features) == probe.predict(features)
+    assert loaded.predict_proba(features) == probe.predict_proba(features)
 
 
 def test_fidelity_is_zero_when_teacher_disagrees_on_every_row() -> None:

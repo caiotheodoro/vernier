@@ -184,6 +184,23 @@ def _prompt_yes_no(prompt: str) -> bool:
         print("  answer y/n")
 
 
+_DIFFICULTY_CHOICES = ("easy", "medium", "hard")
+
+
+def _prompt_difficulty(prompt: str) -> str:
+    """Closed-set input (`CONTRACTS.md`: `difficulty` in {`easy`,`medium`,`hard`}) -- a blank
+    default silently swallowed a stray keystroke into a real committed typo (`"emedium"`,
+    `docs/DECISIONS.md` D064) when this was a bare free-text `input()`. Re-prompts instead of
+    guessing, the same discipline `_prompt_int_choice`/`_prompt_edge_case_tags` already use."""
+    while True:
+        raw = input(prompt).strip().lower()
+        if not raw:
+            return "medium"
+        if raw in _DIFFICULTY_CHOICES:
+            return raw
+        print(f"  must be one of {_DIFFICULTY_CHOICES}")
+
+
 def _prompt_edge_case_tags() -> list[EdgeCaseTag]:
     print(f"  edge-case tags (comma-separated, blank for none): {', '.join(_EDGE_CASE_TAGS)}")
     while True:
@@ -228,7 +245,7 @@ def _label_one_frame(
     hands_visible = _prompt_int_choice("hands_visible (0/1/2): ", (0, 1, 2))
     manipulation = _prompt_yes_no("active manipulation (y/n): ")
     edge_case = _prompt_edge_case_tags()
-    difficulty = input("difficulty (easy/medium/hard): ").strip() or "medium"
+    difficulty = _prompt_difficulty("difficulty (easy/medium/hard): ")
     note = input("note (optional): ").strip()
 
     seconds_spent = int(time.monotonic() - start)

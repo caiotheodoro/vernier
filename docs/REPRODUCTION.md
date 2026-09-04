@@ -5,11 +5,12 @@ measurement applies here first: if this document does not let a stranger obtain 
 numbers, the project has failed on its own terms.
 
 **`make sample` and `make human-labels` are real and runnable now** (`docs/HANDOFF.md`); the
-judge/agreement/estimate/prompt-sweep commands below are the fixed contract the rest of the
+judge/agreement/prompt-sweep commands below are the fixed contract the rest of the
 pipeline satisfies as each wave lands, not yet all wired into these exact `make` targets — see
 `docs/HANDOFF.md` for what actually runs today (`scripts/e2_replication.py`,
 `scripts/e5_prompt_sweep.py`, `scripts/generate_rung1_labels.py`) versus what this file fixes as
-the target shape.
+the target shape. There is no separate `make estimate` step: PPI prevalence estimation runs
+folded into `make agreement` (`docs/DECISIONS.md` D064).
 
 ## The open-judge-only path is the only path
 
@@ -21,17 +22,21 @@ needed anywhere in this reproduction path:
 make effective-n                # H8: no data, no keys, no compute at all
 make sample                     # seed 777, no keys needed beyond HF access
 make judge JUDGES=qwen3-vl      # open weights, local or Modal
-make agreement
-make estimate                   # PPI over the published human gold
+make agreement                  # judge-vs-human agreement AND PPI prevalence, together
 make prompt-sweep JUDGES=qwen3-vl
 make card
 ```
 
-This yields every structural result — H8, design effects, prompt sensitivity, judge–human
-agreement for the open judge, and PPI-rectified prevalence for that judge — without a single
-dollar of API spend. `make effective-n` in particular needs nothing but public participant
-counts, so the cheapest finding in the project is also the most reproducible one. What it
-cannot yield by calling a live judge is a live replication of Build AI's own figures — but that
+This yields every structural result this path can actually reach — H8, prompt sensitivity,
+judge–human agreement for the open judge, and PPI-rectified prevalence for that judge — without
+a single dollar of API spend (real Modal/AWS GPU compute time is not zero-cost, just not a paid
+third-party API). **Not included**: H2's design effect specifically needs a cluster bootstrap
+over `worker_id` on the raw, gated Egocentric-10K corpus (`S10k-U`/`S10k-S`) — a different axis
+entirely from this open-judge-only path, currently blocked on access (`docs/DECISIONS.md` D044),
+not something this pipeline yields once wired. `make effective-n` in particular needs nothing
+but public participant counts, so the cheapest finding in the project is also the most
+reproducible one. What it cannot yield by calling a live judge is a live replication of Build
+AI's own figures — but that
 comparison no longer needs one: their own `gemini-2.5-flash` labels ship in the evaluation
 parquets (`UPSTREAM-FINDINGS.md` F9) and are read directly, for free, by
 `scripts/e2_replication.py` and `scripts/generate_rung1_labels.py`. The asymmetry this section

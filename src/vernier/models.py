@@ -213,8 +213,7 @@ class HumanLabel(Record):
     hands_visible: Literal[0, 1, 2]
     manipulation: bool
     edge_case: tuple[EdgeCaseTag, ...]
-    # Not a closed list in CONTRACTS.md or RUBRIC.md (unlike edge_case); kept as free text.
-    difficulty: str
+    difficulty: Literal["easy", "medium", "hard"]
     note: str
     labelled_at: datetime
     seconds_spent: int

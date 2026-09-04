@@ -121,8 +121,10 @@ must report an iid interval labelled as a lower bound, never a clustered one.
   why that is a weaker instrument.
 - `edge_case` tags come from the closed list in `docs/RUBRIC.md`. New tags mean the rubric
   is incomplete, which is a finding and gets a `DECISIONS.md` entry, not a silent addition.
-- `difficulty` is recorded before the judge's answer is ever displayed. The labelling tool
-  never shows judge output.
+- `difficulty` ∈ {`easy`, `medium`, `hard`}, per `docs/RUBRIC.md`'s own rules (e.g. "set
+  `difficulty` to at least `medium`"; "set `difficulty: hard`" for the undecidable case). It is
+  recorded before the judge's answer is ever displayed. The labelling tool never shows judge
+  output.
 
 ## `AgreementResult`
 

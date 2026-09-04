@@ -24,6 +24,12 @@ DINOv2 features extracted for each -- real network + compute time, not free, but
 forward pass per frame), plus real DINOv2 features for all of Wave 3's 93 primary-labelled
 frames, split in half for calibration vs. evaluation (`WAVES.md`'s own Wave 4 acceptance
 criterion: the floor must be calibrated on data disjoint from what evaluates it).
+
+**The fitted probe is a real, loadable artifact (`docs/DECISIONS.md` D064)**, not just the
+metrics it produced: `probe.save(_PROBE_PATH)` persists it via `LinearProbe.save`/`.load`
+(joblib). Loading it back is not the whole instrument by itself -- a caller also needs this
+file's own `_BACKBONE` name, `_preprocess`'s exact steps, and the mean-pooling-over-patch-tokens
+choice in `_extract_features`, none of which travel with the weights.
 """
 
 from __future__ import annotations
@@ -50,6 +56,7 @@ _N_FIDELITY_HOLDOUT = 150
 _TARGET_FLOOR = 0.80
 _TARGET_COVERAGE = 0.70
 _BACKBONE = "facebook/dinov2-small"
+_PROBE_PATH = Path("data/rung1_probe.joblib")
 
 _STORED_LABELS_PATH = Path("data/rung1_stored_labels.json")
 _FEATURES_CACHE_PATH = Path("data/dinov2_features.json")
@@ -193,6 +200,7 @@ def main() -> int:
     train_labels = [JudgeResponse.model_validate(labels_by_id[fid]) for fid in train_ids]
     probe = LinearProbe()
     probe.fit(train_features, train_labels)
+    probe.save(_PROBE_PATH)
 
     holdout_features = [features_by_id[fid] for fid in holdout_ids]
     holdout_labels = [JudgeResponse.model_validate(labels_by_id[fid]) for fid in holdout_ids]
@@ -211,6 +219,7 @@ def main() -> int:
 
     output: dict[str, Any] = {
         "backbone": _BACKBONE,
+        "probe_path": str(_PROBE_PATH),
         "n_train": len(train_ids),
         "n_fidelity_holdout": len(holdout_ids),
         "fidelity_vs_gemini_2_5_flash": fidelity_score,

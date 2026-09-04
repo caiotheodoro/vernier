@@ -1,5 +1,6 @@
 {
   "backbone": "facebook/dinov2-small",
+  "probe_path": "data/rung1_probe.joblib",
   "n_train": 600,
   "n_fidelity_holdout": 150,
   "fidelity_vs_gemini_2_5_flash": 0.6933333333333334,

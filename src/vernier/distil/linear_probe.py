@@ -7,8 +7,10 @@ Human gold is the held-out evaluation for both the judge and its distillate.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, cast
 
+import joblib
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
@@ -57,6 +59,23 @@ class LinearProbe:
         if self._model is None:
             raise RuntimeError("LinearProbe.predict_proba called before fit")
         return [float(row.max()) for row in self._model.predict_proba(np.asarray(features))]
+
+    def save(self, path: str | Path) -> None:
+        """Persist the fitted sklearn model via `joblib` -- turns a training run into a real,
+        loadable artifact (`docs/DECISIONS.md` D064), not just the metrics it produced. Loading
+        the weights back is not the whole instrument: a caller also needs the exact backbone
+        (`facebook/dinov2-small`, `scripts/distill_rung1.py`'s `_BACKBONE`), its `_preprocess`
+        steps, and its mean-pooling-over-patch-tokens choice -- none of that travels with the
+        weights, by construction, since this class only ever sees already-extracted features."""
+        if self._model is None:
+            raise RuntimeError("LinearProbe.save called before fit")
+        joblib.dump(self._model, path)
+
+    @classmethod
+    def load(cls, path: str | Path) -> "LinearProbe":
+        probe = cls()
+        probe._model = joblib.load(path)
+        return probe
 
 
 def fidelity(probe: LinearProbe, held_out_features: Any, teacher_labels: list[JudgeResponse]) -> float:
