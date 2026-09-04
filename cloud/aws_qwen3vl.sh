@@ -35,6 +35,12 @@ INSTANCE_TYPE="${INSTANCE_TYPE:-g6.2xlarge}"
 KEY_NAME="${KEY_NAME:-plumb-diag2}"
 VOLUME_GB="${VOLUME_GB:-150}"          # model ~9GB + 20k JPEGs ~4GB + image + headroom
 TAG="vernier-h2-judge"
+# On-demand is preferred (no preemption on a multi-hour judge run) but is not always available:
+# the first real launch found ZERO on-demand L4/L40S capacity anywhere in us-east-1, across
+# g6.2xlarge, g6.xlarge and g6e.xlarge. Spot is a different capacity pool and had some. Set
+# MARKET=spot to use it -- the judge runner resumes from its own JSONL by frame_id (D069), so a
+# preemption costs the calls in flight, not the run.
+MARKET="${MARKET:-on-demand}"
 
 MODEL_NAME="Qwen/Qwen3-VL-8B-Instruct-FP8"
 MODEL_REVISION="9cdc6310a8cb770ce18efaf4e9935334512aee45"
@@ -89,13 +95,31 @@ EOF
 case "${1:-}" in
   launch)
     AMI="$(ami_id)"; echo "AMI: $AMI"
-    aws ec2 run-instances --region "$REGION" \
-      --image-id "$AMI" --instance-type "$INSTANCE_TYPE" --key-name "$KEY_NAME" \
-      --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_GB,VolumeType=gp3,DeleteOnTermination=true}" \
-      --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG}]" \
-      --user-data "$(user_data)" \
-      --query 'Instances[0].InstanceId' --output text
-    echo "launched. poll with: $0 status"
+    # L4 capacity in us-east-1 is genuinely tight: the first real launch returned
+    # InsufficientInstanceCapacity in the default AZ. Walking the default subnets is the fix --
+    # the alternative (g5/A10G) cannot run the FP8 checkpoint at all, so trying another zone is
+    # strictly better than trading down the GPU.
+    SUBNETS=$(aws ec2 describe-subnets --region "$REGION" --filters Name=default-for-az,Values=true \
+                --query 'Subnets[].SubnetId' --output text)
+    for SUBNET in $SUBNETS; do
+      AZ=$(aws ec2 describe-subnets --region "$REGION" --subnet-ids "$SUBNET" \
+             --query 'Subnets[0].AvailabilityZone' --output text)
+      echo "trying $INSTANCE_TYPE in $AZ ..."
+      MARKET_ARGS=()
+      [ "$MARKET" = "spot" ] && MARKET_ARGS=(--instance-market-options MarketType=spot)
+      if ID=$(aws ec2 run-instances --region "$REGION" \
+          --image-id "$AMI" --instance-type "$INSTANCE_TYPE" --key-name "$KEY_NAME" \
+          --subnet-id "$SUBNET" "${MARKET_ARGS[@]}" \
+          --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_GB,VolumeType=gp3,DeleteOnTermination=true}" \
+          --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG}]" \
+          --user-data "$(user_data)" \
+          --query 'Instances[0].InstanceId' --output text 2>/dev/null); then
+        echo "launched $ID ($MARKET) in $AZ. poll with: $0 status"
+        exit 0
+      fi
+    done
+    echo "no capacity for $INSTANCE_TYPE in any default subnet of $REGION" >&2
+    exit 1
     ;;
   status)
     ID="$(require_instance)"; echo "instance: $ID"
