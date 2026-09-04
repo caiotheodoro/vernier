@@ -1,0 +1,68 @@
+{
+  "sample": "E100k-ego",
+  "n_frames_requested": 10000,
+  "n_frames_drawn": 10000,
+  "n_published_labels_matched": 10000,
+  "per_variant": {
+    "P0a": {
+      "n_total": 10000,
+      "n_ok": 9999,
+      "status_counts": {
+        "ok": 9999,
+        "unparseable": 1
+      },
+      "hand_ge1_rate": 0.9608960896089609,
+      "hand_eq2_rate": 0.8518851885188519,
+      "active_manipulation_rate": 0.9213921392139214,
+      "n_comparable_to_published": 9999,
+      "hand_count_exact_agreement_rate": 0.894989498949895,
+      "active_labor_agreement_rate": null,
+      "active_labor_agreement_rate_invalid_reason": "docs/DECISIONS.md D067: this run's published_labels_for_sample parsed active_labor as `value == \"yes\"`, but the real 100K-eval schema encodes it as \"true\"/\"false\" (checked live), so every published label here was silently treated as False. The raw value before this correction was 0.0786078607860786 -- discarded, not usable, since it only reflects how often the judge also said False. Not recomputable without re-running the judge (raw per-frame responses were not persisted); the bug is fixed in published_labels.py for all future runs.",
+      "total_cost_usd": 4.588201999999994,
+      "total_latency_ms": 20646909
+    },
+    "P0b": {
+      "n_total": 10000,
+      "n_ok": 9999,
+      "status_counts": {
+        "ok": 9999,
+        "unparseable": 1
+      },
+      "hand_ge1_rate": 0.9601960196019602,
+      "hand_eq2_rate": 0.8501850185018501,
+      "active_manipulation_rate": 0.9173917391739174,
+      "n_comparable_to_published": 9999,
+      "hand_count_exact_agreement_rate": 0.8943894389438944,
+      "active_labor_agreement_rate": null,
+      "active_labor_agreement_rate_invalid_reason": "docs/DECISIONS.md D067: same bug as P0a above. Raw value before correction was 0.08260826082608261 -- discarded, not usable.",
+      "total_cost_usd": 4.474851777777784,
+      "total_latency_ms": 20136833
+    }
+  },
+  "published_comparison": {
+    "hand_ge1_rate": {
+      "published": 0.9695,
+      "observed_P0a": 0.9608960896089609,
+      "diff_pp": 0.8603910391039138,
+      "within_2pp_tolerance": true
+    },
+    "hand_eq2_rate": {
+      "published": 0.7905,
+      "observed_P0a": 0.8518851885188519,
+      "diff_pp": 6.1385188518851885,
+      "within_2pp_tolerance": false
+    },
+    "active_manipulation_rate": {
+      "published": 0.9276,
+      "observed_P0a": 0.9213921392139214,
+      "diff_pp": 0.6207860786078601,
+      "within_2pp_tolerance": true
+    }
+  },
+  "prompt_variant_comparison": {
+    "p0a_active_manipulation_rate": 0.9213921392139214,
+    "p0b_active_manipulation_rate": 0.9173917391739174,
+    "diff_pp": 0.4000400040004015,
+    "p0_variants_disagree": false
+  }
+}

@@ -3,7 +3,18 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-03 — a second scorecard round (D064): `HumanLabel.difficulty` is now a
+**Last updated: 2026-09-04 — E2 extended to `Egocentric-100K-Evaluation`, Build AI's current
+product (D066/D067): real access was granted (terms accepted), a real synthetic-`frame_id`
+scheme fills the gap left by the vendor's own removal of that column (F10), and three real bugs
+(a `draw_sample` dispatch gap, a revision-check repo mismatch, a pyarrow chunking limitation,
+and a `"true"/"false"` vs `"yes"/"no"` schema mismatch) were found and fixed by the smoke test
+and the full run respectively -- none silently patched over. Real result: **2/3 headline
+figures within +/-2pp of Build AI's own current published numbers, 2-hands the outlier
+(6.14pp)** -- the identical structural pattern the original `E10k-ego` run found on their
+superseded release. Cost $9.06. Also did a real, near-zero-cost discovery spike into the raw
+`Egocentric-10K` WebDataset shards (D065): confirmed video, not stills -- a materially bigger
+adapter than assumed, not attempted this round. Prior round (D064): `HumanLabel.difficulty` is
+now a
 real closed `Literal["easy","medium","hard"]` (a real, disclosed "emedium" typo in committed
 label data corrected); the dead `make estimate` target (its own help text promised a
 design-effect column this repo's non-clustered PPI structurally cannot supply) is removed, not
@@ -196,7 +207,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D064 |
+| Decisions | `DECISIONS.md`, D001–D067 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |

@@ -41,6 +41,27 @@ _PARQUET_FILENAME: dict[str, str] = {
 # `sampling/draw.py` uses, duplicated here per this file's existing non-shared-constant pattern.
 _SYNTHETIC_FRAME_ID_SAMPLES: frozenset[str] = frozenset({"E100k-ego"})
 
+# docs/DECISIONS.md D067: a real bug, found only after a full real run -- the 10K-eval schema
+# encodes `active_labor` as "yes"/"no", but the 100K-eval schema (checked live) encodes the
+# SAME field as "true"/"false". `"true" == "yes"` is always False, so the first real run
+# silently treated every 100K published label as `active_labor=False` -- `active_labor_agree`
+# rate collapsed to ~8% (matching "how often the judge also said False", not real agreement).
+# A closed, checked mapping, not a permissive `.lower() in {"yes","true"}` coercion: an
+# unrecognized value must raise, not silently become `False` the same way this bug did.
+_ACTIVE_LABOR_TRUE_VALUES = frozenset({"yes", "true"})
+_ACTIVE_LABOR_FALSE_VALUES = frozenset({"no", "false"})
+
+
+def _parse_active_labor(value: str) -> bool:
+    if value in _ACTIVE_LABOR_TRUE_VALUES:
+        return True
+    if value in _ACTIVE_LABOR_FALSE_VALUES:
+        return False
+    raise ValueError(
+        f"unrecognized active_labor value {value!r}; expected one of "
+        f"{sorted(_ACTIVE_LABOR_TRUE_VALUES | _ACTIVE_LABOR_FALSE_VALUES)}"
+    )
+
 
 def published_labels_for_sample(
     sample: str, frame_ids: set[str] | None = None
@@ -85,7 +106,7 @@ def published_labels_for_sample(
                     continue
                 fid = synthetic_frame_id(image_bytes)
                 if frame_ids is None or fid in frame_ids:
-                    out[fid] = (hc, al == "yes")
+                    out[fid] = (hc, _parse_active_labor(al))
         return out
 
     table = pq.read_table(path, columns=["frame_id", "hand_count", "active_labor"])
@@ -97,5 +118,5 @@ def published_labels_for_sample(
         strict=True,
     ):
         if frame_ids is None or fid in frame_ids:
-            out[fid] = (hc, al == "yes")
+            out[fid] = (hc, _parse_active_labor(al))
     return out

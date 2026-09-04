@@ -444,6 +444,7 @@ def main() -> int:
         claims=[
             _h8_claim(),
             *_h1_h1b_claims(),
+            *_e100k_ego_claims(),
             _h3_claim(),
             _intra_rater_claim(),
             _h4_claim(),

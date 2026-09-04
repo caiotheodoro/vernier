@@ -2014,3 +2014,56 @@ recommended re-running E2 against it. Checked live before acting, not taken on f
 scheme becomes unnecessary, not wrong); or the baseline-comparison check above finds real
 divergence significant enough that Caio decides the ego4d/epic arms are worth judging after
 all, reopening scope beyond E2-only.
+
+## D067 — Real E2-on-100K result: 2/3 within tolerance, plus a real `active_labor` parsing bug
+
+The real `E100k-ego` run authorized in D066 completed for real: N=10,000, both prompt variants,
+real cost **$9.06** (P0a $4.59 + P0b $4.47 -- slightly above D066's $8.56 estimate, consistent
+with real variance, not a discrepancy worth chasing). `status_counts`: 9,999 `ok` + 1
+`unparseable` in each variant.
+
+**Real result, published comparison (P0a vs. Build AI's own current-release headline)**:
+
+| figure | observed | published | diff | within +/-2pp |
+|---|---|---|---|---|
+| hand >=1 | 96.09% | 96.95% | 0.86pp | yes |
+| 2 hands | 85.19% | 79.05% | 6.14pp | **no** |
+| active manipulation | 92.14% | 92.76% | 0.62pp | yes |
+
+**2/3 within tolerance, 2-hands fails** -- the identical structural pattern D056 found on the
+original `E10k-ego` run (H1: 2/3 within tolerance, 2-hands the outlier). A real, notable
+cross-corpus consistency, not assumed or forced: the live judge disagrees with Build AI's own
+published figures on the SAME specific dimension (2-hands) on both their superseded and current
+releases. P0a/P0b do not disagree (diff 0.40pp, well under the 1pp informal threshold) -- also
+consistent with H1b's original null result. `scripts/emit_card.py`'s `main()` now includes
+`*_e100k_ego_claims()`; regenerated `MEASUREMENT_CARD.json`: 17 claims (was 15), **`verdict`
+unchanged, `NOT_VERIFIED`** (H2, Result 2 untouched by this work, still the only 2 blockers).
+
+**Real bug, found only after the full real run, not by any unit test**: `published_labels.py`'s
+`active_labor` parsing was `value == "yes"`, matching the 10K-eval schema's real encoding -- but
+the 100K-eval schema (checked live) encodes the SAME field as `"true"`/`"false"`, not
+`"yes"`/`"no"`. `"true" == "yes"` is always `False`, so every real published label in this run
+was silently treated as `active_labor=False`. This corrupted exactly one diagnostic field --
+`active_labor_agreement_rate` collapsed to ~8% (P0a 7.86%, P0b 8.26%), which only measures "how
+often the judge also said False," not real per-frame agreement. **Not corrupted**: the
+published-comparison table above (reads `_PUBLISHED_100K`, a hardcoded dict from the real
+dataset-card fetch, never touches this per-frame join), `hand_count_exact_agreement_rate` (an
+int comparison, no string parsing involved), and `n_published_labels_matched`/
+`n_comparable_to_published` (dict-membership checks, not value checks) -- all real and correct.
+
+**Fix, real and closed, not permissive**: new `_parse_active_labor(value: str) -> bool` in
+`published_labels.py` with an explicit, closed mapping (`{"yes","true"} -> True`,
+`{"no","false"} -> False`) that RAISES on anything else, rather than silently defaulting to
+`False` the same way the original bug did. New regression tests use the REAL 100K encoding
+(`"true"`/`"false"`), not the `"yes"`/`"no"` shape the original test fixtures used -- exactly
+the gap that let this bug through in the first place.
+
+**The already-collected `data/e2_100k_eval.json` is NOT re-run** to fix this -- re-running the
+full $9/~9h judge call again to correct one secondary diagnostic field that never fed a card
+claim would be real, unjustified additional spend. Instead, both `active_labor_agreement_rate`
+values are set to `null` with an `active_labor_agreement_rate_invalid_reason` field quoting the
+real bug and the discarded raw number, so nobody who opens the committed file mistakes a known-
+wrong value for a real measurement.
+
+**Reverses if:** a future re-run of `E100k-ego` (for any other reason) is a real opportunity to
+also backfill a corrected `active_labor_agreement_rate` for free, using the now-fixed parser.

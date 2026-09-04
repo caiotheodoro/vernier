@@ -19,7 +19,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from published_labels import published_labels_for_sample  # noqa: E402
+from published_labels import _parse_active_labor, published_labels_for_sample  # noqa: E402
 
 from vernier.sampling.draw import synthetic_frame_id  # noqa: E402
 
@@ -112,3 +112,48 @@ def test_published_labels_for_sample_100k_excludes_empty_image_bytes(
     result = published_labels_for_sample("E100k-ego")
 
     assert result == {}
+
+
+# --- _parse_active_labor (docs/DECISIONS.md D067): a real bug, found only after a full real
+# run against the actual 100K-eval parquet -- its `active_labor` column encodes "true"/"false",
+# not "yes"/"no" like the 10K-eval schema. The first real run silently treated `"true" == "yes"`
+# as always False, collapsing `active_labor_agreement_rate` to ~8% (chance-level agreement with
+# an always-False label, not a real measurement). These tests use the REAL vendor encoding, not
+# the "yes"/"no" shape the original (buggy) test fixtures used -- exactly the gap that let the
+# bug through unit tests in the first place.
+
+
+def test_parse_active_labor_accepts_yes_no() -> None:
+    assert _parse_active_labor("yes") is True
+    assert _parse_active_labor("no") is False
+
+
+def test_parse_active_labor_accepts_true_false() -> None:
+    assert _parse_active_labor("true") is True
+    assert _parse_active_labor("false") is False
+
+
+def test_parse_active_labor_rejects_unrecognized_value() -> None:
+    with pytest.raises(ValueError, match="unrecognized active_labor value"):
+        _parse_active_labor("Yes")  # case matters -- a real, closed mapping, not case-folded
+
+
+def test_published_labels_for_sample_100k_parses_the_real_true_false_encoding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression guard for the real D067 bug, using the REAL 100K-eval encoding
+    ("true"/"false"), not the "yes"/"no" shape that let the original bug through."""
+    jpeg_true = _real_jpeg_bytes(8, 8)
+    jpeg_false = _real_jpeg_bytes(4, 4)
+    path = tmp_path / "eval_100k.parquet"
+    _write_labelled_parquet(
+        path, [("_", jpeg_true, 2, "true"), ("_", jpeg_false, 0, "false")], with_frame_id=False
+    )
+    _patch_hf_hub_download(monkeypatch, path)
+
+    result = published_labels_for_sample("E100k-ego")
+
+    assert result == {
+        synthetic_frame_id(jpeg_true): (2, True),
+        synthetic_frame_id(jpeg_false): (0, False),
+    }
