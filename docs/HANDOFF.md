@@ -3,7 +3,14 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-04 — E2 extended to `Egocentric-100K-Evaluation`, Build AI's current
+**Last updated: 2026-09-04 — (D068) the card's own H2/Result 2 text was found actively
+contradicting D065 (still said "confirmed NOT authorized... 403" after access was granted) --
+fixed, along with the same stale claim independently duplicated in `README.md` and
+`docs/BENCHMARK.md`. `llms.txt`'s stale "nothing has run yet" status line (invisible to the
+lint, which only scanned `.md`/`Makefile`) is a third occurrence of a pattern this project has
+now hit three times -- fixed, and the lint's scan path widened again. `README.md` now states the real
+Egocentric-100K result in its Status block and a new section. Prior (D066/D067): E2 extended to
+`Egocentric-100K-Evaluation`, Build AI's current
 product (D066/D067): real access was granted (terms accepted), a real synthetic-`frame_id`
 scheme fills the gap left by the vendor's own removal of that column (F10), and three real bugs
 (a `draw_sample` dispatch gap, a revision-check repo mismatch, a pyarrow chunking limitation,
@@ -207,7 +214,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D067 |
+| Decisions | `DECISIONS.md`, D001–D068 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |

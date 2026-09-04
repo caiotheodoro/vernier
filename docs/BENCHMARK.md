@@ -110,11 +110,12 @@ instability across the three corpora.
 ## R6 — Transfer probe (E9) — dropped, `docs/DECISIONS.md` D048
 
 Matched frozen-feature probes across Egocentric-*, Ego4D and EPIC-KITCHENS-100 on the
-downstream task fixed by `SURVEY.md` would have tested this. It does not run: the raw
-Egocentric-10K corpus is inaccessible to this account (D044), EPIC-KITCHENS-100 registration
-requires an institutional email this project does not have (`SURVEY.md`), and the evaluation
-release ships no downstream-task labels at all. This is not a compute-budget gate closing --
-the inputs the probe needs do not exist for this project.
+downstream task fixed by `SURVEY.md` would have tested this. It does not run: access to the raw
+Egocentric-10K corpus is granted now (D065), but no frame-extraction adapter exists for it yet
+(the corpus turned out to be video, not stills), EPIC-KITCHENS-100 registration requires an
+institutional email this project does not have (`SURVEY.md`), and the evaluation release ships
+no downstream-task labels at all. This is not a compute-budget gate closing -- some of the
+inputs the probe needs still do not exist for this project.
 
 ## What could not be checked
 

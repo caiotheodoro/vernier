@@ -67,12 +67,14 @@ def test_unmet_claims_cover_every_still_blocked_hypothesis() -> None:
 
 
 def test_blockers_are_named_specifically() -> None:
-    # H2/Result 2's blocker is a real, checked access gap (D044), not "HF_TOKEN not configured"
-    # (it is configured).
+    # H2/Result 2's blocker is real adapter work (D065), not an access problem -- access was
+    # granted and this must say so explicitly, not still claim a 403/authorization gap.
     items = _unmet_claims()
     reasons = " ".join(i.reason for i in items)
-    assert "D044" in reasons
-    assert "NOT authorized" in reasons
+    assert "D065" in reasons
+    assert "granted" in reasons
+    assert "NOT authorized" not in reasons
+    assert "403" not in reasons
 
 
 # --- H1/H1b/H3: real claims from the full-N run (D054/D055) -----------------------------------

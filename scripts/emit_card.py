@@ -409,17 +409,21 @@ def _h6_claim() -> Claim:
 
 
 def _unmet_claims() -> list[UncheckedItem]:
-    # H2/Result 2's blocker is no longer "credentials not configured" -- HF_TOKEN *is*
-    # configured and does authenticate; the account is simply not on the gated dataset's
-    # authorized list (docs/DECISIONS.md D044), a real, checked, outstanding access gap, and
-    # the corpus turned out to be WebDataset tar shards, not a parquet -- a materially bigger
-    # adapter to build even once access exists.
+    # H2/Result 2's blocker is no longer access -- docs/DECISIONS.md D065: Caio accepted the
+    # gated-access terms, dataset_info()/hf_hub_download both succeed live now, and a real
+    # shard has been opened for the first time. The real, current blocker is that the raw
+    # corpus turned out to be h265 video (per-clip, not per-frame), not a stills parquet -- a
+    # materially bigger, structurally different adapter (real frame extraction, a new kind of
+    # dependency this project doesn't have), not sized past one shard.
     gated_corpus = (
-        "BLOCKER: requires the raw, gated Egocentric-10K corpus (S10k-U/S10k-S). HF_TOKEN is "
-        "configured and authenticates, but this account is confirmed NOT authorized for this "
-        "specific gated dataset (docs/DECISIONS.md D044, live 403 GatedRepoError) -- Caio "
-        "needs to request/confirm access, or say this arm is out of scope. The corpus is also "
-        "WebDataset tar shards, not a parquet -- its real adapter is unwired regardless"
+        "BLOCKER: requires a real S10k-U/S10k-S adapter over the raw Egocentric-10K corpus. "
+        "Access is granted (docs/DECISIONS.md D065, terms accepted) -- this is no longer an "
+        "access problem. D065's real, live inspection of one shard (out of 19,495) found the "
+        "corpus is h265 video, not stills: two ~7-minute clips per shard, with per-clip "
+        "metadata only (worker_id, factory_id, duration_sec, fps) and no per-frame timestamp "
+        "or frame_index. The real adapter needs video-frame extraction, a kind of dependency "
+        "this project does not have yet, and its scope is not sized past that one shard -- "
+        "Caio needs to decide whether to fund building it, not request access"
     )
     # H4/H5 (D059), H7 (D060), and H6 (D061) are now all real, checked Claims -- Wave 3's human
     # labels, scripts/judge_gold_sets.py's live-judge run, and scripts/distill_rung1.py (a
@@ -463,10 +467,15 @@ def main() -> int:
             "sets (200 each) are also fully live-judged (D059, scripts/judge_gold_sets.py); "
             "Wave 3's real human gold (93 primary / 34-overlap retest, D057/D058) is matched "
             "against them for the intra-rater/H4/H5/PPI claims above. R100 needed no separate "
-            "judge run -- it is a subset of the G200-* union. S10k-U/S10k-S are not drawn: the "
-            "raw Egocentric-10K corpus this account has confirmed access to read metadata for "
-            "but not download (docs/DECISIONS.md D044). H8 needs no sample at all -- public "
-            "participant counts only."
+            "judge run -- it is a subset of the G200-* union. E100k-ego (N=10,000, both P0a/"
+            "P0b) is also fully live-judged, against Build AI's CURRENT-PRODUCT evaluation "
+            "release, Egocentric-100K-Evaluation, not the superseded 10K one -- a disclosed, "
+            "non-pre-registered additional check (docs/DECISIONS.md D066/D067), not a re-run "
+            "of H1. S10k-U/S10k-S are still not drawn: access to the raw Egocentric-10K corpus "
+            "is granted (D065), and one real shard has been opened (confirmed h265 video, not "
+            "stills), but the real frame-extraction adapter is not built -- a materially "
+            "bigger task than the evaluation-parquet adapter, not yet sized past one shard. "
+            "H8 needs no sample at all -- public participant counts only."
         ),
         rubric_rev="1.2.0",
         judge_revisions={},

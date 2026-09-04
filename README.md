@@ -42,9 +42,13 @@ vernier measures the judge, then replaces it with something re-runnable.
 > pre-registered 600/100 per D057/D058) and committed as data. A rung-1 instrument (DINOv2
 > features + linear probe + abstention cascade) has been trained and evaluated for real
 > (D061) -- it does not clear its pre-registered target, and that negative result is reported,
-> not hidden. `MEASUREMENT_CARD.json` is real and regenerable via `make card`; see
-> `docs/HANDOFF.md` for exactly what remains (H2 and Result 2, both blocked on gated corpus
-> access).
+> not hidden. The comparison has also been run against Build AI's **current** product,
+> `Egocentric-100K-Evaluation`, not just the superseded `10K` release above — the same 2-hands
+> gap reproduces there too: observed 85.19% vs. their own published 79.05%, a 6.1pp miss, at a
+> real cost of $9.06 (`docs/DECISIONS.md` D066/D067). `MEASUREMENT_CARD.json` is real and
+> regenerable via `make card`; see `docs/HANDOFF.md` for exactly what remains (H2 and Result 2
+> — no longer blocked on access, which is granted, but on a real, unscoped video-frame-
+> extraction adapter for the raw corpus, `docs/DECISIONS.md` D065).
 >
 > What *has* happened is a close read of the published artifacts, which corrected several of
 > this repository's own earlier claims. Those corrections are in `docs/UPSTREAM-FINDINGS.md`,
@@ -85,10 +89,11 @@ egocentric factory data is a general learning framework. The corpus draws 164,86
 30 days against 203 for the evaluation set that justifies it, and the publishing org has zero
 public models. Matched-size frozen-feature probes across Egocentric-*, Ego4D and
 EPIC-KITCHENS-100 on a common downstream task would have tested that thesis publicly for the
-first time. It does not run: the raw Egocentric-10K corpus is inaccessible to this account
-(D044), EPIC-KITCHENS-100 registration requires an institutional email this project does not
-have (`SURVEY.md`), and the evaluation release ships no downstream-task labels at all to probe
-against. Result 1 ships alone.
+first time. It does not run: access to the raw Egocentric-10K corpus is granted now (D065), but
+no frame-extraction adapter exists for it yet (the corpus turned out to be video, not stills --
+a real, unscoped engineering task), EPIC-KITCHENS-100 registration requires an institutional
+email this project does not have (`SURVEY.md`), and the evaluation release ships no
+downstream-task labels at all to probe against. Result 1 ships alone.
 
 ## Two things found before any experiment ran
 
@@ -105,6 +110,22 @@ understates the true width by the design effect. vernier's pre-registration ther
 a **cluster bootstrap over worker ID**, not over frames, and publishes the design effect as
 a result in its own right — because the correct comparison between two datasets depends on
 it and the published claim has no interval at all.
+
+## What running it found
+
+A disclosed, non-pre-registered extension, not a re-run of the pre-registered H1 above (which
+is reported unchanged, on the original `Egocentric-10K-Evaluation` release):
+**the same comparison, run against Build AI's current product,** `Egocentric-100K-Evaluation`.
+
+| Figure | Observed | Published | Diff | Within ±2pp |
+|---|---|---|---|---|
+| ≥1 hand | 96.09% | 96.95% | 0.86pp | yes |
+| 2 hands | 85.19% | 79.05% | 6.14pp | **no** |
+| Active manipulation | 92.14% | 92.76% | 0.62pp | yes |
+
+**2 of 3 within tolerance, 2-hands the outlier — the identical pattern found on their
+superseded release.** The two prompt variants don't disagree with each other (0.40pp, well
+under the 1pp threshold). Real cost: $9.06. `docs/DECISIONS.md` D066/D067.
 
 ## Who this is for
 

@@ -2067,3 +2067,49 @@ wrong value for a real measurement.
 
 **Reverses if:** a future re-run of `E100k-ego` (for any other reason) is a real opportunity to
 also backfill a corrected `active_labor_agreement_rate` for free, using the now-fixed parser.
+
+## D068 — Card's own H2/Result 2 text corrected; `llms.txt` lint gap closed; README gets the 100K result
+
+A third external review found the primary deliverable had drifted from its own decision log:
+`MEASUREMENT_CARD.json`'s H2/Result 2 blocker text (`scripts/emit_card.py`'s `_unmet_claims`)
+still said "confirmed NOT authorized... 403 GatedRepoError (D044)" after D065 already granted
+access and opened a real shard -- the card was actively contradicting `DECISIONS.md`, not just
+stale. It also found a third occurrence of the "documentation only, nothing has run" pattern
+(`llms.txt`, invisible to `check_stale_prose.py` since it only scanned `.md` files plus, as of
+D064, `Makefile`), and that `README.md` never mentioned the real Egocentric-100K result at all.
+
+**`emit_card.py` fix**: `_unmet_claims`'s `gated_corpus` text rewritten to D065's real, current
+blocker -- access is granted; the real gap is that the raw corpus turned out to be h265 video
+with only per-clip metadata (no per-frame timestamp/index), a materially bigger, structurally
+different adapter than a stills-parquet port, not sized past one shard. `main()`'s
+`sample_definition` string got the same correction, plus a real omission fixed in the same
+edit: it never mentioned `E100k-ego` at all despite it being fully drawn and live-judged.
+Regenerated `MEASUREMENT_CARD.json`: 17 claims, **verdict unchanged, `NOT_VERIFIED`** (a
+text-only fix; no computed result changed). `tests/test_emit_card.py`'s
+`test_blockers_are_named_specifically` updated to assert the real D065 language and explicitly
+assert the old "NOT authorized"/"403" text is gone, not just present-with-extra-text.
+
+**`llms.txt` fix**: added to `check_stale_prose.py`'s `find_stale_prose` scan paths, same
+pattern as D064's `Makefile` addition (the literal "documentation only" pattern was already in
+`_STALE_PATTERNS`; this was purely a scan-scope gap). Verified live: scanning pre-fix `llms.txt`
+newly fails, confirming the scope fix actually catches what it's meant to. Rewrote `llms.txt`'s
+stale status line to match the real current state. New regression tests
+(`test_llms_txt_is_scanned...`, `test_makefile_is_scanned...`) lock in both scan-path additions
+so neither can silently regress again.
+
+**README.md fixes**: added the real Egocentric-100K result to the Status block (one sentence,
+matching D067's real numbers). Added a new section, `## What running it found`, placed
+immediately after "Two things found before any experiment ran" rather than folded into it --
+that section's own title and scope are specifically about pre-experiment findings, and the
+100K comparison is a real experimental result, not a pre-experiment one; misdating it into that
+section would be the same kind of misrepresentation this project's own ethos argues against.
+Also found and fixed the same stale D044 reference independently duplicated in the "Result 2"
+paragraph (`README.md`) and in `docs/BENCHMARK.md`'s R6 section -- both corrected the same way.
+`docs/PRE-REGISTRATION.md`'s own D044/D048 pointer (in its explicitly frozen "not rewritten
+after the fact" amendments section) and `docs/REVIEW.md` (an `_EXEMPT_FILES` historical record)
+are deliberately left untouched -- both are working exactly as designed, not stale.
+
+**Reverses if:** a future review finds another file independently duplicating the pre-D065
+access-blocker language this round already corrected in `emit_card.py`, `README.md`, and
+`docs/BENCHMARK.md` -- check `docs/PRE-REGISTRATION.md`'s and `docs/REVIEW.md`'s exemption
+reasoning still holds before assuming those need the same fix.

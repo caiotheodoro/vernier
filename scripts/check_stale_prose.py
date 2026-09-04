@@ -52,13 +52,15 @@ _EXEMPT_FILES = {
 
 
 def find_stale_prose(repo_root: Path) -> dict[str, list[tuple[int, str]]]:
-    """Scan every tracked `.md` file under `repo_root`, plus `Makefile` (which is not `.md` and
-    was previously invisible to this scan even though its own header comment tripped
-    "documentation-only" -- a real scope gap, not a pattern gap), excluding `_EXEMPT_FILES` and
-    anything under `docs/private/`, `docs/upstream/`, for `_STALE_PATTERNS`. Returns
-    `{relative_path: [(line_number, pattern), ...]}` for every file with a hit."""
+    """Scan every tracked `.md` file under `repo_root`, plus `Makefile` and `llms.txt` (neither
+    is `.md`, and both were previously invisible to this scan even though `llms.txt` carried
+    the literal "documentation only" claim, undetected until a scorecard review found it by
+    hand -- the same scope gap D064 already fixed once for `Makefile`), excluding
+    `_EXEMPT_FILES` and anything under `docs/private/`, `docs/upstream/`, for
+    `_STALE_PATTERNS`. Returns `{relative_path: [(line_number, pattern), ...]}` for every file
+    with a hit."""
     hits: dict[str, list[tuple[int, str]]] = {}
-    paths = sorted(repo_root.rglob("*.md")) + [repo_root / "Makefile"]
+    paths = sorted(repo_root.rglob("*.md")) + [repo_root / "Makefile", repo_root / "llms.txt"]
     for path in paths:
         if not path.is_file():
             continue

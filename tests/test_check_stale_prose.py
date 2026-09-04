@@ -61,6 +61,25 @@ def test_reports_multiple_hits_in_one_file_with_correct_line_numbers(tmp_path: P
     }
 
 
+def test_llms_txt_is_scanned_even_though_it_is_not_markdown(tmp_path: Path) -> None:
+    # Regression guard: llms.txt carried a real "documentation only" claim, invisible to this
+    # scan until a scorecard review found it by hand -- the same scope gap D064 already fixed
+    # once for Makefile.
+    (tmp_path / "llms.txt").write_text("Status: documentation only.\n")
+
+    hits = find_stale_prose(tmp_path)
+
+    assert hits == {"llms.txt": [(1, "documentation only")]}
+
+
+def test_makefile_is_scanned_even_though_it_is_not_markdown(tmp_path: Path) -> None:
+    (tmp_path / "Makefile").write_text("# this repository is documentation only for now\n")
+
+    hits = find_stale_prose(tmp_path)
+
+    assert hits == {"Makefile": [(1, "documentation only")]}
+
+
 def test_gemini_2_5_flash_alone_is_not_flagged(tmp_path: Path) -> None:
     # Deliberate deviation from docs/REVIEW.md R10's literal pattern list -- see module
     # docstring: a bare model-name match would false-positive on legitimate current text.
