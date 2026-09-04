@@ -25,9 +25,19 @@
 # non-comparable to the committed E2 runs, which is the whole reason D053 pinned sampling.
 #
 # Usage (from the laptop):
-#   bash cloud/aws_qwen3vl.sh launch     # create the instance, wait for the server to answer
-#   bash cloud/aws_qwen3vl.sh ssh        # shell in
-#   bash cloud/aws_qwen3vl.sh terminate  # DELETE IT. An idle g6.2xlarge is ~$23/day.
+#   bash cloud/aws_qwen3vl.sh launch      # create the instance (walks AZs; MARKET=spot allowed)
+#   bash cloud/aws_qwen3vl.sh bootstrap   # ffmpeg + python 3.12 + repo + manifest + membership
+#   bash cloud/aws_qwen3vl.sh ssh         # print the ssh command (with a tunnel to vLLM)
+#   bash cloud/aws_qwen3vl.sh terminate   # DELETE IT. An idle g6e.2xlarge is ~$50/day.
+#
+# `bootstrap` exists because two things about the Deep Learning AMI are not obvious and both
+# stop the run dead: its ffmpeg is 4.4.2 (fine -- `subfile` and hevc are both present, checked)
+# but its Python is 3.10, and this project requires >=3.11. Rather than relax the project's
+# floor for a deployment convenience, it installs a standalone 3.12 with `uv`.
+#
+# Frame extraction turns out to be CPU-bound on the box, not network-bound: at 32 workers the
+# n=200 probe ran 5.5 of 8 cores busy for 1.47 frames/s. That is the argument for a bigger
+# instance if capacity ever allows one, not for more workers.
 set -euo pipefail
 
 REGION="${REGION:-us-east-1}"
@@ -131,11 +141,30 @@ case "${1:-}" in
           --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
     echo "ssh -L ${VLLM_PORT}:127.0.0.1:${VLLM_PORT} ubuntu@$IP"
     ;;
+  bootstrap)
+    IP=$(aws ec2 describe-instances --region "$REGION" --instance-ids "$(require_instance)" \
+          --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+    SSH=(ssh -i "$HOME/.ssh/${KEY_NAME}.pem" -o StrictHostKeyChecking=no \
+         -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "ubuntu@${IP}")
+    echo "bootstrapping ${IP} ..."
+    "${SSH[@]}" 'sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg'
+    # Tracked files only; data/ is gitignored and shipped explicitly below.
+    git ls-files | tar -czf - -T - | "${SSH[@]}" 'mkdir -p vernier && tar -xzf - -C vernier'
+    tar -czf - data/corpus_manifest_10k.jsonl data/membership/S10k-U.json data/membership/S10k-S.json \
+      | "${SSH[@]}" 'tar -xzf - -C vernier'
+    "${SSH[@]}" 'curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1
+                 export PATH="$HOME/.local/bin:$PATH"
+                 cd vernier && uv venv --python 3.12 .venv >/dev/null 2>&1
+                 uv pip install -q --python .venv/bin/python -e ".[judges,stats,data]"
+                 .venv/bin/python -c "import vernier; print(\"bootstrap ok\")"'
+    echo "now write ~/vernier/.envrc on the box with HF_TOKEN and"
+    echo "QWEN3VL_BASE_URL=http://127.0.0.1:8000 (chmod 600), then run scripts/h2_design_effect.py"
+    ;;
   terminate)
     ID="$(require_instance)"
     aws ec2 terminate-instances --region "$REGION" --instance-ids "$ID" \
       --query 'TerminatingInstances[0].{id:InstanceId,state:CurrentState.Name}' --output json
     ;;
   *)
-    echo "usage: $0 {launch|status|ssh|terminate}" >&2; exit 2 ;;
+    echo "usage: $0 {launch|bootstrap|status|ssh|terminate}" >&2; exit 2 ;;
 esac
