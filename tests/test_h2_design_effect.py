@@ -21,6 +21,7 @@ from h2_design_effect import (  # noqa: E402
     HEADLINE_TASKS,
     cluster_size_summary,
     design_effects,
+    extraction_failure,
     outcomes_from_responses,
 )
 from vernier.models import Confidence, JudgeResponse  # noqa: E402
@@ -151,3 +152,44 @@ def test_cluster_size_summary_reports_the_spread_not_just_the_mean() -> None:
     assert summary["mean_cluster_size"] == pytest.approx(8 / 3)
     assert summary["max_cluster_size"] == 5
     assert summary["min_cluster_size"] == 1
+
+
+def test_an_unextractable_frame_becomes_a_recorded_error_not_a_crash() -> None:
+    """Regression for a real failure, not a hypothetical one: a clip whose sidecar declares
+    180.0s but whose video holds 159.2s produced `RuntimeError: ffmpeg produced no frame`, and
+    that single frame killed a 100-frame parallel run outright. At 20,000 frames it would have
+    killed the run hours in.
+
+    `CONTRACTS.md` rule 2: record the absence with its reason and exclude it, the same handling
+    a refusal gets. The reason is kept verbatim so the cause stays diagnosable from the jsonl.
+    """
+    from vernier.models import FrameRef
+
+    frame = FrameRef(
+        frame_id="ego10k/factory072_worker050_00006/00005393",
+        corpus="egocentric-10k-raw",
+        corpus_rev="abc",
+        factory_id="factory_072",
+        worker_id="factory_072/worker_050",
+        clip_id="factory072_worker050_00006",
+        frame_index=5393,
+        timestamp_s=179.767,
+        width=1920,
+        height=1080,
+        fps=30.0,
+        codec="h265",
+        sample="S10k-U",
+        stratum="unstratified",
+        why_no_provenance=None,
+    )
+
+    response = extraction_failure(frame, RuntimeError("ffmpeg produced no frame"))
+
+    assert response.status == "error"
+    assert response.hands_visible is None and response.manipulation is None
+    assert "ffmpeg produced no frame" in response.raw
+    assert response.judge_rev == "extraction-failed"
+    # And it must not reach any denominator.
+    outcomes, kept = outcomes_from_responses([response])
+    assert kept == []
+    assert outcomes["hand_ge1"] == []

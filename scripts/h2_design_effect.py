@@ -30,7 +30,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +42,7 @@ from vernier.estimation.bootstrap import (
     cluster_bootstrap_ci,
     design_effect,
 )
-from vernier.models import FrameRef, JudgeResponse
+from vernier.models import Confidence, FrameRef, JudgeResponse
 
 # The three published headline figures, in the same shape `scripts/e2_replication.py` uses so
 # the two runners cannot silently disagree about what "the 2-hands figure" means.
@@ -138,14 +140,65 @@ def design_effects(
     return results
 
 
+def extraction_failure(frame: FrameRef, exc: BaseException) -> JudgeResponse:
+    """A frame that could not be decoded, recorded rather than dropped or fatal.
+
+    Two real causes, both measured, neither a bug in this code:
+
+    * Clip sidecars declare a `duration_sec` a fraction of a second longer than the video
+      actually runs -- 48 randomly probed clips agreed to within 0.1%, but "within 0.1%" of
+      180s is still ~0.2s of declared-but-absent frames at every clip's end.
+    * A small minority of clips are materially shorter than declared. The first one found
+      (`factory072_worker050_00006`) claims 180.0s and holds 159.2s, 4,777 frames against a
+      declared 5,400.
+
+    Letting one of these end the run was the actual defect: it killed a 100-frame parallel run
+    outright, and would have killed a 20,000-frame one hours in. `CONTRACTS.md` rule 2 already
+    says what to do instead -- record the absence with its reason and exclude it from the
+    denominator, exactly as a refusal or a timeout is handled.
+
+    The residual bias is disclosed rather than corrected: frames near a clip's end are slightly
+    more likely to be dropped than frames elsewhere. At ~0.1% of each clip's range this cannot
+    move a design effect, but it is a real, non-uniform exclusion and is reported as one.
+    """
+    return JudgeResponse(
+        frame_id=frame.frame_id,
+        judge="qwen3-vl-8b-instruct-fp8",
+        judge_rev="extraction-failed",
+        prompt_variant="P0a",
+        hands_visible=None,
+        manipulation=None,
+        confidence=Confidence(kind="none", value=None),
+        raw=f"{type(exc).__name__}: {exc}"[:2000],
+        status="error",
+        latency_ms=0,
+        cost_usd=0.0,
+    )
+
+
 def _judge_all(
-    frames: list[FrameRef], responses_path: Path, checkpoint_every: int = 25
+    frames: list[FrameRef],
+    responses_path: Path,
+    checkpoint_every: int = 25,
+    max_workers: int = 16,
 ) -> list[JudgeResponse]:
     """Judge every frame under `P0a`, appending each response as it lands.
 
     Resumable by the same reasoning as D069: the run is hours long and the frames it judges
     each cost a real video decode as well as a real judge call, so losing the lot to an
     interruption means re-spending both.
+
+    **Concurrent, unlike `e2_replication.py`, and for a measured reason.** `docs/HANDOFF.md`
+    records client-side concurrency *hurting* there -- 0.47 f/s sequential against 0.26 at 8
+    workers -- but that was a property of the single-container Modal deployment with
+    scale-to-zero, not of vLLM. Two things differ here. The judge is a dedicated server whose
+    continuous batching wants concurrent requests. And the real bottleneck is not the judge at
+    all: the n=20 smoke measured 1.2 s of judge latency against 5.2 s of frame extraction per
+    frame, and extraction is an ffmpeg range-read of HF's CDN, which is network-bound and
+    parallelises cleanly. Serial, 20,000 frames would take ~35 hours.
+
+    `judge_frame` performs the extraction internally (via `image_bytes_for`), so one pool
+    covers both stages.
     """
     from judge_responses_io import append_response, read_responses
 
@@ -159,21 +212,35 @@ def _judge_all(
     judge = Qwen3VLJudge()
     started = time.time()
     pending = [f for f in frames if f.frame_id not in done]
-    # Appended open, flushed per line by `append_response`: a crash loses at most the call in
-    # flight, and every frame here cost a real video decode as well as a real judge call.
+    lock = threading.Lock()
+    counter = {"n": 0}
+
+    # Appended open, flushed per line by `append_response` under the lock: a crash loses at
+    # most the calls in flight, and every frame cost a real video decode as well as a real
+    # judge call.
     with responses_path.open("a") as handle:
-        for i, frame in enumerate(pending, start=1):
-            response = judge.judge_frame(frame, "P0a")
-            append_response(handle, response)
-            responses.append(response)
-            if i % checkpoint_every != 0:
-                continue
-            rate = i / max(time.time() - started, 1e-9)
-            print(
-                f"  {i}/{len(pending)} judged, {rate:.2f} frames/s, "
-                f"~{(len(pending) - i) / max(rate, 1e-9) / 60:.0f} min left",
-                flush=True,
-            )
+
+        def run_one(frame: FrameRef) -> JudgeResponse:
+            try:
+                response = judge.judge_frame(frame, "P0a")
+            except Exception as exc:  # noqa: BLE001
+                response = extraction_failure(frame, exc)
+            with lock:
+                append_response(handle, response)
+                responses.append(response)
+                counter["n"] += 1
+                n = counter["n"]
+                if n % checkpoint_every == 0:
+                    rate = n / max(time.time() - started, 1e-9)
+                    print(
+                        f"  {n}/{len(pending)} judged, {rate:.2f} frames/s, "
+                        f"~{(len(pending) - n) / max(rate, 1e-9) / 60:.0f} min left",
+                        flush=True,
+                    )
+            return response
+
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            list(pool.map(run_one, pending))
     return responses
 
 
@@ -190,6 +257,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--out", type=Path, default=Path("data/h2_design_effect.json"))
     parser.add_argument("--B", type=int, default=CLUSTER_BOOTSTRAP_B)
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=16,
+        help="concurrent extract+judge workers. Frame extraction, not the judge, is the "
+        "bottleneck (smoke: 5.2s vs 1.2s per frame) and it is network-bound.",
+    )
     args = parser.parse_args(argv)
 
     from vernier.sampling.draw import draw_sample
@@ -200,7 +274,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     responses_path = args.out.with_suffix(f".{args.sample}.responses.jsonl")
-    responses = _judge_all(frames, responses_path)
+    responses = _judge_all(frames, responses_path, max_workers=args.max_workers)
 
     outcomes, kept = outcomes_from_responses(responses)
     # Cluster ids are aligned to `kept`, not to `frames`: a refused response drops its frame
@@ -214,6 +288,14 @@ def main(argv: list[str] | None = None) -> int:
         "n_frames_drawn": len(frames),
         "n_responses": len(responses),
         "n_ok": len(kept),
+        # Absence is explicit (CONTRACTS.md rule 2): a frame whose video could not be decoded
+        # is excluded from every denominator here, with its reason kept verbatim in the jsonl.
+        "n_extraction_failed": sum(
+            1 for r in responses if r.judge_rev == "extraction-failed"
+        ),
+        "n_excluded_other": sum(
+            1 for r in responses if r.status != "ok" and r.judge_rev != "extraction-failed"
+        ),
         "B": args.B,
         "seed": CLUSTER_BOOTSTRAP_SEED,
         "cluster_by": "worker_id",
