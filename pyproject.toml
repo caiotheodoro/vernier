@@ -21,7 +21,10 @@ judges = [
     # OpenAI-compatible server mode (Modal, then AWS) -- the `openai` client works against any
     # OpenAI-compatible endpoint via `base_url`, so no vLLM- or Modal-specific SDK is needed
     # here. Gemini/Claude (google-genai/anthropic) are retired per D042.
-    "openai>=1.0",
+    # Pinned below 3: openai 3.x swapped `httpx` for a vendored `httpx2`, which breaks the
+    # real-exception-type tests in tests/test_judges_qwen3vl.py under mypy (caught by CI, not
+    # locally -- every real judge call in data/ ran on 2.x). Lifting the pin is a real re-run.
+    "openai>=1.0,<3",
 ]
 data = [
     "pyarrow>=17",
