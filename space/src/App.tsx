@@ -83,10 +83,11 @@ function Loaded({ stats, frames, state, rowsStatus, setRowsStatus, gridRef, scro
           </p>
         </header>
 
-        {rowsStatus === "down" ? (
+        {rowsStatus === "slow" || rowsStatus === "down" ? (
           <p className="notice">
-            Frames are loading from Hugging Face's dataset server and it did not answer. Labels and statistics still
-            work.
+            {rowsStatus === "slow"
+              ? "Hugging Face's dataset server is rate-limiting this page, so frames arrive slowly. Labels and statistics are already here."
+              : "Frames are loading from Hugging Face's dataset server and it did not answer. Labels and statistics still work."}
           </p>
         ) : null}
 

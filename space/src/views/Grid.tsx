@@ -114,7 +114,7 @@ export function Grid({ frames, stats, state, rows, onStatus }: Props): JSX.Eleme
 
     const firstRow = Math.max(0, Math.floor((viewTop - tileH) / (tileH + GAP)));
     const lastRow = Math.min(rowsCount - 1, Math.ceil((viewTop + viewH) / (tileH + GAP)));
-    const prefetchLast = Math.min(rowsCount - 1, lastRow + Math.ceil(viewH / (tileH + GAP)));
+    const prefetchLast = lastRow;  // no look-ahead: each tile costs its own request (see rows.ts)
 
     if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(totalH * dpr)) {
       canvas.width = Math.round(width * dpr);
@@ -197,7 +197,7 @@ export function Grid({ frames, stats, state, rows, onStatus }: Props): JSX.Eleme
       }
     }
 
-    images.prefetchRows([...visibleRows, ...aheadRows]);
+    images.prefetchRows(visibleRows);
   }, [frames, images, width, tileW, tileH, cols, rowsCount, totalH, state.task, state.src, state.f, scrollY]);
 
   const onClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {

@@ -14,8 +14,14 @@ type RowsResponse = {
 };
 
 const MAX_WINDOW = 100;
-const MAX_ROWS_IN_FLIGHT = 3;
-const MAX_DECODES_IN_FLIGHT = 6;
+// The 600 gold frames are scattered across 30,000 rows, so a "window" is usually one row and
+// a screenful of tiles is a screenful of requests. The dataset server rate-limits anonymous
+// callers (429) well before that finishes, which is why these numbers are small and why 429 is
+// handled as backoff-and-retry rather than as failure: a slower fill is fine, blank tiles are
+// not.
+const MAX_ROWS_IN_FLIGHT = 2;
+const MAX_DECODES_IN_FLIGHT = 4;
+const BACKOFF_MS = [1_000, 3_000, 8_000, 20_000];
 
 class Semaphore {
   private active = 0;
@@ -36,7 +42,7 @@ class Semaphore {
   }
 }
 
-export type RowsStatus = "idle" | "ok" | "down";
+export type RowsStatus = "idle" | "ok" | "slow" | "down";
 
 export class RowsClient {
   private readonly cache = new Map<number, RowInfo>();
@@ -100,21 +106,40 @@ export class RowsClient {
     return `https://datasets-server.huggingface.co/rows?${p.toString()}`;
   }
 
+  /** Set while the server is rate-limiting us; every caller waits it out rather than piling on. */
+  private pausedUntil = 0;
+
+  private async waitOutBackoff(): Promise<void> {
+    const wait = this.pausedUntil - Date.now();
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  }
+
   private async fetchWindow(offset: number, length: number): Promise<void> {
     await this.gate.acquire();
     try {
-      const res = await fetch(this.url(offset, length), { headers: { accept: "application/json" } });
-      if (!res.ok) throw new Error(`rows HTTP ${res.status}`);
-      const body = (await res.json()) as RowsResponse;
-      for (const entry of body.rows) {
-        this.cache.set(entry.row_idx, {
-          src: entry.row.image.src,
-          width: entry.row.image.width,
-          height: entry.row.image.height,
-          frameId: entry.row.frame_id,
-        });
+      for (let attempt = 0; ; attempt += 1) {
+        await this.waitOutBackoff();
+        const res = await fetch(this.url(offset, length), { headers: { accept: "application/json" } });
+        if (res.status === 429 || res.status === 503) {
+          const delay = BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)] ?? 20_000;
+          this.pausedUntil = Math.max(this.pausedUntil, Date.now() + delay);
+          this.setStatus("slow");
+          if (attempt >= BACKOFF_MS.length) throw new Error(`rows HTTP ${res.status}, gave up`);
+          continue;
+        }
+        if (!res.ok) throw new Error(`rows HTTP ${res.status}`);
+        const body = (await res.json()) as RowsResponse;
+        for (const entry of body.rows) {
+          this.cache.set(entry.row_idx, {
+            src: entry.row.image.src,
+            width: entry.row.image.width,
+            height: entry.row.image.height,
+            frameId: entry.row.frame_id,
+          });
+        }
+        this.setStatus("ok");
+        return;
       }
-      this.setStatus("ok");
     } catch (err) {
       this.setStatus("down");
       throw err;
@@ -226,7 +251,10 @@ export class ImageCache {
     const res = await fetch(info.src, { mode: "cors" });
     if (res.status >= 400 && res.status < 500) return "expired";
     if (!res.ok) throw new Error(`image HTTP ${res.status}`);
-    const blob = await res.blob();
+    const raw = await res.blob();
+    // The dataset server serves cached assets as `binary/octet-stream`; `createImageBitmap`
+    // refuses a blob whose type it cannot decode from, so re-tag the bytes before decoding.
+    const blob = raw.type.startsWith("image/") ? raw : new Blob([await raw.arrayBuffer()], { type: "image/jpeg" });
     const width = Math.max(64, Math.round(this.tileWidth() * Math.min(2, window.devicePixelRatio || 1)));
     return createImageBitmap(blob, { resizeWidth: Math.min(width, info.width), resizeQuality: "medium" });
   }
