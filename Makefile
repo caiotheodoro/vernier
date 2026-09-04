@@ -7,7 +7,7 @@
 # `agreement` -- see that target's recipe. `docs/DECISIONS.md` D064 removed the standalone
 # stub, since its own help text promised a design-effect column this repo's non-clustered PPI
 # path (D039) cannot structurally supply, not just an unwired one.)
-.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model \
+.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model space space-data \
         domain-bias distil calibrate probe card validate privacy-gate \
         test typecheck fixtures check-eval-parquets install-hooks
 
@@ -51,6 +51,12 @@ probe:         ## Result 2: transfer probe. Kill-gated -- see docs/METHOD.md.
 	$(NOT_YET)
 card:          ## Emit the measurement card, including "what could not be checked".
 	python3 scripts/emit_card.py
+
+space-data:    ## Build the Space's precomputed JSON (space/public/data/) from committed data/.
+	python3 scripts/export_space_data.py
+
+space:         ## Build the static Space into space/dist/ (needs node; run space-data first).
+	cd space && npm ci && npm run build
 
 test:          ## Wave 0: run the pytest suite (contract records + fixture generator).
 	python3 -m pytest
