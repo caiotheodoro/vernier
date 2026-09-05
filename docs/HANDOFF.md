@@ -3,7 +3,126 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-04 — (D071/D072) H2 is measured and closed.** The raw-corpus adapter
+**Last updated: 2026-09-05 — delivery is current on every surface; what is left is
+publication.** Main is green (a `constraints.txt` lock pins CI's install; the Space's stats
+snapshot no longer fails on a test count or a float ulp). `MEASUREMENT_CARD.json`
+carries 18 claims and one unmet item (Result 2), verdict `NOT_VERIFIED`; the Hub dataset,
+the Hub model and the Space all serve that exact card (digest `3aacbe46…`), and the dataset's
+`results/` now ships both `h2_design_effect` files the H2 claim cites. D074 is the independent
+review of D071/D072 `WAVES.md` required: the verdict stands, every number reproduced from the
+response records, and the pre-registration turned out to state H2's threshold two ways (design
+effect ≥ 2, and "twice the width", which is 4 under its own definition; the result clears
+neither). D075 opened a third, salted, blind labelling pass over the 18 rater/judge
+disagreements plus an equal control arm; it is a separate `review` pass and **feeds no published
+number** — folding it needs its own entry with before and after. Two sessions wrote a D074
+within minutes of each other on 2026-09-05; the later one is now D075. That will recur while two
+sessions share one append-only file: check `grep -c '^## D0' docs/DECISIONS.md` against the
+last number before appending.
+
+**Still open, in order:** publication (the section below); the D075 fold decision, once the
+review pass is complete and `scripts/review_labels_cli.py report` says whether the controls
+moved; a second rater on `G200-ego` (`RED-TEAM.md` A1, still the first weakness on the front
+page, ~35 minutes of someone else's time); `judge_weights_rev` recorded into the result JSON on
+the next real judge run (D074 finding 4); `REVIEW.md` R2, the pseudo-cluster proxy on Build AI's
+own frames, now calibratable against real `worker_id`s (`RED-TEAM.md` A13); Result 2, blocked
+on two reasons the adapter did not touch.
+
+## Next session: publication
+
+Three steps. One is the critical path, one follows it, one runs beside it. `docs/private/`
+holds the outreach sequence and the email draft; it is gitignored and is never quoted here or in
+anything public (`AGENTS.md` rule 5).
+
+### Gate, before anything goes public
+
+Run all of it; publish only if every line is clean.
+
+```
+git status --short && git rev-list --left-right --count origin/main...main   # clean, 0 0
+gh run list --limit 1                                                          # ✓ on main
+make validate                                                                  # tests, mypy, lint
+make card && git diff --exit-code MEASUREMENT_CARD.json                        # committed card == fresh
+python3 -c "import json;print(json.load(open('MEASUREMENT_CARD.json'))['content_digest'])"
+python3 -c "import json;print(json.load(open('space/public/data/stats.json'))['generated_from']['card_digest'])"
+curl -sL https://caiotheodoro-vernier.static.hf.space/data/stats.json | python3 -c "import sys,json;print(json.load(sys.stdin)['generated_from']['card_digest'])"
+curl -sL https://huggingface.co/datasets/caiotheodoro/vernier/raw/main/MEASUREMENT_CARD.json | python3 -c "import sys,json;print(json.load(sys.stdin)['content_digest'])"
+```
+
+The four digests must be identical. The digest does not see UI-only changes, so also compare
+`git log -1 --format='%h %ci' -- space/` with the Space repo's `lastModified`
+(`curl -s https://huggingface.co/api/spaces/caiotheodoro/vernier`); as of this header the last
+Space commit (f5ef78a, 23:31 local) is four minutes newer than the last upload. If either is
+behind, `make space-data && make space`
+then `hf upload caiotheodoro/vernier space/dist . --type space`; if the dataset's is behind,
+`make hf-dataset` then `hf upload caiotheodoro/vernier hf/dataset . --type dataset` (both need
+`HF_TOKEN` from `.env`; `hf` is the 1.30 CLI at `~/.local/bin/hf`). If the other session has
+folded D075 into the primary labels in the meantime, every number downstream moves: run
+`make agreement`, `make distil`, `make card`, `make space-data`, republish, and only then
+continue — a writeup that cites numbers a later commit restates is the exact failure this
+project audits in its subject.
+
+Then the writeup's own rule: every figure in `docs/WRITEUP.md` is copied from the card or a
+`data/*.json` file, and the card wins on disagreement. Check the ones that have moved most
+recently by hand: the H2 table (1.25 / 1.62 / 1.27 and 1.31 / 1.66 / 1.29), the 2,144-vs-2,153
+worker count, the decision range (D001–D075), and the two cost figures ($17.63 from the two E2
+result files; ~$7.50 from D072, the one number in the writeup that cites a decision rather than a
+data file, because no result file carries it).
+
+### 1. The writeup, as a Hugging Face community article — critical path
+
+There is no CLI for this; it is the web editor at https://huggingface.co/new-blog, published
+under `caiotheodoro`. Body is `docs/WRITEUP.md` with two edits: drop the italic *"Draft for the
+Hugging Face community blog"* paragraph at the top (keep the sentence about where the numbers
+come from, reworded as a statement, not a draft note), and turn the bare repository paths
+(`docs/PRE-REGISTRATION.md`, `data/e2_full_n10000.json#H1`, …) into links to
+https://github.com/caiotheodoro/vernier at `main`, since on the Hub they resolve to nothing. The
+H1 title is the article title. Tags: `egocentric`, `dataset-audit`, `llm-as-judge`,
+`evaluation`, `build-ai`. Link the collection
+(https://huggingface.co/collections/caiotheodoro/vernier-same-judge-same-6pp-on-2-hands-both-releases-6a9b1bc9fac182a7a2d9c997)
+in the "Where everything is" list; if the editor offers to attach datasets and models, attach
+`caiotheodoro/vernier`, `caiotheodoro/vernier-rung1-probe`, and the two `builddotai/*-Evaluation`
+datasets so the article surfaces on their pages, which is the whole point of publishing on the
+Hub rather than anywhere else.
+
+After it is live: a `DECISIONS.md` entry (D076 unless the other session has taken it) recording
+the URL and the date; the URL added to `README.md`'s map, `llms.txt`, the dataset card
+(`scripts/export_hf_dataset.py`, then `make hf-dataset` and re-upload), and the collection.
+Nothing in the article is edited after that without a dated note in the same entry — it is a
+published result now, and the project's own standard for Build AI's card applies to it.
+
+### 3. The email — after 1, never before
+
+`docs/private/OUTREACH.md` is the sequence and the reasons; `docs/private/EMAIL-DRAFT.md` is the
+text. Five lines, link first. What a session can do: check every link in the draft resolves,
+check every figure in it against the card, confirm the article is live, and stop. Sending is the
+user's act, from the user's account, and is not automated. Two things the draft must reflect as
+of now: the article URL (it is the first link), and `docs/ETHICS.md` §4 as rewritten in D073 —
+24 downscaled stills are republished in the Space and come down on request; that is the one
+sentence in the email that is a courtesy to them rather than a result. D009's exception (private
+disclosure first, only for a live privacy or security exposure) has not been triggered; nothing
+found in this project is one. Record the send as a one-line `DECISIONS.md` entry with the date
+and nothing else — the content stays private.
+
+### 2. arXiv — beside the other two, gating nothing
+
+cs.CV, single author, no affiliation ("Independent"). An unaffiliated first-time submitter needs
+an endorser; ask with the article already public, since the ask is then "read this" rather than
+"trust me" (`docs/private/OUTREACH.md` says why in more words). Do not name a candidate in any
+public file. Build the submission from the writeup, not from a rewrite:
+
+```
+pandoc -s docs/WRITEUP.md -o arxiv/vernier.tex        # TeX source, which arXiv requires
+                                                       # for anything TeX-produced
+```
+
+Then a title, an abstract (the first two paragraphs of the writeup, tightened), CC BY 4.0, and
+cross-list `stat.AP` if it is offered. The arXiv version cites the article URL and the Git
+commit it was built from. Submit after 1 is live so v1 links to it; submit before 3 only if the
+endorsement arrives first — the email should carry the arXiv link if one exists, and does not
+wait for it.
+
+
+**Prior header — (D071/D072) H2 is measured and closed.** The raw-corpus adapter
 D065 declined to size turned out to be small: ffmpeg's `subfile` protocol extracts one frame
 from an h265 mp4 inside a tar over HTTP range requests, so no new dependency was needed, and a
 tar header is 512 bytes at a computable offset, so `scripts/build_corpus_manifest.py` indexed
@@ -252,7 +371,7 @@ A live E2 or E5 run now also leaves per-frame records behind, next to its checkp
 per-file negation. Forward-only -- the committed aggregates predate this and have no jsonl.
 `docs/DECISIONS.md` D069.
 
-## The next action
+## The next action, as it stood in Wave 2 (historical; the current one is "Next session: publication" above)
 
 **The Qwen3-VL judge is deployed and fully smoke-tested live end to end, image + logprobs
 included — real correct output.** `cloud/modal_qwen3vl.py` is live on Modal
