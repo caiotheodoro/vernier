@@ -391,6 +391,65 @@ def _fig_forest(d: dict[str, Any]) -> str:
     return "\n".join(rows) + "\n"
 
 
+
+def _vendor_prevalence(d: dict[str, Any]) -> str:
+    """D089: the same correction with the vendor's own judge over its own 9,800-frame arms."""
+    v = d["margin"]["vendor_full_arm"]["prevalence"]
+    arm_of = {"egocentric-10k": "G200-ego", "epic-kitchens-100": "G200-epic", "ego4d": "G200-ego4d"}
+    order = ["egocentric-10k", "epic-kitchens-100", "ego4d"]
+    rows = []
+    for corpus in order:
+        for task in ("hand_count", "manipulation"):
+            b = v[corpus][task]
+            published = d["wave4"]["ppi"][arm_of[corpus]][task]["published"]
+            rows.append(
+                f"{corpus} & {_TASK_LABEL[task]} & {_pct(published)} & {_pct(b['value'])} & "
+                f"[{_pct(b['ci']['lo'])}, {_pct(b['ci']['hi'])}] & {b['n_gold']} & {b['n_unlabelled']} \\\\"
+            )
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}llrrlrr@{}}\n\\toprule\n"
+        "corpus & task & published & corrected & 95\\% CI & $n_{\\text{gold}}$ & $N$ \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
+def _sensitivity(d: dict[str, Any]) -> str:
+    """D089: every headline number on the first 93 labels, on all 153, and on 153 minus the
+    labels recorded in two seconds or less. The second batch was collected after results were
+    public and three times faster, and disclosing that without testing it is where this project's
+    candour previously stopped."""
+    frames = [f for f in json.loads((_ROOT / "space" / "public" / "data" / "frames.json").read_text())
+              if f.get("r")]
+    cut = "2026-09-04"
+    subsets = {
+        "first batch ($n=93$)": [f for f in frames if f["r"]["at"] < cut],
+        "all labels ($n=153$)": frames,
+        "excluding $\\leq$2\\,s labels": [f for f in frames if f["r"]["s"] > 2],
+    }
+    rows = []
+    for name, fs in subsets.items():
+        over = sum(1 for f in fs if f["r"]["h"] == 0 and f["q"]["h"] >= 1)
+        at_o = sum(1 for f in fs if f["r"]["h"] == 0)
+        und = sum(1 for f in fs if f["r"]["h"] >= 1 and f["q"]["h"] == 0)
+        at_u = sum(1 for f in fs if f["r"]["h"] >= 1)
+        m_o = sum(1 for f in fs if f["q"]["m"] and not f["r"]["m"])
+        m_ao = sum(1 for f in fs if not f["r"]["m"])
+        m_u = sum(1 for f in fs if (not f["q"]["m"]) and f["r"]["m"])
+        m_au = sum(1 for f in fs if f["r"]["m"])
+        rows.append(
+            f"{name} & {len(fs)} & {over}/{at_o} & {und}/{at_u} & {m_o}/{m_ao} & {m_u}/{m_au} \\\\"
+        )
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}lrrrrr@{}}\n\\toprule\n"
+        "& & \\multicolumn{2}{c}{$\\geq$1 hand} & \\multicolumn{2}{c}{manipulation} \\\\\n"
+        "\\cmidrule(lr){3-4}\\cmidrule(lr){5-6}\n"
+        "subset & $n$ & over & under & over & under \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
 def main() -> int:
     d = _load()
     _OUT.mkdir(parents=True, exist_ok=True)
@@ -406,6 +465,8 @@ def main() -> int:
         "run_ledger": _run_ledger(d),
         "cluster_detail": _cluster_detail(d),
         "fig_forest": _fig_forest(d),
+        "vendor_prevalence": _vendor_prevalence(d),
+        "sensitivity": _sensitivity(d),
     }
     for name, tex in tables.items():
         (_OUT / f"{name}.tex").write_text(tex)

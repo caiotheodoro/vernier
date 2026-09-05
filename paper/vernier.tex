@@ -4,6 +4,10 @@
 % scripts/export_paper_tables.py into paper/generated/ and pulled in with \input, so a table
 % cannot drift from the artifact it reports. Figures quoted in prose are pinned by
 % scripts/check_prose_figures.py, the same way the two markdown writeups are (D081, D086).
+%
+% arXiv categories: primary stat.AP, cross-list cs.CV (D089). This is a measurement
+% paper about a corpus statistic, not a vision-method paper; the only vision artefact is a
+% linear probe reported as a negative result.
 \documentclass[11pt]{article}
 
 \usepackage[margin=1.1in]{geometry}
@@ -50,7 +54,7 @@ the released frames carry no identifier that would let anyone else compute one. 
 comparative claims cannot be resolved at this gold size: correcting both sides of the
 manipulation margin against EPIC-KITCHENS-100 moves it from a published $+6.62$ to $-1.02$
 percentage points, 95\% interval $[-11.68, +9.65]$, which covers the published value. None of
-the eight pre-registered hypotheses was confirmed, and we report what moved when we collected
+the pre-registered hypotheses was confirmed, and we report what moved when we collected
 more labels. Artifacts and protocol are public; the measurement card reports
 \texttt{\vernierVerdict}.
 \end{abstract}
@@ -116,13 +120,31 @@ Our estimand differs from all of these in a way that matters. Each of them estim
 of \emph{a model, a ranking, or a system}, on an evaluation the authors themselves constructed.
 We estimate a property of \emph{a corpus}, published by \emph{a third party}, using that party's
 own released frames and their own stored labels, and we ask whether their published number
-survives the correction. We are not aware of prior work that does this.
+survives the correction. We are not aware of prior work that combines those three properties, and the positioning above says which established lines each of them comes from.
 
 The connection to \citet{feng2026noisybutvalid} is worth stating precisely, because it frames our
 first result. Their method requires both error rates, since a judge that misses and a judge that
 over-calls distort an estimate differently. In our data one of the two rates is at or near zero.
 That is a special case of their setting rather than a challenge to it, and it is the case in
 which a naive judge-only estimate is biased in a knowable direction.
+
+\paragraph{Auditing a dataset someone else published.}
+Re-examining a released corpus with a better human protocol is an established move.
+\citet{beyer2020imagenet} re-label the ImageNet validation set and find that reported gains are
+``substantially smaller than those reported on the original labels''.
+\citet{northcutt2021labelerrors} estimate label-error rates across ten third-party benchmarks
+using each benchmark's own released data plus human validation, and show that model rankings
+change once the errors are corrected. \citet{raji2019actionable} audit commercial vendors'
+published accuracy claims directly and study what the vendors did afterwards.
+
+Our estimand differs from the first two in a way that matters for what an audit can conclude.
+Their target is label correctness against a fixed taxonomy, where a wrong label is wrong by
+construction and the corrected number is simply better. Ours is a vendor-authored statistic
+published as a selling point, with no interval attached and a comparative claim resting on it,
+where the question is not whether individual labels are right but how wide the published number
+should have been and whether the comparison survives. From \citet{raji2019actionable} we take the
+framing that an audit of a commercial claim is a different object from an audit of a benchmark,
+and differ in that our subject is a measurement rather than a disparity.
 
 \paragraph{Judge validation and its limits.}
 Agreement between a model judge and a human is routine to report and easy to report badly.
@@ -134,8 +156,8 @@ rates involved here, where one class exceeds 90\%.
 \paragraph{Clustered inference in evaluation.}
 \citet{miller2024errorbars} argues that evaluation results deserve error bars and that
 dependence between evaluation items inflates the standard errors that flat-rate reporting
-ignores. Our design-effect measurement is that argument applied to a dataset statistic rather
-than a model score, with the clustering variable being the person wearing the camera.
+ignores. The design effect itself is standard survey sampling \citep{kish1965survey}; our
+measurement is that argument applied to a dataset statistic rather than a model score, with the clustering variable being the person wearing the camera.
 
 \paragraph{Prompt sensitivity.}
 \citet{liu2026ipr} formalises inter-prompt reliability and its pairwise agreement rate for
@@ -334,6 +356,59 @@ This estimand is not pre-registered and is reported as exploratory. The pre-regi
 asked a narrower question, whether judge \emph{error rate} differs by domain, and it is reported
 unchanged in Section~\ref{sec:notheld}.
 
+
+\subsection{The same correction with the vendor's own judge}
+\label{sec:vendorarm}
+
+The estimates above use our open judge as the model arm, over the frames left in a 200-frame
+gold pool. The release also ships the vendor's own labels for 9{,}800 frames per corpus, and
+those are disjoint from our gold frames, which is what prediction-powered inference requires.
+Using them makes the model arm the judge that produced the published figure, and the estimand
+becomes the published number corrected for its own error rather than a substitute's.
+
+\begin{table}[h]
+\centering\small
+\input{generated/vendor_prevalence}
+\caption{Gold-corrected prevalence with the vendor's own stored labels as the model arm over the
+full evaluation arms. The unlabelled sample rises from about 140 frames to 9{,}800, which
+collapses the unlabelled variance term to almost nothing and leaves the gold sample as the only
+material constraint.}
+\label{tab:vendorprev}
+\end{table}
+
+The manipulation margin against EPIC-KITCHENS-100 becomes $-1.32$ percentage points with a 95\%
+interval of $[-10.78, +8.14]$, so the sign and the conclusion are unchanged and the interval is
+about 11\% narrower. What changes materially is the price of resolving it. With the unlabelled
+term almost gone, separating the corrected margin from the published value needs about 89 gold
+frames per arm, against the 63 and 60 that exist. The earlier figure of 226 was an artifact of
+having drawn a 200-frame judged pool when the vendor had already labelled 9{,}800.
+
+
+\subsection{Does the second batch of labels change the answer?}
+\label{sec:sensitivity}
+
+Section~\ref{sec:moved} reports that 60 of the \vernierNPrimary{} labels were collected after
+the first results were public, at a median of three seconds a frame against ten for the first
+batch. Disclosing that without testing it would leave the reader to guess, so we report the
+headline counts on three subsets.
+
+\begin{table}[h]
+\centering\small
+\input{generated/sensitivity}
+\caption{Judge error against the rater on the first 93 labels, on all \vernierNPrimary{}, and on
+the \vernierNPrimary{} minus every label recorded in two seconds or less.}
+\label{tab:sens}
+\end{table}
+
+The over-report rate is stable: 5 of 21 at-risk frames on the first batch, 6 of 24 on the full
+set, and 6 of 24 with the fastest labels removed. What moves is the pair of manipulation
+under-reports, and they move in an informative direction. The first batch contains none, the
+full set contains two, and removing labels recorded in two seconds or less removes one of them.
+The asymmetry we report is therefore not created by the second batch; the two exceptions to it
+are, and they sit among the fastest labels in the study. We report the asymmetry as strong
+rather than absolute for that reason, and a reader who discounts the fast labels entirely gets a
+stronger version of our claim, not a weaker one.
+
 \section{Clustering and the design effect}
 \label{sec:cluster}
 
@@ -432,14 +507,14 @@ experiment specifies a model with cluster-robust intervals. It was never fitted;
 comparison of two raw error rates.
 
 \paragraph{Buying labels made the vendor's number look better, and the price we quoted was
-wrong.} Having priced the unresolved margin at roughly 42 gold frames per arm, we collected 60
+wrong twice.} Having priced the unresolved margin at roughly 42 gold frames per arm, we collected 60
 more. The corrected margins moved toward the published figures rather than away and the
 asymmetric-error result weakened from absolute to 26 of 28. The price itself was then found to
 be wrong: it scaled the whole standard error as $1/\\sqrt{n}$, when only the gold term shrinks
 with more labels and the unlabelled term is a floor. Corrected, the manipulation margin needs
-about 226 gold frames per arm rather than 59, and the hand-visibility margin cannot be separated
-by labelling at all, because the floor the 137-frame unlabelled pool imposes already exceeds
-what separation would require. Two
+about 226 gold frames per arm rather than 59. That figure was then itself superseded: it
+assumed the 200-frame judged pool we had drawn, and using the vendor's full 9{,}800-frame arms
+(Section~\ref{sec:vendorarm}) brings it to about 89. Two
 properties of that second batch belong in the record: it was collected after the first results
 were public, so the rater knew which direction would move the margin, and it was labelled at a
 median of three seconds a frame against ten for the first batch, with 24 of 60 at two seconds or
@@ -490,6 +565,21 @@ make no claim about the consent instrument behind the corpus, which is not publi
 draw no inference about intent from the vendor's repository history; where we report a schema
 change between releases we report the fact and stop.
 
+
+We did not contact the vendor before publishing. That was a pre-registered choice rather than an
+oversight: publishing first keeps the work independent rather than negotiated, and the artifact
+is built so that either outcome is useful to them, a confirmation with intervals they did not
+have or a problem found before a customer finds it. The decision recorded a reversal condition,
+that a finding turning out to be a live security or privacy exposure rather than a measurement
+question would warrant private disclosure first. Nothing here is one.
+
+The author is also the rater. That matters for reading Section~\ref{sec:moved}, where the second
+batch of labels was collected by someone who knew which direction would move the margin, and it
+is why Section~\ref{sec:sensitivity} reports the results without those labels. The author has an
+interest in the vendor whose work is measured being aware of it. That interest is contained
+structurally rather than by assertion: the protocol, hypotheses and stopping rules were frozen
+before any result was seen, so no finding could be shaped by how it would be received.
+
 The protocol, the decision log, every result file and the labels are public:
 code and protocol at \url{https://github.com/caiotheodoro/vernier}, the labels, membership,
 judge output and result files at \url{https://huggingface.co/datasets/caiotheodoro/vernier},
@@ -513,12 +603,11 @@ unstated width. On this corpus the cluster-aware interval is 12 to 29\% wider th
 calculation would suggest, and the direction of the bias is knowable and consistent across two
 model families. The comparative claim that the corpus leads a well-known academic dataset does
 not survive correction cleanly and does not fail either. Settling it does not need a better
-judge. It needs roughly 226 more human labels per arm on the manipulation comparison, and on
-hand visibility it cannot be settled by labelling at any budget, because the 200-frame judged
-pool we drew imposes a variance floor above what separation requires. Judging the full
-evaluation arms, which the vendor already released and which costs about nine dollars, would
-lower that floor. That is the cheapest open step, and it is a step the vendor could have taken
-before publishing the number.
+judge. It needs about 89 gold frames per arm on the
+manipulation comparison, against the 63 and 60 that exist, once the vendor's own full-size
+labelled arms are used as the model arm rather than the 200-frame pool we first drew. That is
+roughly 55 more labelled frames. It is a step the vendor could have taken before publishing the
+number, at no marginal labelling cost beyond what it had already spent.
 
 \appendix
 \section{Corrections to our own reported claims}

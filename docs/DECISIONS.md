@@ -3197,3 +3197,69 @@ carrying a cs.CV label, with one figure and no images.
 
 **Reverses if:** the full evaluation arms are judged, which moves the floor and re-opens every
 sizing conclusion above.
+
+## D089 — The vendor's own labels were the full-size unlabelled arm all along
+
+The grader's top recommendation was to re-run the correction against the full evaluation arms,
+and it assumed that needed a judge run costing about nine dollars. It needed no judge call at
+all. `data/rung1_stored_labels.json` holds **29,400 of the vendor's own `gemini-2.5-flash`
+labels**, 9,800 per corpus, and they are **disjoint from the 600 gold frames by construction**,
+which is exactly the condition PPI imposes on its gold and unlabelled sets. The gold frames'
+vendor labels were already in the Space payload.
+
+**The estimand improves, not just the precision.** With the vendor's judge as the model arm the
+quantity being corrected is the published number itself, rather than a substitute judge's number
+corrected for a substitute judge's errors. That was the largest standing caveat on the headline.
+
+| | open judge, N ≈ 140 | vendor's judge, N = 9,800 |
+|---|---|---|
+| Egocentric manipulation | 0.8506 [0.7790, 0.9221] | 0.8443 [0.7665, 0.9221] |
+| EPIC manipulation | 0.8607 [0.7817, 0.9397] | 0.8575 [0.8037, 0.9114] |
+| margin, manipulation | -1.02pp [-11.68, +9.65] | **-1.32pp [-10.78, +8.14]** |
+| gold per arm to separate it | 226 | **89** |
+| variance floor, half-width | 6.14pp | **0.67pp** |
+
+The narrowing is not uniform, which is worth recording because the grader predicted that it
+would be. The unlabelled term collapses, but the gold-residual term depends on how well the
+model predicts the rater, and the vendor's judge predicts the rater less well than ours on the
+Egocentric arm, so that interval barely moves. What changes decisively is the floor, and with it
+the price: separating the manipulation margin from the published value needs about **89** gold
+frames per arm against the 63 and 60 that exist, roughly 55 more labels. The 226 figure was an
+artifact of having drawn a 200-frame judged pool when 9,800 were already committed to the
+repository. This is the second time in two days that a sizing claim from this project has been
+wrong in the direction of making the work look cheaper.
+
+The pre-registered pipeline is untouched. The vendor-arm analysis lives in
+`scripts/margin_analysis.py`, which is already the exploratory script, because this estimand is
+not pre-registered either.
+
+**The sensitivity analysis the grader asked for, and what it shows.** Every headline count is now
+reported on the first 93 labels, on all 153, and on the 153 minus every label recorded in two
+seconds or less:
+
+| subset | ≥1 hand over / under | manipulation over / under |
+|---|---|---|
+| first batch, n=93 | 5/21, 0/72 | 8/27, **0/66** |
+| all labels, n=153 | 6/24, 0/129 | 10/33, **2/120** |
+| excluding ≤2s labels, n=129 | 6/24, 0/105 | 10/33, **1/96** |
+
+The over-report rate is stable at 23.8% to 25.0% across all three. The two manipulation
+under-reports, which are the only reason the asymmetry stopped being absolute, are absent from
+the first batch and one of the two disappears when the fastest labels are dropped. So the
+asymmetry is not manufactured by the compromised batch; the exceptions to it are, and they sit
+among the fastest labels in the study. A reader who discounts those labels entirely gets a
+stronger version of the claim, not a weaker one, and the paper says so.
+
+**Also from the grade.** A dataset-auditing related-work paragraph now positions the work against
+Beyer et al., Northcutt et al. and Raji and Buolamwini, all verified at source, and "we are not
+aware of prior work that does this" is replaced by a stated contrast: their estimand is label
+correctness against a fixed taxonomy, ours is a vendor-authored statistic with no interval and a
+comparative claim on it. Kish is cited for the design effect. The ethics section now states that
+the vendor was not contacted before publication and why, per D009, and that the author is the
+rater. The arXiv categories become **primary stat.AP, cross-list cs.CV**, which is what the paper
+is.
+
+**Reverses if:** the vendor's stored labels turn out not to be the labels behind the published
+figures, which would make the whole vendor-arm analysis measure something else. The release ships
+them as the per-frame labels for the evaluation set and the published rates recompute from them,
+so this is recorded as a check that passed rather than an assumption.

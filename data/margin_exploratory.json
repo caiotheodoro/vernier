@@ -115,5 +115,220 @@
         }
       }
     }
+  },
+  "vendor_full_arm": {
+    "why": "The model arm is the vendor's own stored gemini-2.5-flash labels over the whole E10k-* arm (9,800 frames per corpus), not the live open judge over the ~140 frames left in a 200-frame gold pool. The estimand is therefore the published number corrected for judge error, rather than a substitute judge's number corrected for its own. docs/DECISIONS.md D089.",
+    "prevalence": {
+      "egocentric-10k": {
+        "hand_count": {
+          "value": 0.917152893944463,
+          "ci": {
+            "lo": 0.8640734164679603,
+            "hi": 0.9702323714209656,
+            "level": 0.95
+          },
+          "n_gold": 63,
+          "n_unlabelled": 9800,
+          "rectifier": -4.440892098500626e-16,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "manipulation": {
+          "value": 0.8443237634036664,
+          "ci": {
+            "lo": 0.766535875376966,
+            "hi": 0.9221116514303669,
+            "level": 0.95
+          },
+          "n_gold": 63,
+          "n_unlabelled": 9800,
+          "rectifier": 0.24999999999999967,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        }
+      },
+      "ego4d": {
+        "hand_count": {
+          "value": 0.55583850931677,
+          "ci": {
+            "lo": 0.434804892824994,
+            "hi": 0.676872125808546,
+            "level": 0.95
+          },
+          "n_gold": 30,
+          "n_unlabelled": 9800,
+          "rectifier": -3.3306690738754696e-16,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "manipulation": {
+          "value": 0.4658173029977541,
+          "ci": {
+            "lo": 0.3424307587389651,
+            "hi": 0.5892038472565431,
+            "level": 0.95
+          },
+          "n_gold": 30,
+          "n_unlabelled": 9800,
+          "rectifier": 0.09090909090909083,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        }
+      },
+      "epic-kitchens-100": {
+        "hand_count": {
+          "value": 0.8700075585789872,
+          "ci": {
+            "lo": 0.823946322046983,
+            "hi": 0.9160687951109913,
+            "level": 0.95
+          },
+          "n_gold": 60,
+          "n_unlabelled": 9800,
+          "rectifier": 1.1102230246251565e-16,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        },
+        "manipulation": {
+          "value": 0.8575403911564625,
+          "ci": {
+            "lo": 0.8036507992301529,
+            "hi": 0.9114299830827721,
+            "level": 0.95
+          },
+          "n_gold": 60,
+          "n_unlabelled": 9800,
+          "rectifier": 0.1666666666666664,
+          "method": "ppi++",
+          "clustered": false,
+          "cluster_by": null,
+          "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
+        }
+      }
+    },
+    "comparisons": {
+      "egocentric-10k_minus_epic-kitchens-100": {
+        "hand_count": {
+          "corrected_margin_pp": 4.714533536547583,
+          "ci_pp": {
+            "lo": -2.3133170879575964,
+            "hi": 11.742384161052762,
+            "level": 0.95
+          },
+          "published_margin_pp": 6.05,
+          "published_inside_corrected_ci": true,
+          "sign_flipped": false,
+          "left": {
+            "value": 0.917152893944463,
+            "n_gold": 63,
+            "n_unlabelled": 9800
+          },
+          "right": {
+            "value": 0.8700075585789872,
+            "n_gold": 60,
+            "n_unlabelled": 9800
+          },
+          "se_pp": 3.5857039618788757,
+          "gold_per_arm_to_exclude_published": {
+            "achievable_by_labelling_alone": true,
+            "gold_per_arm": 2246,
+            "floor_half_width_pp": 0.6618811032969218
+          }
+        },
+        "manipulation": {
+          "corrected_margin_pp": -1.3216627752796084,
+          "ci_pp": {
+            "lo": -10.784772011486627,
+            "hi": 8.14144646092741,
+            "level": 0.95
+          },
+          "published_margin_pp": 6.619999999999992,
+          "published_inside_corrected_ci": true,
+          "sign_flipped": true,
+          "left": {
+            "value": 0.8443237634036664,
+            "n_gold": 63,
+            "n_unlabelled": 9800
+          },
+          "right": {
+            "value": 0.8575403911564625,
+            "n_gold": 60,
+            "n_unlabelled": 9800
+          },
+          "se_pp": 4.828205676660804,
+          "gold_per_arm_to_exclude_published": {
+            "achievable_by_labelling_alone": true,
+            "gold_per_arm": 89,
+            "floor_half_width_pp": 0.6746732379524762
+          }
+        }
+      },
+      "egocentric-10k_minus_ego4d": {
+        "hand_count": {
+          "corrected_margin_pp": 36.131438462769296,
+          "ci_pp": {
+            "lo": 22.915324340132162,
+            "hi": 49.347552585406426,
+            "level": 0.95
+          },
+          "published_margin_pp": 29.089999999999993,
+          "published_inside_corrected_ci": true,
+          "sign_flipped": false,
+          "left": {
+            "value": 0.917152893944463,
+            "n_gold": 63,
+            "n_unlabelled": 9800
+          },
+          "right": {
+            "value": 0.55583850931677,
+            "n_gold": 30,
+            "n_unlabelled": 9800
+          },
+          "se_pp": 6.743039273621432,
+          "gold_per_arm_to_exclude_published": {
+            "achievable_by_labelling_alone": true,
+            "gold_per_arm": 126,
+            "floor_half_width_pp": 0.8425718340350231
+          }
+        },
+        "manipulation": {
+          "corrected_margin_pp": 37.850646040591236,
+          "ci_pp": {
+            "lo": 23.26462710882628,
+            "hi": 52.4366649723562,
+            "level": 0.95
+          },
+          "published_margin_pp": 41.589999999999996,
+          "published_inside_corrected_ci": true,
+          "sign_flipped": false,
+          "left": {
+            "value": 0.8443237634036664,
+            "n_gold": 63,
+            "n_unlabelled": 9800
+          },
+          "right": {
+            "value": 0.4658173029977541,
+            "n_gold": 30,
+            "n_unlabelled": 9800
+          },
+          "se_pp": 7.441983141944247,
+          "gold_per_arm_to_exclude_published": {
+            "achievable_by_labelling_alone": true,
+            "gold_per_arm": 628,
+            "floor_half_width_pp": 0.823902402819922
+          }
+        }
+      }
+    }
   }
 }

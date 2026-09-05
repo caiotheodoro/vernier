@@ -37,7 +37,7 @@ from vernier.agreement.core import _LABEL_FIELD, _RESPONSE_FIELD  # noqa: E402
 from vernier.estimation.ppi import estimate_prevalence  # noqa: E402
 from vernier.judges.prompts import PromptVariant  # noqa: E402
 from vernier.labels.store import HumanLabelStore  # noqa: E402
-from vernier.models import HumanLabel, JudgeResponse  # noqa: E402
+from vernier.models import Confidence, HumanLabel, JudgeResponse  # noqa: E402
 from vernier.sampling.draw import SampleName  # noqa: E402
 from vernier.sampling.membership import load_membership  # noqa: E402
 
@@ -174,6 +174,60 @@ def _gold_needed_to_exclude(
     }
 
 
+
+# ── the vendor's own judge, over the vendor's own full evaluation arms ───────────────────────
+# D089. The pre-registered PPI arms use the live open judge over the 200-frame gold pools, so
+# the unlabelled sample is ~140 frames when the release ships 9,800 per corpus that the vendor
+# already labelled. Those stored labels are disjoint from the gold frames by construction, which
+# is exactly what PPI requires, so the full-size arm needs no new judge call. Using them also
+# changes the estimand from "a substitute judge's number, gold-corrected" to "the published
+# number, gold-corrected", which is the quantity this project set out to audit.
+
+_E10K_FOR_GOLD: dict[SampleName, SampleName] = {
+    "G200-ego": "E10k-ego",
+    "G200-ego4d": "E10k-ego4d",
+    "G200-epic": "E10k-epic",
+}
+_STORED_LABELS_PATH = Path("data/rung1_stored_labels.json")
+_FRAMES_PATH = Path("space/public/data/frames.json")
+
+
+def _vendor_response(frame_id: str, hands: int, manipulation: bool) -> JudgeResponse:
+    return JudgeResponse(
+        frame_id=frame_id,
+        judge="gemini-2.5-flash",
+        judge_rev="stored in the evaluation release; exact API snapshot not disclosed upstream",
+        prompt_variant="P0b",
+        hands_visible=hands,  # type: ignore[arg-type]
+        manipulation=manipulation,
+        confidence=Confidence(kind="none", value=None),
+        raw="stored",
+        status="ok",
+        latency_ms=0,
+        cost_usd=0.0,
+    )
+
+
+def _vendor_full_arm(sample: SampleName, gold: list[HumanLabel]) -> list[JudgeResponse]:
+    """The vendor's label for every gold frame, plus its labels for the whole E10k arm."""
+    frames = {f["id"]: f for f in json.loads(_FRAMES_PATH.read_text())}
+    stored = json.loads(_STORED_LABELS_PATH.read_text())
+    arm_ids = {
+        f.frame_id for f in load_membership(_E10K_FOR_GOLD[sample], _MEMBERSHIP_ROOT)
+    }
+    judged = [
+        _vendor_response(lab.frame_id, frames[lab.frame_id]["g"]["h"], frames[lab.frame_id]["g"]["m"])
+        for lab in gold
+        if frames.get(lab.frame_id, {}).get("g")
+    ]
+    judged += [
+        _vendor_response(r["frame_id"], r["hands_visible"], r["manipulation"])
+        for r in stored
+        if r["frame_id"] in arm_ids
+    ]
+    return judged
+
+
 def _load_labels() -> list[HumanLabel]:
     return HumanLabelStore(_LABEL_STORE_ROOT / _RATER).read_pass("primary")
 
@@ -210,6 +264,29 @@ def main() -> int:
                 why_not_clustered=_WHY_NOT_CLUSTERED,
             ).ppi
 
+    # D089: the same margins, with the vendor's own judge as the model arm over its own 9,800
+    # frames per corpus instead of the ~140 left over from a 200-frame gold pool.
+    vendor_blocks: dict[str, dict[str, Any]] = {}
+    vendor_comps: dict[str, dict[str, tuple[float, float, int, int]]] = {}
+    for sample in _SAMPLES:
+        gold = [lab for lab in primary if lab.frame_id in ids[sample]]
+        full = _vendor_full_arm(sample, gold)
+        vendor_blocks[sample] = {}
+        vendor_comps[sample] = {}
+        for task in ("hand_count", "manipulation"):
+            vendor_blocks[sample][task] = estimate_prevalence(
+                corpus=_CORPUS_NAME[sample],
+                task=task,
+                prompt_variant=_VARIANT,
+                judge="gemini-2.5-flash",
+                gold=gold,
+                judged=full,
+                published=_PUBLISHED[sample][task],
+                cluster_by=None,
+                why_not_clustered=_WHY_NOT_CLUSTERED,
+            ).ppi
+            vendor_comps[sample][task] = _variance_components(gold, full, task)
+
     out: dict[str, Any] = {
         "estimand": "exploratory",
         "why_exploratory": (
@@ -239,6 +316,38 @@ def main() -> int:
             )
             for task in ("hand_count", "manipulation")
         }
+
+    out["vendor_full_arm"] = {
+        "why": (
+            "The model arm is the vendor's own stored gemini-2.5-flash labels over the whole "
+            "E10k-* arm (9,800 frames per corpus), not the live open judge over the ~140 frames "
+            "left in a 200-frame gold pool. The estimand is therefore the published number "
+            "corrected for judge error, rather than a substitute judge's number corrected for "
+            "its own. docs/DECISIONS.md D089."
+        ),
+        "prevalence": {
+            _CORPUS_NAME[s_]: {
+                t: vendor_blocks[s_][t].model_dump(mode="json") for t in ("hand_count", "manipulation")
+            }
+            for s_ in _SAMPLES
+        },
+        "comparisons": {
+            f"{_CORPUS_NAME[l]}_minus_{_CORPUS_NAME[r]}": {
+                t: margin(
+                    vendor_blocks[l][t],
+                    vendor_blocks[r][t],
+                    _PUBLISHED[l][t],
+                    _PUBLISHED[r][t],
+                    components=(
+                        vendor_comps[l][t][0] + vendor_comps[r][t][0],
+                        vendor_comps[l][t][1] + vendor_comps[r][t][1],
+                    ),
+                )
+                for t in ("hand_count", "manipulation")
+            }
+            for l, r in _COMPARISONS
+        },
+    }
 
     path = Path("data/margin_exploratory.json")
     path.write_text(json.dumps(out, indent=2))
