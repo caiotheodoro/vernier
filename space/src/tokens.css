@@ -1,28 +1,59 @@
 /* vernier — a measuring instrument for someone else's number.
  *
- * Deliberately light only. The page is a cool workshop surface and the frames are the dark
- * element on it; a dark mode would put photographs on a ground they were never judged against.
- * Do not add one.
+ * The surface is engineering graph paper that dissolves as you read: this page is a caliper laid
+ * against a published figure, and graph paper is what you measure on. Ported from the author's
+ * CV so the two read as one hand.
  *
- * Colour carries meaning, not decoration: --ink is what the vendor published, --signal is what
- * vernier measured, --human is what the rater said. --signal is 2.8:1 on --ground and --human
- * 4.4:1, so neither ever carries text; labels beside a coloured mark are --ink. */
+ * Deliberately light only. A dark mode would put photographs on a ground they were never judged
+ * against. Do not add one.
+ *
+ * Colour is meaning, rationed to three values and assigned in fixed order:
+ *   --v-published  nobody checked   Build AI's figure. Never given a whisker; the absence is the point.
+ *   --v-judge      a machine checked
+ *   --v-measured   a human checked  PPI++, the rater's marks, focus, active filters.
+ * "vernier measured it" and "a human anchored it" are the same fact here, so they share a colour.
+ * --v-published (2.3:1) and --v-measured (4.6:1) never carry body text; every chart mark carries
+ * a direct value label in --ink. Dim a mark, never its number. */
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
 
 :root {
-  --ground: #dde3e8;
-  --panel: #f4f6f8;
-  --ink: #161a1e;
-  --steel: #55636f;
-  --signal: #e8591c;
-  --human: #2d6a9f;
+  --bg: #ffffff;
+  --bg-subtle: #f8f8f7;
+  --code-bg: #f3f3ed;
+  --border: #e8e8e4;
+  --border-strong: #d4d4cf;
 
-  --rule: rgba(85, 99, 111, 0.4);
+  --ink: #171717;
+  --muted: #6b6b6b;
+  --faint: #a3a3a3;
 
-  --font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --fs-display: 3.5rem;
-  --fs-h2: 1.5rem;
-  --fs-body: 0.9375rem;
-  --fs-data: 0.8125rem;
+  --v-published: #a3a3a3;
+  --v-judge: #4361ee;
+  --v-measured: #c93d1e;
+  --accent: #c93d1e;
+
+  /* Retained names so the canvas renderer and older rules keep resolving. */
+  --ground: #ffffff;
+  --panel: #f8f8f7;
+  --steel: #6b6b6b;
+  --signal: #c93d1e;
+  --human: #c93d1e;
+  --rule: #e8e8e4;
+
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --fs-display: clamp(2rem, 5vw, 3rem);
+  --fs-h2: clamp(1.5rem, 3vw, 2rem);
+  --fs-body: 0.92rem;
+  --fs-data: 0.82rem;
+  --fs-eyebrow: 0.72rem;
+  --fs-mono: 0.68rem;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -30,8 +61,16 @@
   --space-4: 32px;
   --space-5: 64px;
   --measure: 68ch;
-  --radius: 2px;
-  --page: 1280px;
+
+  --r-chip: 4px;
+  --r-ctrl: 6px;
+  --r-tile: 8px;
+  --r-card: 10px;
+  --r-pill: 100px;
+  --radius: 6px;
+
+  --prose: 680px;
+  --page: 1200px;
 }
 
 * {
@@ -39,18 +78,89 @@
 }
 
 html {
-  background: var(--ground);
+  background: var(--bg);
+  scroll-behavior: smooth;
 }
 
+/* The 36px engineering grid, washed out from half the viewport down. */
 body {
   margin: 0;
-  background: var(--ground);
+  min-height: 100vh;
+  overflow-x: hidden;
   color: var(--ink);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+  position: relative;
   font-family: var(--font);
   font-size: var(--fs-body);
-  line-height: 1.5;
+  line-height: 1.75;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, var(--bg) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* One motion device: fade up on entry, 70ms ladder.
+ *
+ * A transition, not a keyframe animation, and deliberately. A keyframe with `fill: both` holds
+ * its `from` value whenever the animation has not advanced -- which is exactly what a hidden or
+ * throttled tab does -- so the section stays at `opacity: 0` indefinitely. A transition's end
+ * state is the declared value, applied whether or not the interpolation ever runs, so the worst
+ * case is "appears without moving" rather than "never appears".
+ *
+ * `opacity: 1` on the bare attribute is the second guard: no JS, no `html.motion`, no problem. */
+[data-fade] {
+  opacity: 1;
+}
+
+html.motion [data-fade] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+html.motion [data-fade][data-visible] {
+  opacity: 1;
+  transform: none;
+}
+
+html.motion [data-fade][data-delay="1"] { transition-delay: 0.05s; }
+html.motion [data-fade][data-delay="2"] { transition-delay: 0.12s; }
+html.motion [data-fade][data-delay="3"] { transition-delay: 0.19s; }
+html.motion [data-fade][data-delay="4"] { transition-delay: 0.26s; }
+html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html.motion [data-fade] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 :focus-visible {
@@ -609,4 +719,401 @@ body {
   .count {
     margin-left: 0;
   }
+}
+
+/* ── The CV layout: one prose column, and exactly two things that break it ───────────── */
+
+.page {
+  max-width: var(--prose);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 8vh, 5rem) 1.5rem 6rem;
+}
+
+/* The grid and the frame detail are instruments, not prose, so they and nothing else widen. */
+.bleed {
+  width: min(var(--page), calc(100vw - 3rem));
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.eyebrow {
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 0.75rem;
+}
+
+.hero-title {
+  font-size: var(--fs-display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin: 0 0 1.25rem;
+  max-width: 580px;
+}
+
+.hero-deck {
+  font-size: var(--fs-body);
+  line-height: 1.75;
+  color: var(--muted);
+  margin: 0 0 2rem;
+  max-width: 580px;
+}
+
+/* ── Charts ─────────────────────────────────────────────────────────────────────────── */
+
+.chart-frame {
+  margin: 2rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  background: var(--bg);
+  padding: 18px 18px 14px;
+}
+
+.chart-frame-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.chart-frame-caption {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.chart-tooltip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-ctrl);
+  padding: 7px 10px;
+  box-shadow: 0 2px 10px rgba(23, 23, 23, 0.08);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.chart-tooltip-label {
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-tooltip-row strong {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.chart-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.chart-tooltip-extra {
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+/* ── Controls, on the CV's vocabulary ───────────────────────────────────────────────── */
+
+.select,
+.filter-select,
+.button {
+  font-family: inherit;
+  font-size: var(--fs-data);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-ctrl);
+  padding: 5px 9px;
+  transition: border-color 0.15s;
+}
+
+.select:hover,
+.filter-select:hover,
+.button:hover {
+  border-color: var(--border-strong);
+}
+
+.select-label,
+.filter-label {
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* Links are underlined with a rule that recolours, never text-decoration. */
+.footer-link,
+.reason-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.footer-link:hover,
+.reason-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.reason-link {
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.reasons {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+}
+
+.reason {
+  position: relative;
+  padding-left: 14px;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+/* A 5px dash, not a disc. */
+.reason::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 5px;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.reason-none {
+  color: var(--faint);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* ── Grid bands ──────────────────────────────────────────────────────────────────────── */
+
+.grid-bands {
+  margin-top: 2rem;
+}
+
+.band {
+  margin-bottom: 2.5rem;
+}
+
+.band-blurb {
+  font-size: var(--fs-data);
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 0.9rem;
+  max-width: 68ch;
+}
+
+.count-pill {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 1px 7px;
+  margin-left: 6px;
+}
+
+.grid-canvas {
+  display: block;
+  width: 100%;
+  border-radius: var(--r-tile);
+}
+
+.grid-canvas:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: var(--fs-eyebrow);
+  color: var(--muted);
+  margin-top: 1rem;
+}
+
+.legend-judge::before,
+.legend-rater::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+.legend-judge::before {
+  background: var(--ink);
+}
+
+.legend-rater::before {
+  background: var(--v-measured);
+}
+
+/* ── Sections ────────────────────────────────────────────────────────────────────────── */
+
+.section {
+  position: relative;
+  margin-top: 4rem;
+}
+
+/* The pre-registered hypothesis this section tests, stamped in the quietest possible ink. */
+.watermark {
+  position: absolute;
+  top: -1.6rem;
+  left: -0.1rem;
+  font-size: 5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--border);
+  pointer-events: none;
+  user-select: none;
+  z-index: -1;
+}
+
+.section-title {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+}
+
+.section-lede {
+  font-size: 0.97rem;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+  max-width: 68ch;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 2px 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* The stat strip: rules top and bottom, dividers between cells. */
+.verdicts {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 1.5rem 0;
+  padding: 1.25rem 0;
+  gap: 0;
+}
+
+.verdict {
+  flex: 1 1 180px;
+  padding: 0 1.25rem;
+}
+
+.verdict + .verdict {
+  border-left: 1px solid var(--border);
+}
+
+.verdict dt {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 0.4rem;
+}
+
+.verdict dd {
+  margin: 0;
+}
+
+.verdict dd strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.verdict-detail {
+  display: block;
+  font-size: var(--fs-eyebrow);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.panel-note {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 68ch;
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-chip);
+  padding: 1px 6px;
+  margin-right: 5px;
+}
+
+.detail-td.mono {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
 }

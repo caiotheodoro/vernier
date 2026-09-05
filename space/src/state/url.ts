@@ -4,7 +4,7 @@ import type { Corpus, Task } from "../data/types";
 
 export type Answer = "0" | "1" | "2" | "yes" | "no";
 export type JudgeFilter = Answer | "unparsed";
-export type RaterFilter = Answer | "unlabelled";
+export type RaterFilter = Answer | "unlabelled" | "labelled";
 export type Agreement = "agrees" | "disagrees" | "none";
 export type ConfBand = "ge99" | "90to99" | "lt90";
 export type JudgeSource = "qwen" | "gemini";
@@ -38,7 +38,7 @@ export const DEFAULT_STATE: SliceState = {
 const TASKS = new Set<string>(["hand_count", "hand_eq2", "manipulation"]);
 const CORPORA = new Set<string>(["egocentric-10k", "ego4d", "epic-kitchens-100", "egocentric-100k", "all"]);
 const JUDGE = new Set<string>(["0", "1", "2", "yes", "no", "unparsed"]);
-const RATER = new Set<string>(["0", "1", "2", "yes", "no", "unlabelled"]);
+const RATER = new Set<string>(["0", "1", "2", "yes", "no", "unlabelled", "labelled"]);
 const AGREE = new Set<string>(["agrees", "disagrees", "none"]);
 const CONF = new Set<string>(["ge99", "90to99", "lt90"]);
 const SRC = new Set<string>(["qwen", "gemini"]);

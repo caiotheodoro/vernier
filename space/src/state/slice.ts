@@ -73,6 +73,9 @@ export function matches(frame: Frame, state: SliceState): boolean {
   }
   if (state.rater === "unlabelled") {
     if (frame.r !== null) return false;
+  } else if (state.rater === "labelled") {
+    // The 93 frames a human actually judged -- the set every PPI estimate rests on.
+    if (frame.r === null) return false;
   } else if (state.rater !== null) {
     if (!frame.r) return false;
     if (!matchesAnswer(state.task, state.rater, frame.r.h, frame.r.m)) return false;

@@ -22,8 +22,8 @@ export function Coverage({ stats, state }: Props): JSX.Element {
         Coverage
       </h2>
       <p className="section-lede">
-        What the judge said about every frame it saw, per corpus. The ink tick is the figure the vendor published;
-        the orange span is what vernier measured with human gold, where gold exists. Bars are{" "}
+        What the judge said about every frame it saw, per corpus. The tick is the figure the vendor published;
+        the span below it is what vernier measured once human gold corrected the judge, where gold exists. Bars are{" "}
         {task === "manipulation" ? "manipulation yes/no" : "hand count 0 / 1 / 2"}.
       </p>
 
@@ -124,8 +124,11 @@ export function Coverage({ stats, state }: Props): JSX.Element {
       </table>
 
       <p className="panel-note">
-        Per-worker coverage needs worker ids; this release ships none ({stats.provenance.no_worker_ids?.decision}), so
-        no interval here is clustered and each is a lower bound on its true width. Prompt sensitivity over{" "}
+        Build AI's evaluation frames ship no worker id ({stats.provenance.no_worker_ids?.decision}), so no interval
+        here is clustered and each is a lower bound on its true width. How much of one is now measured rather than
+        guessed: on vernier's own draws from the same corpus, clustering by worker widens an interval by{" "}
+        {fixed(stats.h2.width_understatement_pct.lo, 0)}–{fixed(stats.h2.width_understatement_pct.hi, 0)}% (see
+        below). Prompt sensitivity over{" "}
         {int(stats.prompt_sweep.n)} frames: hand count moves {fixed(stats.prompt_sweep.hand_count_spread_pp, 2)} pp
         across {Object.keys(stats.prompt_sweep.hand_count).length} prompt variants, manipulation{" "}
         {fixed(stats.prompt_sweep.manipulation_spread_pp, 2)} pp across{" "}

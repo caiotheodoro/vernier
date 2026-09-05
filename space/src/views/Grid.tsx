@@ -1,32 +1,60 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// The frame grid, in three tiers.
+//
+// The tiers are not a loading concession, they are the shape of the licence. 24 frames ship with
+// this page and paint instantly from one atlas. Everything else lives on Hugging Face's dataset
+// server, which costs ~10 seconds per call whatever you ask it for -- so this grid never fetches
+// an image on its own. A tile with no local thumbnail draws the judge's complete output instead,
+// which is real data rather than a placeholder, and one image is fetched only when a reader
+// opens a frame.
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Frame, Hands, Stats, Task } from "../data/types";
-import { ImageCache, RowsClient, type RowsStatus } from "../data/rows";
-import { useWidth } from "../lib/hooks";
+import { useAtlas, useWidth, cssToken } from "../lib/hooks";
 import { agrees, judgeHands, judgeManipulation, raterBinary } from "../state/slice";
 import { update, type SliceState } from "../state/url";
-import { cssToken } from "../lib/hooks";
 
-type Props = {
-  frames: Frame[];
-  stats: Stats;
-  state: SliceState;
-  rows: RowsClient;
-  onStatus: (s: RowsStatus) => void;
-};
+type Props = { frames: Frame[]; stats: Stats; state: SliceState };
 
-const GAP = 8;
-const RATIO = 3 / 4; // tile height / width
-const MIN_TILE = 132;
+const GAP = 10;
+const RATIO = 9 / 16;
+const MIN_TILE = 150;
+
+/** Ships locally · fetched on request · human-judged but not ours to ship. */
+export type Tier = "local" | "remote" | "withheld";
+
+export function tierOf(frame: Frame): Tier {
+  if (frame.t) return "local";
+  return frame.r ? "withheld" : "remote";
+}
+
+const BAND: { tier: Tier; title: string; blurb: (n: number) => string }[] = [
+  {
+    tier: "local",
+    title: "Held locally",
+    blurb: () => "Shipped with this page, from Build AI's own Apache-2.0 release. No network.",
+  },
+  {
+    tier: "withheld",
+    title: "Human-judged, not ours to ship",
+    blurb: (n) =>
+      `${n} frames a rater labelled that this repository does not republish — Ego4D's licence, ` +
+      "EPIC's non-commercial terms, or someone other than the camera wearer is in shot. " +
+      "Hugging Face serves the picture; open one to fetch it.",
+  },
+  {
+    tier: "remote",
+    title: "On request",
+    blurb: () => "The judge's own output is below each id. Open a frame to fetch its picture.",
+  },
+];
 
 function columnsFor(width: number): number {
   if (width < 420) return 2;
-  if (width < 700) return 4;
-  if (width < 1000) return 6;
-  return 8;
+  if (width < 700) return 3;
+  if (width < 1000) return 5;
+  return 6;
 }
 
-/** Draw the judge's and rater's answers as shape, not colour alone: hands are 0/1/2 strokes,
- *  manipulation is a filled (yes) or hollow (no) square. */
+/** Judge and rater answers as shape, not colour alone: strokes for hands, a square for yes/no. */
 function drawGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -49,73 +77,90 @@ function drawGlyph(
     } else {
       ctx.strokeRect(x + 0.5, y - 8.5, 8, 8);
     }
+  } else if (hands === null) {
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(x + 1, y);
+    ctx.lineTo(x + 9, y);
+    ctx.stroke();
+  } else if (hands === 0) {
+    ctx.beginPath();
+    ctx.arc(x + 5, y - 5, 3.5, 0, Math.PI * 2);
+    ctx.stroke();
   } else {
-    const n = hands ?? 0;
-    if (hands === null) {
-      ctx.setLineDash([2, 2]);
+    for (let i = 0; i < hands; i += 1) {
       ctx.beginPath();
-      ctx.moveTo(x + 1, y);
-      ctx.lineTo(x + 9, y);
+      ctx.moveTo(x + 1 + i * 5, y);
+      ctx.lineTo(x + 1 + i * 5, y - 10);
       ctx.stroke();
-    } else {
-      for (let i = 0; i < Math.max(n, 0); i += 1) {
-        ctx.beginPath();
-        ctx.moveTo(x + 1 + i * 5, y);
-        ctx.lineTo(x + 1 + i * 5, y - 10);
-        ctx.stroke();
-      }
-      if (n === 0) {
-        ctx.beginPath();
-        ctx.arc(x + 5, y - 5, 3.5, 0, Math.PI * 2);
-        ctx.stroke();
-      }
     }
   }
   ctx.restore();
 }
 
-export function Grid({ frames, stats, state, rows, onStatus }: Props): JSX.Element {
+export function Grid({ frames, stats, state }: Props): JSX.Element {
+  const atlas = useAtlas(stats);
+  const bands = useMemo(() => {
+    const by: Record<Tier, Frame[]> = { local: [], withheld: [], remote: [] };
+    for (const f of frames) by[tierOf(f)].push(f);
+    return by;
+  }, [frames]);
+
+  if (frames.length === 0) {
+    return (
+      <p className="grid-empty">
+        No frames match. Loosen a filter, or open the link you were sent again.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid-bands">
+      {BAND.map(({ tier, title, blurb }) =>
+        bands[tier].length === 0 ? null : (
+          <section className="band" key={tier} data-fade data-delay="2">
+            <p className="eyebrow">
+              {title} <span className="count-pill">{bands[tier].length}</span>
+            </p>
+            <p className="band-blurb">{blurb(bands[tier].length)}</p>
+            <Band frames={bands[tier]} stats={stats} state={state} atlas={atlas} tier={tier} />
+          </section>
+        ),
+      )}
+      <p className="legend">
+        <span className="legend-judge">judge</span>
+        <span className="legend-rater">rater</span>
+        <span>outline: judge and rater disagree</span>
+        <span>hollow dot: the judge hesitated (confidence below .99)</span>
+      </p>
+    </div>
+  );
+}
+
+function Band({
+  frames,
+  stats,
+  state,
+  atlas,
+  tier,
+}: Props & { atlas: ImageBitmap | null; tier: Tier }): JSX.Element {
   const [wrapRef, width] = useWidth<HTMLDivElement>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [scrollY, setScrollY] = useState(0);
-  const [, forceRender] = useState(0);
-
   const cols = columnsFor(width);
   const tileW = width > 0 ? Math.max(MIN_TILE, Math.floor((width - GAP * (cols - 1)) / cols)) : MIN_TILE;
   const tileH = Math.round(tileW * RATIO);
-  const rowsCount = Math.ceil(frames.length / cols);
-  const totalH = rowsCount * (tileH + GAP);
-
-  const images = useMemo(() => new ImageCache(rows, () => tileW), [rows, tileW]);
-  useEffect(() => images.onChange(() => forceRender((n) => n + 1)), [images]);
-  useEffect(() => rows.onStatus(onStatus), [rows, onStatus]);
-
-  useEffect(() => {
-    const onScroll = (): void => setScrollY(window.scrollY);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const rows = Math.ceil(frames.length / cols);
+  const totalH = rows * (tileH + GAP);
 
   const select = useCallback(
-    (id: string | null) => {
-      update(state, { f: id });
-    },
+    (id: string | null) => update(state, { f: id }),
     [state],
   );
 
-  // Draw: only the rows intersecting the viewport, plus one screen of prefetch.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || width <= 0) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const box = canvas.getBoundingClientRect();
-    const viewTop = Math.max(0, -box.top);
-    const viewH = window.innerHeight;
-
-    const firstRow = Math.max(0, Math.floor((viewTop - tileH) / (tileH + GAP)));
-    const lastRow = Math.min(rowsCount - 1, Math.ceil((viewTop + viewH) / (tileH + GAP)));
-    const prefetchLast = lastRow;  // no look-ahead: each tile costs its own request (see rows.ts)
-
     if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(totalH * dpr)) {
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(totalH * dpr);
@@ -124,88 +169,96 @@ export function Grid({ frames, stats, state, rows, onStatus }: Props): JSX.Eleme
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const ground = cssToken("--ground") || "#dde3e8";
-    const panel = cssToken("--panel") || "#f4f6f8";
-    const rule = cssToken("--rule") || "rgba(85,99,111,.4)";
-    const steel = cssToken("--steel") || "#55636f";
-    const signal = cssToken("--signal") || "#e8591c";
-    const human = cssToken("--human") || "#2d6a9f";
+    const bg = cssToken("--bg") || "#ffffff";
+    const subtle = cssToken("--bg-subtle") || "#f8f8f7";
+    const codeBg = cssToken("--code-bg") || "#f3f3ed";
+    const border = cssToken("--border") || "#e8e8e4";
+    const ink = cssToken("--ink") || "#171717";
+    const muted = cssToken("--muted") || "#6b6b6b";
+    const accent = cssToken("--v-measured") || "#c93d1e";
+    const mono = '11px "Geist Mono", ui-monospace, monospace';
 
-    ctx.fillStyle = ground;
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, totalH);
 
-    const visibleRows: number[] = [];
-    const aheadRows: number[] = [];
+    frames.forEach((frame, i) => {
+      const x = (i % cols) * (tileW + GAP);
+      const y = Math.floor(i / cols) * (tileH + GAP);
 
-    for (let r = firstRow; r <= prefetchLast; r += 1) {
-      for (let c = 0; c < cols; c += 1) {
-        const i = r * cols + c;
-        const frame = frames[i];
-        if (!frame) continue;
-        const prio = r <= lastRow ? 0 : 1;
-        (prio === 0 ? visibleRows : aheadRows).push(frame.row);
-        images.request(frame.id, frame.row, prio);
-        if (r > lastRow) continue;
-
-        const x = c * (tileW + GAP);
-        const y = r * (tileH + GAP);
-
-        ctx.fillStyle = panel;
+      if (frame.t && atlas) {
+        ctx.fillStyle = subtle;
         ctx.fillRect(x, y, tileW, tileH);
-
-        const entry = images.get(frame.id);
-        if (entry?.state === "ready") {
-          const b = entry.bitmap;
-          const scale = Math.min(tileW / b.width, tileH / b.height);
-          const dw = b.width * scale;
-          const dh = b.height * scale;
-          ctx.drawImage(b, x + (tileW - dw) / 2, y + (tileH - dh) / 2, dw, dh);
-        } else {
-          ctx.strokeStyle = rule;
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x + 0.5, y + 0.5, tileW - 1, tileH - 1);
-        }
-
-        const jh = judgeHands(frame, state.src);
-        const jm = judgeManipulation(frame, state.src);
-        drawGlyph(ctx, x + 6, y + tileH - 6, signal, state.task, jh, jm);
-        if (frame.r) {
-          drawGlyph(ctx, x + 24, y + tileH - 6, human, state.task, frame.r.h, frame.r.m);
-        }
-
-        if (frame.q.c !== null) {
-          const len = Math.max(2, Math.round(frame.q.c * (tileH - 12)));
-          ctx.strokeStyle = steel;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(x + tileW - 4, y + tileH - 6);
-          ctx.lineTo(x + tileW - 4, y + tileH - 6 - len);
-          ctx.stroke();
-        }
-
-        if (agrees(frame, state.task, state.src) === false) {
-          ctx.strokeStyle = signal;
-          ctx.lineWidth = 2;
-          ctx.strokeRect(x + 1, y + 1, tileW - 2, tileH - 2);
-        }
-
-        if (frame.id === state.f) {
-          ctx.strokeStyle = cssToken("--ink") || "#161a1e";
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x + 1.5, y + 1.5, tileW - 3, tileH - 3);
+        const scale = Math.min(tileW / frame.t.w, tileH / frame.t.h);
+        const dw = frame.t.w * scale;
+        const dh = frame.t.h * scale;
+        ctx.drawImage(
+          atlas,
+          frame.t.x,
+          frame.t.y,
+          frame.t.w,
+          frame.t.h,
+          x + (tileW - dw) / 2,
+          y + (tileH - dh) / 2,
+          dw,
+          dh,
+        );
+      } else {
+        // Not a placeholder: the judge's complete answer, with the `---` it wrote as a rule.
+        ctx.fillStyle = codeBg;
+        ctx.fillRect(x, y, tileW, tileH);
+        ctx.strokeStyle = border;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, tileW - 1, tileH - 1);
+        ctx.font = mono;
+        ctx.fillStyle = muted;
+        ctx.fillText(frame.id.slice(0, 8), x + 10, y + 20);
+        const parts = frame.q.raw.split(/\n-+\n/);
+        ctx.fillStyle = ink;
+        ctx.font = '13px "Geist Mono", ui-monospace, monospace';
+        ctx.fillText((parts[0] ?? "").trim().slice(0, 12), x + 10, y + tileH / 2 - 4);
+        ctx.strokeStyle = border;
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + tileH / 2 + 4.5);
+        ctx.lineTo(x + Math.min(48, tileW - 20), y + tileH / 2 + 4.5);
+        ctx.stroke();
+        ctx.fillText((parts[1] ?? "").trim().slice(0, 12), x + 10, y + tileH / 2 + 22);
+        if (tier === "withheld" && frame.r) {
+          ctx.fillStyle = accent;
+          ctx.fillRect(x, y, 2, tileH);
+          ctx.font = mono;
+          ctx.fillText(`rater ${raterBinary(frame, state.task) ? "yes" : "no"}`, x + 10, y + tileH - 10);
         }
       }
-    }
 
-    images.prefetchRows(visibleRows);
-  }, [frames, images, width, tileW, tileH, cols, rowsCount, totalH, state.task, state.src, state.f, scrollY]);
+      drawGlyph(ctx, x + 8, y + tileH - 8, ink, state.task, judgeHands(frame, state.src), judgeManipulation(frame, state.src));
+      if (frame.r) {
+        drawGlyph(ctx, x + 26, y + tileH - 8, accent, state.task, frame.r.h, frame.r.m);
+      }
+      // Only the 33 frames the judge hesitated on get a mark. A tick on all 600 said nothing.
+      if (frame.q.c !== null && frame.q.c < 0.99) {
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x + tileW - 11, y + 11, 3.5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      if (agrees(frame, state.task, state.src) === false) {
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1, y + 1, tileW - 2, tileH - 2);
+      }
+      if (frame.id === state.f) {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x + 1.5, y + 1.5, tileW - 3, tileH - 3);
+      }
+    });
+  }, [frames, atlas, width, tileW, tileH, cols, totalH, state.task, state.src, state.f, tier]);
 
   const onClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
     const box = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - box.left;
-    const y = e.clientY - box.top;
-    const c = Math.floor(x / (tileW + GAP));
-    const r = Math.floor(y / (tileH + GAP));
+    const c = Math.floor((e.clientX - box.left) / (tileW + GAP));
+    const r = Math.floor((e.clientY - box.top) / (tileH + GAP));
     if (c < 0 || c >= cols) return;
     const frame = frames[r * cols + c];
     if (frame) select(frame.id === state.f ? null : frame.id);
@@ -223,8 +276,7 @@ export function Grid({ frames, stats, state, rows, onStatus }: Props): JSX.Eleme
     };
     if (e.key in step) {
       e.preventDefault();
-      const delta = step[e.key] ?? 0;
-      const next = current < 0 ? 0 : Math.min(frames.length - 1, Math.max(0, current + delta));
+      const next = current < 0 ? 0 : Math.min(frames.length - 1, Math.max(0, current + (step[e.key] ?? 0)));
       const frame = frames[next];
       if (frame) select(frame.id);
     } else if (e.key === "Home" || e.key === "End") {
@@ -236,15 +288,7 @@ export function Grid({ frames, stats, state, rows, onStatus }: Props): JSX.Eleme
     }
   };
 
-  if (frames.length === 0) {
-    return (
-      <p className="grid-empty">
-        No frames match. Loosen a filter, or open the link you were sent again.
-      </p>
-    );
-  }
-
-  const selectedIndex = state.f ? frames.findIndex((f) => f.id === state.f) : -1;
+  const selected = state.f ? frames.findIndex((f) => f.id === state.f) : -1;
 
   return (
     <div className="grid-wrap" ref={wrapRef}>
@@ -255,25 +299,21 @@ export function Grid({ frames, stats, state, rows, onStatus }: Props): JSX.Eleme
         tabIndex={0}
         role="listbox"
         aria-label={`${frames.length} frames, ${stats.generated_from.judge} ${stats.generated_from.prompt_variant}`}
-        aria-activedescendant={selectedIndex >= 0 ? `tile-${state.f}` : undefined}
+        aria-activedescendant={selected >= 0 ? `tile-${state.f}` : undefined}
         onClick={onClick}
         onKeyDown={onKeyDown}
       />
+      {/* Every frame in this band, not the first 200: aria-activedescendant must always resolve. */}
       <ul className="grid-a11y">
-        {frames.slice(0, 200).map((f) => (
+        {frames.map((f) => (
           <li key={f.id} id={`tile-${f.id}`} role="option" aria-selected={f.id === state.f}>
             {f.corpus} {f.id.slice(0, 8)} judge {String(judgeHands(f, state.src) ?? "—")} hands,{" "}
             {String(judgeManipulation(f, state.src) ?? "—")} manipulation
             {f.r ? `, rater ${String(raterBinary(f, state.task))}` : ", no rater label"}
+            {f.t ? ", held locally" : ", picture on request"}
           </li>
         ))}
       </ul>
-      <p className="legend">
-        <span className="legend-signal">judge</span>
-        <span className="legend-human">rater</span>
-        <span>outline: judge and rater disagree</span>
-        <span>right edge: judge confidence</span>
-      </p>
     </div>
   );
 }

@@ -9,7 +9,9 @@ const PAD_L = 8;
 
 export function Health({ stats }: Props): JSX.Element {
   const h = stats.health;
-  const latencies = stats.runs.find((r) => r.latency_ms)?.latency_ms ?? [];
+  // All 600 gold calls, and provably the array the percentiles below were computed from.
+  // This used to be `runs.find(...)` -- the first run's 200 -- under a caption saying 600.
+  const latencies = h.gold_calls.latency_ms;
 
   return (
     <section className="section" id="health" aria-labelledby="health-title">

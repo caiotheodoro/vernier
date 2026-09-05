@@ -75,6 +75,7 @@ export function Frame({ frame, stats, state, rows }: Props): JSX.Element {
               <th className="detail-th">hands</th>
               <th className="detail-th">manipulation</th>
               <th className="detail-th">confidence</th>
+              <th className="detail-th">said</th>
             </tr>
           </thead>
           <tbody>
@@ -85,22 +86,40 @@ export function Frame({ frame, stats, state, rows }: Props): JSX.Element {
               <td className="detail-td">{hands(frame.q.h)}</td>
               <td className="detail-td">{manip(frame.q.m)}</td>
               <td className="detail-td">{conf(frame.q.c)}</td>
+              {/* What the model actually emitted. Six distinct strings across 600 calls. */}
+              <td className="detail-td mono">{frame.q.raw.replace(/\n/g, " ")}</td>
             </tr>
             <tr>
               <td className="detail-td">gemini stored</td>
               <td className="detail-td">{frame.g ? hands(frame.g.h) : "—"}</td>
               <td className="detail-td">{frame.g ? manip(frame.g.m) : "—"}</td>
               <td className="detail-td">—</td>
+              <td className="detail-td">—</td>
             </tr>
             <tr className="detail-row-rater">
               <td className="detail-td">rater</td>
               <td className="detail-td">{frame.r ? hands(frame.r.h) : "—"}</td>
               <td className="detail-td">{frame.r ? manip(frame.r.m) : "—"}</td>
-              <td className="detail-td">{frame.r ? frame.r.d : "—"}</td>
+              {/* The rater has no confidence; this column is difficulty and effort, and now
+                  says so instead of sitting under a "confidence" header. */}
+              <td className="detail-td">
+                {frame.r ? `${frame.r.d}, ${frame.r.s}s` : "—"}
+              </td>
+              <td className="detail-td">—</td>
             </tr>
           </tbody>
         </table>
 
+        {frame.r && frame.r.e.length > 0 ? (
+          <p className="detail-note">
+            rubric tags:{" "}
+            {frame.r.e.map((tag) => (
+              <span className="tag" key={tag}>
+                {tag}
+              </span>
+            ))}
+          </p>
+        ) : null}
         {frame.r?.note ? <p className="detail-note">“{frame.r.note}”</p> : null}
         {!frame.r ? <p className="detail-note">Not in the 93-frame human-gold set.</p> : null}
         {frame.q.s !== "ok" ? (

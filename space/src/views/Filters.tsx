@@ -65,6 +65,7 @@ export function Filters({ stats, state, shown, total }: Props): JSX.Element {
   const judgeOptions = answerOptions(state.task);
   const raterOptions: Option<RaterFilter>[] = [
     ...answerOptions(state.task).map((o) => ({ value: o.value as RaterFilter | "", label: o.label })),
+    { value: "labelled", label: "any human label" },
     { value: "unlabelled", label: "unlabelled" },
   ];
 

@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useData } from "./data/load";
-import { RowsClient, type RowsStatus } from "./data/rows";
+import { RowsClient } from "./data/rows";
 import { HF_DATASET_URL, REPO_URL, SOURCE_DATASET_URL, repoFile, type Stats } from "./data/types";
 import { int } from "./lib/format";
+import { useFadeIn } from "./lib/hooks";
 import { applySlice } from "./state/slice";
 import { parseHash, useHash, type SliceState } from "./state/url";
 import { Coverage } from "./views/Coverage";
@@ -11,13 +12,13 @@ import { Frame } from "./views/Frame";
 import { Grid } from "./views/Grid";
 import { Health } from "./views/Health";
 import { Quality } from "./views/Quality";
-import { Scale } from "./views/Scale";
+import { Replication } from "./views/Replication";
+import { Hero } from "./views/Hero";
 
 export function App(): JSX.Element {
   const data = useData();
   const hash = useHash();
   const state: SliceState = useMemo(() => parseHash(hash), [hash]);
-  const [rowsStatus, setRowsStatus] = useState<RowsStatus>("idle");
   const gridRef = useRef<HTMLDivElement>(null);
 
   const scrollToGrid = useCallback(() => {
@@ -46,25 +47,24 @@ export function App(): JSX.Element {
   }
 
   const { stats, frames } = data;
-  return <Loaded stats={stats} frames={frames} state={state} rowsStatus={rowsStatus} setRowsStatus={setRowsStatus} gridRef={gridRef} scrollToGrid={scrollToGrid} />;
+  return <Loaded stats={stats} frames={frames} state={state} gridRef={gridRef} scrollToGrid={scrollToGrid} />;
 }
 
 type LoadedProps = {
   stats: Stats;
   frames: import("./data/types").Frame[];
   state: SliceState;
-  rowsStatus: RowsStatus;
-  setRowsStatus: (s: RowsStatus) => void;
   gridRef: React.RefObject<HTMLDivElement>;
   scrollToGrid: () => void;
 };
 
-function Loaded({ stats, frames, state, rowsStatus, setRowsStatus, gridRef, scrollToGrid }: LoadedProps): JSX.Element {
+function Loaded({ stats, frames, state, gridRef, scrollToGrid }: LoadedProps): JSX.Element {
   const rows = useMemo(
     () => new RowsClient(stats.rows_api.dataset, stats.rows_api.config, stats.rows_api.split),
     [stats.rows_api.dataset, stats.rows_api.config, stats.rows_api.split],
   );
   const shown = useMemo(() => applySlice(frames, state), [frames, state]);
+  useFadeIn(true);
   const selected = state.f ? (frames.find((f) => f.id === state.f) ?? null) : null;
 
   return (
@@ -83,25 +83,23 @@ function Loaded({ stats, frames, state, rowsStatus, setRowsStatus, gridRef, scro
           </p>
         </header>
 
-        {rowsStatus === "slow" || rowsStatus === "down" ? (
-          <p className="notice">
-            {rowsStatus === "slow"
-              ? "Hugging Face's dataset server is rate-limiting this page, so frames arrive slowly. Labels and statistics are already here."
-              : "Frames are loading from Hugging Face's dataset server and it did not answer. Labels and statistics still work."}
-          </p>
-        ) : null}
 
-        <Scale stats={stats} frames={frames} state={state} onReason={scrollToGrid} />
+        <Hero stats={stats} frames={frames} state={state} onReason={scrollToGrid} />
 
         <Filters stats={stats} state={state} shown={shown.length} total={frames.length} />
 
-        <div ref={gridRef}>
-          <Grid frames={shown} stats={stats} state={state} rows={rows} onStatus={setRowsStatus} />
+        <div ref={gridRef} className="bleed">
+          <Grid frames={shown} stats={stats} state={state} />
         </div>
 
-        {selected ? <Frame frame={selected} stats={stats} state={state} rows={rows} /> : null}
+        {selected ? (
+          <div className="bleed">
+            <Frame frame={selected} stats={stats} state={state} rows={rows} />
+          </div>
+        ) : null}
 
-        <Quality stats={stats} state={state} onFilter={scrollToGrid} />
+        <Replication stats={stats} />
+        <Quality stats={stats} frames={frames} state={state} onFilter={scrollToGrid} />
         <Coverage stats={stats} state={state} />
         <Health stats={stats} />
 
