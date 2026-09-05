@@ -2688,3 +2688,56 @@ for the rater, and gating every commit on it would block the commit that records
 **Reverses if:** a rater argues rule 12 is wrong -- that a frame can show manipulation with no
 hand visible, which is arguable for an occluded two-handed grip. That is a rubric change, needs
 a `RUBRIC.md` revision and its own entry, and would reinstate these labels rather than this one.
+
+## D079 — The margin estimand, exploratory: the point estimate flips and the interval cannot exclude the published value
+
+H5 asks whether the judge's *error rate* differs by domain. That is an interaction, and D035
+found it underpowered before any label was written. What Build AI actually sells is not an error
+rate but a **margin**: Egocentric-10K leading EPIC-KITCHENS-100 by 6.62pp on active manipulation
+and 6.05pp on >=1 hand (`docs/UPSTREAM-FINDINGS.md` F4). `scripts/margin_analysis.py` estimates
+that margin with each side corrected for judge error against human gold.
+
+**Not pre-registered, and reported as exploratory in those words**, per the pre-registration's
+own rule. It re-parameterises H5's question on the same frozen data rather than fishing a new
+outcome from a family, and H5 itself is unchanged and reported beside it.
+
+| comparison | task | published | corrected | 95% CI | published inside |
+|---|---|---:|---:|---|---|
+| Ego − EPIC | manipulation | +6.62pp | **-4.69pp** | [-18.00, +8.63] | **yes** |
+| Ego − EPIC | hand count | +6.05pp | +6.67pp | [-5.03, +18.37] | yes |
+| Ego − Ego4D | manipulation | +41.59pp | +30.84pp | [+13.71, +47.97] | yes |
+| Ego − Ego4D | hand count | +29.09pp | +31.51pp | [+18.69, +44.34] | yes |
+
+**The honest reading, which is weaker than it first looks.** The manipulation margin against
+EPIC changes sign under correction, from +6.62pp to -4.69pp. It is the only one of the four that
+does. But the corrected interval covers the published value, so **this does not refute the
+published margin** -- it fails to resolve it. `RED-TEAM.md` A9's rule applies verbatim: a wide
+interval containing the null is "underpowered, not null", and conflating the two would be the
+error this project audits. A headline built on "the margin reverses" would be exactly that
+conflation, and is not available on this data.
+
+What is genuinely supported: the point estimate is sensitive to judge error in a way the
+published number does not disclose; the hand-count margin survives correction nearly unchanged,
+which is a real asymmetry between the two claims; and the Ego4D margins are far too large for any
+judge effect to reach, which `docs/METHOD.md` E6 predicted before the data existed and which the
+writeup must keep saying rather than over-generalising from the EPIC result.
+
+**The estimand is priced, which is the useful part.** Holding the point estimate, roughly **42
+gold labels per arm** would put the published manipulation margin outside the interval, against
+the 33 and 30 that exist -- about 25 more labels. The same figure for hand count is in the
+thousands, because there the corrected and published values nearly coincide and no separation is
+expected. So the audit can state what it would cost to finish: not a second corpus, not a better
+judge, about twenty-five more frames from a rater.
+
+**Variance.** The arms are disjoint frame sets, so their variances are summed. Conservative in
+the direction that matters: a shared rater or judge offset is positively correlated across arms
+and would shrink the variance of the difference below the sum, so a margin that excluded the
+published value here would also exclude it under a tighter interval. This one does not.
+
+**Sensitivity to D078, recorded because it is large.** Before the rule-12 corrections, EPIC's
+PPI manipulation estimate was 0.8941 and this margin would have been about -8pp. The corrections
+moved it to 0.8552 and the margin to -4.69pp. A result that moves by 3pp on two mislabelled
+frames is a result whose error bars are the story, not its point estimate.
+
+**Reverses if:** the gold sets grow. At ~42 per arm this becomes a decidable question rather than
+an underpowered one, and a second rater would settle the anchoring objection at the same time.

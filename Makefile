@@ -9,7 +9,7 @@
 # path (D039) cannot structurally supply, not just an unwired one.)
 .PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model space space-data lock \
         domain-bias distil calibrate probe card validate privacy-gate \
-        test typecheck fixtures check-eval-parquets check-label-rules install-hooks
+        test typecheck fixtures check-eval-parquets check-label-rules margin install-hooks
 
 NOT_YET = @echo "not yet implemented -- see docs/HANDOFF.md for which wave lands this" >&2 && exit 1
 PASS ?= primary
@@ -78,6 +78,9 @@ check-eval-parquets:  ## D016: verify evaluation parquets contain the frames the
 
 check-corpus-manifest:  ## D071: reconcile the raw-corpus clip manifest against the published 2,153-worker/85-factory figures.
 	python3 scripts/check_corpus_manifest.py
+
+margin: ## EXPLORATORY (D079): gold-corrected margin between corpora, vs the published one
+	python3 scripts/margin_analysis.py
 
 check-label-rules: ## Report human labels breaking a machine-checkable RUBRIC.md rule (D078)
 	python3 scripts/check_label_rules.py

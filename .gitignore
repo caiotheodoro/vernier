@@ -9,6 +9,7 @@ data/*
 !data/gold_judged/
 !data/judge_test_retest.json
 !data/wave4_analysis.json
+!data/margin_exploratory.json
 !data/rung1_distillation.json
 !data/e2_full_n10000.json
 !data/e5_full_n2000.json
