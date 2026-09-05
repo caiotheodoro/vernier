@@ -14,5 +14,5 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip
-      - run: pip install -e ".[dev,data,stats,probes,judges,cloud]"
+      - run: pip install -e ".[dev,data,stats,probes,judges,cloud]" -c constraints.txt
       - run: make validate

@@ -7,7 +7,7 @@
 # `agreement` -- see that target's recipe. `docs/DECISIONS.md` D064 removed the standalone
 # stub, since its own help text promised a design-effect column this repo's non-clustered PPI
 # path (D039) cannot structurally supply, not just an unwired one.)
-.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model space space-data \
+.PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model space space-data lock \
         domain-bias distil calibrate probe card validate privacy-gate \
         test typecheck fixtures check-eval-parquets install-hooks
 
@@ -63,6 +63,9 @@ test:          ## Wave 0: run the pytest suite (contract records + fixture gener
 
 typecheck:     ## Wave 0: mypy --strict over src/vernier, tests, scripts and cloud.
 	python3 -m mypy src/vernier tests scripts cloud
+
+lock:          ## Re-resolve constraints.txt (universal, py3.11) -- a deliberate dependency bump, never a side effect. Verify with `make validate` after.
+	uv pip compile pyproject.toml --all-extras --universal --python-version 3.11 -o constraints.txt
 
 fixtures:      ## Wave 0: regenerate tests/fixtures/{valid,malformed}/*.json from tests/fixtures.py.
 	python3 scripts/generate_fixtures.py

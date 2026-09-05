@@ -1,0 +1,296 @@
+# Pinned, universal (py>=3.11, any platform) resolution of every extra in pyproject.toml.
+# Direct dependencies are held to the versions the committed results and the passing local
+# suite actually ran on; transitive ones are whatever resolved against those. CI installs
+# with `-c constraints.txt` so a new upstream release cannot turn main red on its own (the
+# openai 3.x / httpx2 break that motivated the `openai<3` pin arrived exactly that way).
+#
+# Regenerate deliberately, never as a side effect:  make lock
+# (`uv pip compile pyproject.toml --all-extras --universal --python-version 3.11`).
+aiohappyeyeballs==2.7.1
+    # via aiohttp
+aiohttp==3.14.3
+    # via modal
+aiosignal==1.4.0
+    # via aiohttp
+annotated-doc==0.0.5
+    # via typer
+annotated-types==0.8.0
+    # via pydantic
+anyio==4.15.0
+    # via
+    #   httpx
+    #   openai
+    #   watchfiles
+ast-serialize==0.9.0
+    # via mypy
+attrs==26.1.0
+    # via aiohttp
+cbor2==6.1.4
+    # via modal
+certifi==2026.7.22
+    # via
+    #   httpcore
+    #   httpx
+    #   modal
+click==8.5.0
+    # via
+    #   huggingface-hub
+    #   modal
+colorama==0.4.6 ; sys_platform == 'win32'
+    # via
+    #   pytest
+    #   tqdm
+    #   typer
+cuda-bindings==13.3.1 ; python_full_version < '3.15' and sys_platform == 'linux'
+    # via torch
+cuda-pathfinder==1.8.1 ; python_full_version < '3.15' and sys_platform == 'linux'
+    # via cuda-bindings
+cuda-toolkit==13.0.3.0 ; sys_platform == 'linux'
+    # via torch
+distro==1.9.0
+    # via openai
+filelock==3.32.5
+    # via
+    #   huggingface-hub
+    #   torch
+frozenlist==1.8.0
+    # via
+    #   aiohttp
+    #   aiosignal
+fsspec==2026.7.0
+    # via
+    #   huggingface-hub
+    #   torch
+grpclib==0.4.9
+    # via modal
+h11==0.16.0
+    # via httpcore
+h2==4.4.1
+    # via grpclib
+hf-xet==1.6.0 ; platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'
+    # via huggingface-hub
+hpack==4.2.0
+    # via h2
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via
+    #   huggingface-hub
+    #   openai
+huggingface-hub==1.28.0
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+    #   tokenizers
+    #   transformers
+hyperframe==6.1.0
+    # via h2
+idna==3.19
+    # via
+    #   anyio
+    #   httpx
+    #   yarl
+iniconfig==2.3.0
+    # via pytest
+jinja2==3.1.6
+    # via torch
+jiter==0.16.0
+    # via openai
+joblib==1.5.3
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+    #   scikit-learn
+librt==0.15.0 ; platform_python_implementation != 'PyPy'
+    # via mypy
+markdown-it-py==4.2.0
+    # via rich
+markupsafe==3.0.3
+    # via jinja2
+mdurl==0.1.2
+    # via markdown-it-py
+modal==1.5.5
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+mpmath==1.3.0
+    # via sympy
+multidict==6.7.1
+    # via
+    #   aiohttp
+    #   grpclib
+    #   yarl
+mypy==2.1.0
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+mypy-extensions==1.1.0
+    # via mypy
+networkx==3.6.1
+    # via torch
+numpy==2.4.3
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+    #   scikit-learn
+    #   scipy
+    #   transformers
+nvidia-cublas==13.1.1.3 ; sys_platform == 'linux'
+    # via
+    #   cuda-toolkit
+    #   nvidia-cudnn-cu13
+    #   nvidia-cusolver
+nvidia-cuda-cupti==13.0.85 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via cuda-toolkit
+nvidia-cuda-nvrtc==13.0.88 ; sys_platform == 'linux'
+    # via
+    #   cuda-toolkit
+    #   nvidia-cublas
+nvidia-cuda-runtime==13.0.96 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via cuda-toolkit
+nvidia-cudnn-cu13==9.24.0.43 ; sys_platform == 'linux'
+    # via torch
+nvidia-cufft==12.0.0.61 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via cuda-toolkit
+nvidia-cufile==1.15.1.6 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via cuda-toolkit
+nvidia-curand==10.4.0.35 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via cuda-toolkit
+nvidia-cusolver==12.0.4.66 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via cuda-toolkit
+nvidia-cusparse==12.6.3.3 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via
+    #   cuda-toolkit
+    #   nvidia-cusolver
+nvidia-cusparselt-cu13==0.8.1 ; sys_platform == 'linux'
+    # via torch
+nvidia-nccl-cu13==2.30.7 ; sys_platform == 'linux'
+    # via torch
+nvidia-nvjitlink==13.3.33 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via
+    #   cuda-toolkit
+    #   nvidia-cufft
+    #   nvidia-cusolver
+    #   nvidia-cusparse
+nvidia-nvshmem-cu13==3.4.5 ; sys_platform == 'linux'
+    # via torch
+nvidia-nvtx==13.0.85 ; (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux')
+    # via cuda-toolkit
+openai==2.32.0
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+packaging==26.3
+    # via
+    #   huggingface-hub
+    #   pytest
+    #   transformers
+pathspec==1.1.1
+    # via mypy
+pillow==12.3.0
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+pluggy==1.6.0
+    # via pytest
+propcache==0.5.2
+    # via
+    #   aiohttp
+    #   yarl
+protobuf==6.33.6
+    # via modal
+pyarrow==23.0.1
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+pydantic==2.12.5
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+    #   openai
+pydantic-core==2.41.5
+    # via pydantic
+pygments==2.21.0
+    # via rich
+pytest==8.3.3
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+pyyaml==6.0.3
+    # via
+    #   huggingface-hub
+    #   transformers
+regex==2026.9.3
+    # via transformers
+rich==15.0.0
+    # via
+    #   modal
+    #   typer
+safetensors==0.8.0
+    # via transformers
+scikit-learn==1.8.0
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+scipy==1.17.1
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+    #   scikit-learn
+setuptools==84.0.0
+    # via torch
+shellingham==1.5.4
+    # via typer
+sniffio==1.3.1
+    # via openai
+sympy==1.14.0
+    # via torch
+synchronicity==0.12.5
+    # via modal
+threadpoolctl==3.6.0
+    # via scikit-learn
+tokenizers==0.23.2
+    # via transformers
+toml==0.10.2
+    # via modal
+torch==2.14.0
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+tqdm==4.70.0
+    # via
+    #   huggingface-hub
+    #   openai
+    #   transformers
+transformers==5.16.1
+    # via
+    #   -c /private/tmp/claude-501/-Users-caiotheodoro-Documents-personal-personal-ml-vernier/e5ba5294-9ddc-4858-bff6-1c0ca4082ee1/scratchpad/local-pins.txt
+    #   vernier (pyproject.toml)
+triton==3.8.0 ; python_full_version < '3.15' and sys_platform == 'linux'
+    # via torch
+typer==0.27.2
+    # via transformers
+types-certifi==2021.10.8.3
+    # via modal
+types-toml==0.10.8.20260518
+    # via modal
+typing-extensions==4.16.0
+    # via
+    #   aiohttp
+    #   aiosignal
+    #   anyio
+    #   huggingface-hub
+    #   modal
+    #   mypy
+    #   openai
+    #   pydantic
+    #   pydantic-core
+    #   synchronicity
+    #   torch
+    #   typing-inspection
+typing-inspection==0.4.4
+    # via pydantic
+watchfiles==1.2.0
+    # via modal
+yarl==1.24.5
+    # via aiohttp
