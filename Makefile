@@ -52,6 +52,9 @@ probe:         ## Result 2: transfer probe. Kill-gated -- see docs/METHOD.md.
 card:          ## Emit the measurement card, including "what could not be checked".
 	python3 scripts/emit_card.py
 
+space-thumbs:  ## Build the Space's thumbnail atlas from the cached eval parquet (D073). Rarely.
+	python3 scripts/export_space_thumbnails.py
+
 space-data:    ## Build the Space's precomputed JSON (space/public/data/) from committed data/.
 	python3 scripts/export_space_data.py
 

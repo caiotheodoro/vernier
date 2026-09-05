@@ -23,6 +23,10 @@ data/*
 # deterministic -- ~25 minutes against 60MB in every clone forever.
 !data/h2_design_effect.S10k-U.json
 !data/h2_design_effect.S10k-S.json
+# docs/DECISIONS.md D073: the index for the frames the Space ships as thumbnails. Small,
+# checkable, and read by scripts/export_space_data.py -- the atlas itself lives under
+# space/public/atlas/ because Vite serves it verbatim.
+!data/space_thumbnails.json
 frames/
 cache/
 *.mp4
