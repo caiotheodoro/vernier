@@ -19,6 +19,7 @@ sys.path.insert(0, str(_ROOT / "scripts"))
 
 from export_paper_tables import (  # noqa: E402
     _cluster_detail,
+    _fig_forest,
     _confusion_per_corpus,
     _design_effect,
     _error_direction,
@@ -44,6 +45,7 @@ def data() -> dict[str, Any]:
 @pytest.mark.parametrize(
     "name,builder",
     [
+        ("fig_forest", _fig_forest),
         ("confusion_per_corpus", _confusion_per_corpus),
         ("ppi_variance", _ppi_variance),
         ("run_ledger", _run_ledger),
@@ -79,6 +81,11 @@ def test_underscores_are_escaped_for_tex(data: dict[str, Any]) -> None:
 def test_every_table_is_a_complete_booktabs_tabular(data: dict[str, Any]) -> None:
     for path in sorted(_GENERATED.glob("*.tex")):
         tex = path.read_text()
+        if path.name.startswith("fig_"):
+            assert tex.startswith("\\begin{tikzpicture}"), path.name
+            assert tex.rstrip().endswith("\\end{tikzpicture}"), path.name
+            assert "{{" not in tex, f"{path.name}: doubled braces leaked from an f-string"
+            continue
         if path.name == "provenance.tex":
             assert tex.count("\\newcommand") >= 5
             continue

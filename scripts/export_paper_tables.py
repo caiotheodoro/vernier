@@ -346,6 +346,51 @@ def _cluster_detail(d: dict[str, Any]) -> str:
     )
 
 
+
+def _fig_forest(d: dict[str, Any]) -> str:
+    """The published mark has no width. That is the whole argument and a table buries it.
+
+    pgfplots rather than an image, so the coordinates come from the artifacts like every table
+    here and no plotting dependency enters the project.
+    """
+    rows: list[str] = []
+    pub, judge, ppi = [], [], []
+    y = 0
+    labels = []
+    for arm, corpus in (("G200-ego", "Egocentric-10K"), ("G200-epic", "EPIC-KITCHENS-100"),
+                        ("G200-ego4d", "Ego4D")):
+        block = d["wave4"]["ppi"][arm]["manipulation"]
+        y += 1
+        labels.append(f"{y}/{corpus}")
+        pub.append(f"({block['published']},{y})")
+        judge.append(f"({block['naive']['value']},{y})")
+        p_ = block["ppi"]
+        half = (p_["ci"]["hi"] - p_["ci"]["lo"]) / 2
+        ppi.append(f"({p_['value']},{y}) +- ({half},0)")
+    rows.append("\\begin{tikzpicture}")
+    yticks = ",".join(l.split("/")[1] for l in labels)
+    opts = (
+        "width=\\linewidth,height=5.2cm,xlabel={active manipulation prevalence},"
+        "xmin=0.35,xmax=1.02,ytick={1,2,3},yticklabels={" + yticks + "},"
+        "ymin=0.4,ymax=3.6,y dir=reverse,legend pos=south west,legend cell align=left,"
+        "legend style={font=\\footnotesize,draw=none,fill=none},grid=major,"
+        "major grid style={dotted,gray!40},tick label style={font=\\footnotesize},"
+        "label style={font=\\footnotesize}"
+    )
+    rows.append("\\begin{axis}[" + opts + "]")
+    rows.append("\\addplot+[only marks,mark=|,mark size=5pt,black,thick] coordinates {"
+                + " ".join(pub) + "};")
+    rows.append("\\addlegendentry{published, no interval}")
+    rows.append("\\addplot+[only marks,mark=o,gray] coordinates {" + " ".join(judge) + "};")
+    rows.append("\\addlegendentry{judge alone}")
+    rows.append("\\addplot+[only marks,mark=*,error bars/.cd,x dir=both,x explicit] coordinates {"
+                + " ".join(ppi) + "};")
+    rows.append("\\addlegendentry{PPI++ with 95\\% interval}")
+    rows.append("\\end{axis}")
+    rows.append("\\end{tikzpicture}")
+    return "\n".join(rows) + "\n"
+
+
 def main() -> int:
     d = _load()
     _OUT.mkdir(parents=True, exist_ok=True)
@@ -360,6 +405,7 @@ def main() -> int:
         "ppi_variance": _ppi_variance(d),
         "run_ledger": _run_ledger(d),
         "cluster_detail": _cluster_detail(d),
+        "fig_forest": _fig_forest(d),
     }
     for name, tex in tables.items():
         (_OUT / f"{name}.tex").write_text(tex)

@@ -1,0 +1,10 @@
+\begin{tikzpicture}
+\begin{axis}[width=\linewidth,height=5.2cm,xlabel={active manipulation prevalence},xmin=0.35,xmax=1.02,ytick={1,2,3},yticklabels={Egocentric-10K,EPIC-KITCHENS-100,Ego4D},ymin=0.4,ymax=3.6,y dir=reverse,legend pos=south west,legend cell align=left,legend style={font=\footnotesize,draw=none,fill=none},grid=major,major grid style={dotted,gray!40},tick label style={font=\footnotesize},label style={font=\footnotesize}]
+\addplot+[only marks,mark=|,mark size=5pt,black,thick] coordinates {(0.9166,1) (0.8504,2) (0.5007,3)};
+\addlegendentry{published, no interval}
+\addplot+[only marks,mark=o,gray] coordinates {(0.9,1) (0.875,2) (0.63,3)};
+\addlegendentry{judge alone}
+\addplot+[only marks,mark=*,error bars/.cd,x dir=both,x explicit] coordinates {(0.850557049558202,1) +- (0.07156131868854032,0) (0.8607142857142858,2) +- (0.07901984495654224,0) (0.5,3) +- (0.13347483477663524,0)};
+\addlegendentry{PPI++ with 95\% interval}
+\end{axis}
+\end{tikzpicture}

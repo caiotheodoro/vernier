@@ -8,6 +8,8 @@
 
 \usepackage[margin=1.1in]{geometry}
 \usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{amsmath}
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
@@ -287,9 +289,20 @@ frames carry no worker identifier to cluster over.}
 \label{tab:prev}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\input{generated/fig_forest}
+\caption{Active-manipulation prevalence per corpus. The vendor's published figure is a bar with
+no width, because none is published. The judge-only rate is what a single labelling pass
+produces. The gold-corrected estimate carries a 95\% interval, which on the Egocentric arm spans
+roughly fourteen percentage points. The argument of this paper is the difference between the
+first mark and the third.}
+\label{fig:forest}
+\end{figure}
+
 Correcting for the error in Table~\ref{tab:errdir} moves every prevalence estimate and, more to
 the point, attaches an interval to quantities that are published without one
-(Table~\ref{tab:prev}).
+(Table~\ref{tab:prev}, and Figure~\ref{fig:forest}).
 
 The comparative claim is what the vendor actually sells, and it is a difference rather than a
 rate. Table~\ref{tab:margins} corrects both sides of it.
