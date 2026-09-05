@@ -17,6 +17,7 @@ from typing import Any
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _DATA = _REPO_ROOT / "data"
+_ARTICLE_URL = "https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way"
 _REPO_URL = "https://github.com/caiotheodoro/vernier"
 _DATASET_URL = "https://huggingface.co/datasets/caiotheodoro/vernier"
 
@@ -89,6 +90,7 @@ Human gold here is n = {r["n_calibration_gold"] + r["n_eval_gold"]} (calibration
 either way. None of that has been run.
 
 Data: [{_DATASET_URL}]({_DATASET_URL}). Code and decision log: [{_REPO_URL}]({_REPO_URL}).
+Why this exists and why it failed: [{_ARTICLE_URL}]({_ARTICLE_URL}).
 
 ## License
 

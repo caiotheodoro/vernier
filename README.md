@@ -172,6 +172,7 @@ also ships 2,144 workers against the published 2,153 (`docs/UPSTREAM-FINDINGS.md
 | Where the work currently stands | `docs/HANDOFF.md` |
 | The data, on the Hub (labels, membership, judge output, results; no images) | [`caiotheodoro/vernier`](https://huggingface.co/datasets/caiotheodoro/vernier) |
 | The rung-1 probe, a published negative result | [`caiotheodoro/vernier-rung1-probe`](https://huggingface.co/caiotheodoro/vernier-rung1-probe) |
+| The writeup, with the argument and the charts | [caio.theodoro.dev](https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way) |
 | Everything above in one place | [collection](https://huggingface.co/collections/caiotheodoro/vernier-same-judge-same-6pp-on-2-hands-both-releases-6a9b1bc9fac182a7a2d9c997) |
 
 Apache-2.0.

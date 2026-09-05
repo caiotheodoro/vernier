@@ -59,6 +59,7 @@ _DOC_COPIES = {
     "MEASUREMENT_CARD.json": "MEASUREMENT_CARD.json",
 }
 
+_ARTICLE_URL = "https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way"
 _REPO_URL = "https://github.com/caiotheodoro/vernier"
 _SPACE_URL = "https://huggingface.co/spaces/caiotheodoro/vernier"
 _MODEL_URL = "https://huggingface.co/caiotheodoro/vernier-rung1-probe"
@@ -129,6 +130,9 @@ def _readme(card: dict[str, Any], counts: dict[str, int]) -> str:
     e2_100k = json.loads((_DATA / "e2_100k_eval.json").read_text())
     wave4 = json.loads((_DATA / "wave4_analysis.json").read_text())
     rung1 = json.loads((_DATA / "rung1_distillation.json").read_text())
+    # D083: the error-direction counts are produced by export_space_data, not recounted here.
+    stats = json.loads((_REPO_ROOT / "space" / "public" / "data" / "stats.json").read_text())
+    margins = json.loads((_DATA / "margin_exploratory.json").read_text())
 
     h1 = e2["H1"]
     h1k = e2_100k["published_comparison"]
@@ -139,6 +143,10 @@ def _readme(card: dict[str, Any], counts: dict[str, int]) -> str:
     n_primary = wave4["n_primary"]
     n_pairs = intra["manipulation"]["n_pairs"]
     ece = wave4["H7_calibration"]
+    conf = stats["confusion"]
+    err = conf["error_direction"]
+    sep = wave4["retest_separation"]
+    margin = margins["comparisons"]["egocentric-10k_minus_epic-kitchens-100"]["manipulation"]
     n_claims = len(card["claims"])
     n_unchecked = len(card["what_could_not_be_checked"])
 
@@ -193,6 +201,8 @@ open-weights judge on the same frames, Build AI's own stored labels, and every c
 result. **No image is redistributed in this dataset** -- frames are identified by `frame_id` and fetched from
 the vendor's own release.
 
+**Full writeup, with the argument and the charts: [{_ARTICLE_URL}]({_ARTICLE_URL}).**
+
 Code, protocol and decision log: [{_REPO_URL}]({_REPO_URL}). Frame-by-frame view:
 [Space]({_SPACE_URL}). Distilled probe (negative result): [model]({_MODEL_URL}).
 Machine-checked verdict: `MEASUREMENT_CARD.json` in this repo -- {n_claims} claims,
@@ -228,6 +238,21 @@ Against human gold (one rater, n = {n_primary} primary labels, rubric v1.2.0):
   {_pct(ppi_ego_m["ppi"]["ci"]["hi"])}]) vs published {_pct(ppi_ego_m["published"])}%;
   judge alone {_pct(ppi_ego_m["naive"]["value"])}%. Not clustered by worker (no worker id on
   these frames) -- a lower bound on the true width.
+- **Every judge error in the gold set inflates the statistic.** {err["total_errors"]} errors
+  across {conf["n"]} frames: hand count {err["hand_count"]["over"]} over-counts out of
+  {err["hand_count"]["at_risk_over"]} frames that could be over-counted and
+  {err["hand_count"]["under"]} under-counts out of {err["hand_count"]["at_risk_under"]};
+  manipulation {err["manipulation"]["over"]} out of {err["manipulation"]["at_risk_over"]} and
+  {err["manipulation"]["under"]} out of {err["manipulation"]["at_risk_under"]}. Build AI's own
+  stored `gemini-2.5-flash` labels carry the same sign on the same frames, so this is not one
+  model's quirk.
+- **The published lead over EPIC-KITCHENS-100 does not survive correction, and is not refuted
+  either.** Exploratory, not pre-registered: the active-manipulation margin goes from a
+  published {margin["published_margin_pp"]:+.2f}pp to {margin["corrected_margin_pp"]:+.2f}pp
+  (95% CI [{margin["ci_pp"]["lo"]:.2f}, {margin["ci_pp"]["hi"]:.2f}]). The sign flips and the
+  interval still covers the published value, so this fails to resolve the margin rather than
+  refuting it. About {margin["approx_gold_per_arm_to_exclude_published"]} gold frames per arm
+  would settle it, against the 33 and 30 that exist.
 - Domain bias (H5): judge error on manipulation {_pct(h5["egocentric"]["error_rate"])}%
   (Egocentric, n = {h5["egocentric"]["n"]}) vs {_pct(h5["epic_kitchens"]["error_rate"])}%
   (EPIC-KITCHENS-100, n = {h5["epic_kitchens"]["n"]}). Underpowered by design at this n;
@@ -257,7 +282,10 @@ Schemas are the pydantic models in `CONTRACTS.md` (copied here). Raw result file
 
 ## Limitations
 
-One rater, so no inter-rater agreement -- the blind re-label is the substitute. The rater had
+One rater, so no inter-rater agreement -- the blind re-label is the substitute, and it ran a
+median of {sep["median_days"] * 24:.1f} hours after the primary pass rather than the seven days
+the protocol specified ({sep["n_pairs_meeting_requirement"]} of {sep["n_pairs"]} pairs met it),
+so it measures consistency within a session and cannot rule out recall (`DECISIONS.md` D076). The rater had
 read the audited prompt before writing the rubric. Human gold is n = {n_primary}, reduced from
 the pre-registered 600; every interval is correspondingly wide and every negative result is
 ambiguous between "no effect" and "cannot see one". No cluster-robust interval exists yet: the

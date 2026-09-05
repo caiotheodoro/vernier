@@ -24,6 +24,9 @@ is measured on two 10,000-frame draws from the raw corpus, clustered by worker: 
 against a pre-registered 2, real but smaller than predicted. One item remains blocked, the
 transfer probe (see docs/HANDOFF.md).
 
+The writeup, with the argument, the charts and what broke while auditing this project's own
+claims: https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way
+
 Start at README.md. Then docs/PRE-REGISTRATION.md (what is committed before any result
 is seen), docs/RUBRIC.md (the annotation rules Build AI's prompt leaves undefined), and
 docs/COVERAGE.md (what this does not measure).

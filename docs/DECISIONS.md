@@ -2909,3 +2909,43 @@ replaced with `ntn pages edit` to drop the duplicated frontmatter.
 
 **Reverses if:** the site's chart renderer rejects any of the four cv-chart blocks, in which
 case they become tables and the article loses nothing but density.
+
+## D084 — The Hugging Face blog post is dropped; the Hub artifacts describe themselves and point at the article
+
+The publication plan carried since `docs/HANDOFF.md` was written had the writeup published as a
+Hugging Face community article. It never went up, and it is now cancelled: the article is live on
+the author's own site at https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way, and a
+second copy of the same argument on a different domain would be one more surface to keep in sync
+with numbers that have moved three times in two days.
+
+**What replaces it.** The Hub carries the artifacts and points at the article rather than
+restating it.
+
+- **The collection description is capped at 150 characters**, which the API enforces and which
+  rules it out as the in-depth surface. It now reads as a pointer: the one-directional error
+  finding and the article URL.
+- **Every item in the collection gained a note** (200 to 255 characters each), saying what the
+  artifact is and why it is in the set: the dataset as the audit's own output, the probe as a
+  published negative result, each Build AI release as the audited object, and the Space as the
+  only place the 24 republished stills exist.
+- **The dataset card is the in-depth surface**, and it already was. It gains the article link at
+  the top, the one-directional error result with its at-risk denominators, the margin estimand
+  with its interval and the roughly 42 gold frames per arm that would settle it, and the D076
+  retest-separation disclosure in its limitations.
+- The model card, `README.md`'s map and `llms.txt` all carry the article URL. It is the first
+  absolute URL `llms.txt` has ever held.
+
+**One thing to watch.** The article's slug is write-once in practice: the sibling `suture` post
+links three times to a `reconforge` URL that now returns 404 because that article's slug was
+edited later, and Notion leaves no redirect. Every Hub surface above now hardcodes
+`vernier-judge-errors-run-one-way`, so changing it breaks the dataset card, the model card, the
+collection, `README.md` and `llms.txt` at once.
+
+**Retired, not deleted:** `scratchpad/make_article.py` and the generated `ARTICLE.md` were built
+to turn `docs/WRITEUP.md` into a Hub article body. They are scratch files and were never
+committed. `docs/WRITEUP.md` itself stays: it is the short version, it is pinned by
+`scripts/check_prose_figures.py`, and the dataset card is generated from the same artifacts it
+quotes.
+
+**Reverses if:** the article moves off the author's site, at which point the Hub surfaces are
+pointing at a dead URL and something has to host the argument again.
