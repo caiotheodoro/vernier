@@ -3,35 +3,42 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-05 — publication is blocked on 36 human labels, and two disclosures
-landed.** Planning the arXiv paper surfaced a claim in `docs/WRITEUP.md` that the public data
-contradicts: the blind re-label ran a **median of 2.4 hours** after the primary pass, not the
-">=7 days" the pre-registration specifies, with **0 of 34 pairs** meeting the rule. D076 records
-it; the separation is now measured by `scripts/wave4_analysis.py` into
-`data/wave4_analysis.json#retest_separation` and read into the card, so it cannot go stale again.
-AC1 is unchanged (0.8757 / 0.9037, both above the 0.70 gate); what it licenses is narrower, and
-`WRITEUP.md`, `RED-TEAM.md` A1, `AGENTS.md`, `METHOD.md` E3, `agreement/core.py` and the Space
-all say so now. Amendment 5 is appended to the frozen pre-registration.
+**Last updated: 2026-09-05 — the review pass is closed, the numbers are settled, and the
+article is ready to paste.** Five entries landed today. D076: the blind re-label ran a median of
+2.4 hours after the primary pass, not the ">=7 days" the pre-registration specifies (0 of 34
+pairs met it); the separation is now measured into `data/wave4_analysis.json#retest_separation`
+rather than asserted. D077: D075's control arm was added *after* its labels were written, so the
+pass was re-planned under `--salt`; the first attempt is archived, not deleted. D078: seven
+labels broke `RUBRIC.md` rule 12 (zero hands with manipulation true), unenforced by anything —
+corrected, and the rule now lives in `src/vernier/labels/rules.py`, both labelling CLIs and
+`make check-label-rules`. D079: the exploratory margin estimand. D080: **the review pass is not
+folded**, and that entry says why.
 
-D077 found the second one: **D075's control arm was added after its labels were written.**
-`git show 4a9444c:data/labels/caio/review_set.json` is 18 frames, all disagreement; `f086851`
-rewrote the plan underneath them. The pass ran as one block, which is the exact tell the
-interleaver exists to remove. `plan` gained `--salt` (its seed was three constants, so `--force`
-reproduced the same set), the pass is re-planned under salt `D077-rerun` at 36 frames, and the
-first attempt is archived to `review_first_unblinded.json` — a name that is not a `PassType`, so
-the store never reads it. **The re-run still leaves the arms one exposure apart** (disagreements
-read twice already, controls once) and D077 sets the bar for using it before the numbers exist.
+**Numbers are settled and will not move again without a new entry.** D078 moved H4 manipulation
+AC1 to 0.8630, H5's EPIC error rate to 0.0333 and two PPI manipulation estimates; D080 declines
+to move anything further. Card digest `62d65220…`, matching in the local card, the Space, the Hub
+dataset and the Hub model, all republished and verified live.
 
-**The card digest moved `3aacbe46…` → `d77e591b…`.** The local card, `space/public/data/stats.json`
-and `hf/dataset/` all carry it; **the live Space and the Hub dataset still serve the old one and
-need republishing** (`hf upload`, not yet done — outward-facing).
+**The margin result, which decides the paper's framing.** Correcting both sides for judge error
+turns Build AI's +6.62pp manipulation lead over EPIC into **-4.69pp, 95% CI [-18.00, +8.63]** —
+the sign flips, and the interval still covers the published value. So it is not refuted, it is
+unresolved, and `RED-TEAM.md` A9's "underpowered, not null" rule applies. The hand-visibility
+lead survives correction almost unchanged (+6.05 → +6.67pp). **A paper headline built on "the
+margin reverses" is not available on this data.** What is available: the one-directional judge
+error (22 errors on 93 frames, every one inflating, in both model families), the asymmetry
+between the two published claims, and the design effect no dataset in the field reports.
 
-**The immediate blocker is 36 human labels**, which is Caio's own work:
-`make human-labels`-style, via `python3 scripts/review_labels_cli.py label --rater caio`, then
-`report --rater caio`. Until that lands, nothing downstream should be republished or written up,
-because folding or rejecting D077 moves intra-rater, H4, H5 and all six PPI estimates.
+**The cheapest remaining item is 25 labelled frames.** ~42 gold per arm would put the published
+margin outside the interval, against the 33 and 30 that exist. That is now ahead of the second
+rater on value per hour, and both are ahead of anything else.
 
-Decisions now run **D001–D077**.
+**`make validate` now catches transcribed numbers** (D081): 48 pins and 18 table cells, in both
+directions, verified by planting drift. `AGENTS.md` rule 2 stopped saying "should catch".
+
+**What is left:** paste the article (body prepared, all figures pinned and current); rebuild the
+paper's framing around what survived; the 25 frames; the second rater.
+
+Decisions now run **D001–D081**.
 
 ## Next session: publication
 
@@ -70,7 +77,7 @@ project audits in its subject.
 Then the writeup's own rule: every figure in `docs/WRITEUP.md` is copied from the card or a
 `data/*.json` file, and the card wins on disagreement. Check the ones that have moved most
 recently by hand: the H2 table (1.25 / 1.62 / 1.27 and 1.31 / 1.66 / 1.29), the 2,144-vs-2,153
-worker count, the decision range (D001–D078), and the two cost figures ($17.63 from the two E2
+worker count, the decision range (D001–D081), and the two cost figures ($17.63 from the two E2
 result files; ~$7.50 from D072, the one number in the writeup that cites a decision rather than a
 data file, because no result file carries it).
 
@@ -363,7 +370,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D078 |
+| Decisions | `DECISIONS.md`, D001–D081 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |

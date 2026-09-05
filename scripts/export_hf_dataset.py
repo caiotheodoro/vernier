@@ -46,6 +46,10 @@ _RESULT_FILES = (
     # own card cites is not self-describing.
     "h2_design_effect.S10k-U.json",
     "h2_design_effect.S10k-S.json",
+    # D079: exploratory, backs no card claim, and shipped anyway because the writeup cites it
+    # and a reader following that citation should find the file rather than a dead path. The
+    # filename carries the caveat.
+    "margin_exploratory.json",
 )
 
 _DOC_COPIES = {

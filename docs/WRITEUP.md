@@ -13,7 +13,7 @@ assumption the comparison rests on. The margin over EPIC-KITCHENS-100 is about s
 
 vernier measured the judge. The protocol was frozen before any frame was drawn
 (`docs/PRE-REGISTRATION.md`), every deviation is a dated entry in a decision log
-(`docs/DECISIONS.md`, D001–D078), and the result is a machine-checked card that exits nonzero
+(`docs/DECISIONS.md`, D001–D081), and the result is a machine-checked card that exits nonzero
 unless every claim is backed by a record.
 
 ## What was done
@@ -70,6 +70,23 @@ down because every judge error in the gold set is a false positive (the judge sa
 "manipulating" when the rater says "holding"). The interval is wide because n = 33 gold frames
 on this arm, and it is a lower bound on the true width because the evaluation release ships
 no worker id to cluster over.
+
+**Does that make their comparison wrong? On this data the honest answer is that we cannot
+say.** (`data/margin_exploratory.json`)
+
+What Build AI sells is not a rate but a lead: 6.62 pp over EPIC-KITCHENS-100 on active
+manipulation. Correct both sides for judge error against human gold and that lead becomes
+-4.69 pp, 95% CI [-18.00, +8.63]. The point estimate changes sign, and the interval still
+covers the published figure, so the published margin is not refuted here. It is unresolved.
+The hand-visibility lead behaves differently: +6.05 pp published, +6.67 pp corrected, barely
+moved. One of the two claims is robust to judge error and the other is not, which is worth
+knowing before you rely on either.
+
+This estimand is exploratory. The pre-registration asked a narrower question, whether the
+judge's error rate differs by domain, and that one is reported unchanged below. What the margin
+supplies instead is a price: on these variances, roughly 42 gold frames per arm would put the
+published lead outside the corrected interval, against the 33 and 30 that exist. Twenty-five
+more labelled frames would settle a number that is currently sold without one.
 
 **Their 10,000 frames are not 10,000 independent observations, and the gap is smaller than
 pre-registered.** (`data/h2_design_effect.S10k-U.json`, `data/h2_design_effect.S10k-S.json`)

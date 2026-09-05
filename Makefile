@@ -9,7 +9,7 @@
 # path (D039) cannot structurally supply, not just an unwired one.)
 .PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model space space-data lock \
         domain-bias distil calibrate probe card validate privacy-gate \
-        test typecheck fixtures check-eval-parquets check-label-rules margin install-hooks
+        test typecheck fixtures check-eval-parquets check-label-rules check-prose-figures margin install-hooks
 
 NOT_YET = @echo "not yet implemented -- see docs/HANDOFF.md for which wave lands this" >&2 && exit 1
 PASS ?= primary
@@ -79,6 +79,9 @@ check-eval-parquets:  ## D016: verify evaluation parquets contain the frames the
 check-corpus-manifest:  ## D071: reconcile the raw-corpus clip manifest against the published 2,153-worker/85-factory figures.
 	python3 scripts/check_corpus_manifest.py
 
+check-prose-figures: ## Every figure in prose still equals the file that produces it (AGENTS.md rule 2)
+	python3 scripts/check_prose_figures.py
+
 margin: ## EXPLORATORY (D079): gold-corrected margin between corpora, vs the published one
 	python3 scripts/margin_analysis.py
 
@@ -94,7 +97,7 @@ hf-dataset:    ## Build the Hugging Face dataset release under hf/dataset/ from 
 hf-model:      ## Build the Hugging Face model release (rung-1 probe + card) under hf/model/.
 	python3 scripts/export_hf_model.py
 
-validate: privacy-gate test typecheck fixtures check-stale-prose  ## All gates: structure, no placeholders, internal consistency, privacy, no stale design language.
+validate: privacy-gate test typecheck fixtures check-stale-prose check-prose-figures  ## All gates: structure, no placeholders, internal consistency, privacy, no stale design language.
 
 privacy-gate:  ## Fail loudly if anything under docs/private/ is stageable.
 	@if git add -A --dry-run 2>/dev/null | grep -q 'docs/private'; then \

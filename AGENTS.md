@@ -30,7 +30,8 @@ A deviation recorded is a limitation; a deviation unrecorded is misconduct.
 **2. No transcribed numbers.** Every figure in prose cites the file that produces it. An
 earlier revision of a sibling repository hardcoded its numbers and went stale the moment
 twelve claims were corrected. Prose that carries a number the pipeline no longer produces is
-a bug, and `make validate` should catch it. The same applies to a *design* the project no
+a bug, and `make validate` catches it: `scripts/check_prose_figures.py` (`docs/DECISIONS.md`
+D081) pins every figure in the writeup to the file that produces it, in both directions. The same applies to a *design* the project no
 longer has, not just a number — `docs/DECISIONS.md` D048 found thirteen files still describing
 the pre-D042 panel of three live judges after it was retired; `scripts/check_stale_prose.py`
 (`docs/DECISIONS.md` D050, `docs/REVIEW.md` R10) is `make validate`'s check for this.

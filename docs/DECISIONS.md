@@ -2741,3 +2741,81 @@ frames is a result whose error bars are the story, not its point estimate.
 
 **Reverses if:** the gold sets grow. At ~42 per arm this becomes a decidable question rather than
 an underpowered one, and a second rater would settle the anchoring objection at the same time.
+
+## D080 — The review pass is not folded into the primary labels, and this is the entry that says so
+
+D075 and D077 both required that folding the review pass into published numbers be its own
+deliberate step with the before and after shown. This is that step, and the answer is that
+nothing is folded.
+
+**What the pass found**, after D078's rule-12 corrections: 5 of 18 disagreement frames revised
+(28%), 0 of 18 controls (0%). Three hand-count revisions, two manipulation. The controls did not
+move at all, which is the outcome D075 built them to detect -- on its face, the review found
+something in the frames rather than in the rater's day.
+
+**Why it is still not folded.** Three reasons, none of which the 28-vs-0 gap answers:
+
+1. **The set was selected by disagreement, so folding can only move human gold toward the
+   judge.** D075 wrote that down before the labels existed. Every revision here reduces a
+   judge-human gap that the audit's own headline is about. A correction that can only ever run
+   one direction is not a correction, it is a ratchet, and the fact that it is a defensible
+   ratchet does not make its output a measurement.
+2. **The arms are one exposure apart** (D077). The disagreement frames have now been read three
+   times, the controls twice. A 28-vs-0 gap is consistent with the frames genuinely warranting
+   revision *and* with re-reading being what produces revisions. The control arm bounds the
+   second explanation at two exposures, not three, so it does not exclude it here.
+3. **The rater has seen the results.** Every re-read since the first published number went out
+   happens with knowledge of which direction a revision would push the headline. That is not an
+   accusation, it is the reason blind protocols exist, and it is unfixable at n=1.
+
+**What the pass is used for instead.** It stands as a measured property of the rubric's edge
+cases: on frames where an open-weights judge disagrees with the rater, the rater revises about a
+quarter of the time on re-reading, and on matched frames where they agreed, essentially never.
+That is a real, reportable number about how decidable this rubric is at its margins, and it is
+more honest than a corrected prevalence would have been. It is also the strongest available
+argument for the thing this project has wanted since before any result existed: those 18 frames
+want a second pair of eyes, not a third pass from the same ones.
+
+**No published number changes.** `MEASUREMENT_CARD.json`, the Space and the Hub releases are
+unaffected by this entry; the numbers they carry are the ones D078 left them with.
+
+**Reverses if:** a second rater labels the same frames. Their answers are not selected by
+disagreement with respect to *this* rater's originals, so they can move gold in either
+direction, which is exactly what makes them foldable when this pass is not.
+
+## D081 — `make validate` now checks that prose figures still equal the files that produce them
+
+`AGENTS.md` rule 2 has said since the first commit that every figure in prose cites the file
+that produces it, and that *"`make validate` should catch it."* Nothing did. `check_stale_prose.py`
+(D050) catches stale *design* language, which is a different failure; the numbers were checked by
+hand, and `docs/HANDOFF.md` said so in as many words.
+
+Two defects this session came through that gap. D076: the writeup asserted a seven-day retest
+separation the committed labels contradict. D078: corrected labels moved figures the prose still
+quoted. Both were found by a person reading carefully, which is exactly the process rule 2 exists
+to replace.
+
+`scripts/check_prose_figures.py` closes it. 48 pins today, each naming a literal as written, the
+file that produces it, a pointer into that file, and how a person writes the value down.
+
+**Two directions, and the second is the one a naive check misses.** A pin fails if the literal no
+longer equals its source -- the D078 case. It also fails if the literal no longer appears in the
+document, which catches a figure quietly deleted while its pin keeps passing on a claim nobody
+makes any more.
+
+**Plus table coverage.** Every numeric cell in every markdown table in a pinned document must be
+pinned or allowlisted with a written reason. Tables are where figures are densest and where the
+next drift would hide. 18 cells covered.
+
+**The card is not the source, deliberately.** A `Claim` carries `statement`, `record_type` and
+`record_ref` and nothing else, so its figures live inside English sentences, and its `intervals`
+array is empty. Pins resolve to the `data/*.json` files that `record_ref` points at, which is
+where the numbers are actually produced. Reading them back out of the card's prose would be
+parsing English to check English.
+
+**Verified by breaking it**: `H4.manipulation.ac1` set to 0.7777 in the artifact while the
+writeup still read 0.863 -- the gate fails with the pin named and the artifact's value quoted,
+and passes again on restore. Nine tests cover both directions, table coverage, bolded cells,
+the transforms, and the real production pin set against the committed artifacts.
+
+**Reverses if:** nothing. This is the check rule 2 always specified, arriving late.
