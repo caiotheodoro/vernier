@@ -2494,3 +2494,49 @@ is regenerated with `make card` alongside `make space-data`, since the Space's p
 **Reverses if:** nothing in the measurement. Finding 1 would read differently only if the
 pre-registration's "twice the width" is recorded as a slip for "twice the variance"; the
 honest position is that the frozen text says both, and this entry says so.
+
+---
+
+## D074 — A third labelling pass, salted, for the frames the rater and judge disagree on
+
+18 of the 93 primary labels disagree with `qwen3-vl` on hand count, manipulation, or both. A
+frame-by-frame read of all 18 against `RUBRIC.md` 1.2.0 found roughly a third of them worth
+re-labelling, and — more usefully — a pattern: six of the seven suspected hand-count misses are
+hands at the **frame edge** (Rule 8), and every one undercounts. That is a bias in one direction,
+not scatter, and it runs the same way as the headline result, since undercounting edge hands
+depresses the 2-hands rate on which vernier reads 6.3pp above Build AI.
+
+**A review of only the disagreements cannot be trusted, and the fix is in the instrument.** If
+every frame put in front of the rater is one they may have got wrong, the rater is being prompted
+to change an answer rather than asked to read a frame. So `scripts/review_labels_cli.py plan`
+mixes in an equal number of control frames the rater and judge already agreed on, and does not
+reveal which arm a frame is in. `report` then compares the revision rate on each arm: if
+disagreements are revised far more often than controls, the review found something in the frames;
+if both move about equally, it found the rater's day. The tool says so in its own output rather
+than leaving the reader to work it out.
+
+The arms are **interleaved, not shuffled**. A flat shuffle is unbiased over the whole set and
+clumpy over any prefix — the first draw here put six controls before the first disagreement, then
+nine disagreements in a row. The rater works in sittings (`--stop-after`), and a sitting that is
+almost all one arm is exactly the tell the controls exist to remove.
+
+**Blind, and mechanically so.** `plan` is the only command that reads judge output, and all it
+emits is `{frame_id, arm}` — a test asserts the written set carries no judge answer, and another
+labels a frame with `_GOLD_JUDGED_ROOT` pointed at a directory that does not exist, so the
+labelling path cannot grow a read of judge output without failing. The rater is also not shown
+their own original label; a re-read that starts from the previous answer is an adjudication, not
+a second measurement.
+
+**`PassType` gains `review`** (`src/vernier/models.py`). A third pass, not an edit of `primary`:
+the primary labels back H4's AC1, H5, every PPI estimate and the measurement card, all published,
+and correcting them in place would silently restate a public result — the exact move this project
+exists to object to. Nothing enumerates `PassType`; every consumer names the pass it wants, so
+`review` reaches no analysis until one is deliberately changed to ask for it.
+
+**What this entry does not do.** It does not fold any revision into a published number. Doing that
+needs its own entry, and it must report both the before and after, because a review of a set
+selected by disagreement can only move human gold toward the judge — which would narrow the very
+gap the result is about.
+
+**Reverses if:** the control arm moves as much as the disagreement arm, in which case the pass
+measured relabelling noise and is reported as such and used for nothing else.

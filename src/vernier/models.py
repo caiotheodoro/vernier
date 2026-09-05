@@ -57,8 +57,13 @@ JudgeStatus = Literal["ok", "refused", "unparseable", "timeout", "error"]
 # both P0 sources is labelled plain "P0" (PRE-REGISTRATION.md, RUBRIC.md Task 1).
 PromptVariant = Literal["P0", "P0a", "P0b", "P1", "P2", "P3", "P4", "P5", "P6", "P7"]
 
-# HumanLabel.pass ∈ {primary, retest}
-PassType = Literal["primary", "retest"]
+# HumanLabel.pass ∈ {primary, retest, review}
+# `review` is a third read of frames already labelled in `primary`, added for the targeted
+# disagreement review. It is a separate pass rather than an edit of `primary` because the
+# primary labels back published claims: overwriting them would silently restate a result.
+# Nothing enumerates this Literal -- every consumer names the pass it wants -- so `review`
+# reaches no analysis unless one is changed to ask for it.
+PassType = Literal["primary", "retest", "review"]
 
 # RUBRIC.md: "Tag list, closed."
 EdgeCaseTag = Literal[
