@@ -2858,3 +2858,54 @@ prose. `docs/DECISIONS.md` D079 prices the cheapest version at about 25 more fra
 
 **Reverses if:** E6's model is actually fitted, at which point the `COVERAGE.md` row changes to
 "Tested" honestly and H5 stops being the only thing standing in for it.
+
+## D083 — The long-form article, written to a measured house style, with its figures pinned
+
+`docs/blog-vernier.md` is the in-depth writeup for the Notion CMS that feeds
+`caio.theodoro.dev/blog`. It is a different piece from `docs/WRITEUP.md`, which stays the short
+version for the Hugging Face community blog: findings first, then a second half on what broke
+while auditing this project's own claims.
+
+**The house style was measured rather than guessed.** `../plumb/docs/blog-ornith-curriculum.md`
+is the designated base, and its conventions were read off the published article and its Notion
+row: no H1 and no deck, a cold lede naming the external claim, a two-column TL;DR table with
+bolded labels, nine H2s and no H3, findings carried by bolded claim sentences opening paragraphs
+rather than by headings, `Honest limits` as one unbroken paragraph, and a closing artifact dump
+that ends on what was *not* released. **Zero em dashes**, which is that article's own count
+across 3,076 prose words. An earlier draft of this plan had assumed the repo's own heavy em-dash
+usage carried over; the blog voice is a different voice, and the sample settled it.
+
+**Charts are the site's own format.** Four ```json blocks prefixed `// cv-chart` (a bars chart
+for the replication, two forests for the corrected prevalences and the margin, a steps chart
+with a band for the design effect) plus one mermaid flowchart for the instrument. Every value in
+them comes from `space/public/data/stats.json` or a `data/*.json` result file.
+
+**No frames, deliberately, against the request.** The brief asked for pictures and frames.
+`docs/ETHICS.md` section 4 states that there is no second copy of any frame anywhere in this
+project, and that sentence is the mechanism that makes withdrawal real: `--exclude <frame_id>`
+rebuilds the atlas and the frame is gone. A still pasted into a CMS is a copy that script cannot
+reach. The article links to the Space's frame grid instead, and a screenshot of that grid would
+have the same problem.
+
+**Writing it immediately found two stale figures**, both moved by D078's label corrections and
+both unnoticed until the new document was pinned: the manipulation ECE is 0.0860 rather than
+0.0645, and `docs/WRITEUP.md` was carrying `0.06` where the artifact now says `0.09`. That
+figure had never been pinned. `scripts/check_prose_figures.py` now covers both documents, 80
+pins, and the writeup's calibration figures are among them.
+
+**The headline finding is now an artifact rather than arithmetic in prose.**
+`scripts/export_space_data.py` emits `confusion.error_direction`: over- and under-report counts
+per task with their at-risk denominators, since a frame the rater scored 2 cannot be
+over-counted and one scored 0 cannot be under-counted, and a bare count would overstate the
+asymmetry. The article's table cells pin to it.
+
+**Created in Notion as a draft, not published.** Row `3d2edebd-9fcf-8160-abc5-e3050e9b4eaf` in
+the Blog data source, `Draft: true` and `PublishDate` null. Two mechanical notes for whoever
+does this next: `ntn pages create --content` fails on a multi-line value passed with a space and
+works with `--content=`, and it does **not** parse YAML frontmatter into row properties, so it
+lands the frontmatter as body text and leaves `Draft` false, which on this database is the
+publish gate. Properties were set with a follow-up `PATCH` piped through stdin, and the body was
+replaced with `ntn pages edit` to drop the duplicated frontmatter.
+
+**Reverses if:** the site's chart renderer rejects any of the four cv-chart blocks, in which
+case they become tables and the article loses nothing but density.
