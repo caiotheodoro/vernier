@@ -518,10 +518,12 @@ def main() -> int:
             "P0b) is also fully live-judged, against Build AI's CURRENT-PRODUCT evaluation "
             "release, Egocentric-100K-Evaluation, not the superseded 10K one -- a disclosed, "
             "non-pre-registered additional check (docs/DECISIONS.md D066/D067), not a re-run "
-            "of H1. S10k-U/S10k-S are still not drawn: access to the raw Egocentric-10K corpus "
-            "is granted (D065), and one real shard has been opened (confirmed h265 video, not "
-            "stills), but the real frame-extraction adapter is not built -- a materially "
-            "bigger task than the evaluation-parquet adapter, not yet sized past one shard. "
+            "of H1. S10k-U and S10k-S (10,000 each) are drawn from the raw Egocentric-10K "
+            "corpus through the D071 adapter (scripts/build_corpus_manifest.py, "
+            "sampling/corpus_frames.py: one frame per clip via ffmpeg over HTTP range "
+            "requests, never a shard download) and fully live-judged under P0a "
+            "(scripts/h2_design_effect.py, D072). They are the only arms that carry a "
+            "worker_id, and the H2 claim above is the cluster bootstrap over it. "
             "H8 needs no sample at all -- public participant counts only."
         ),
         rubric_rev="1.2.0",
