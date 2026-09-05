@@ -2497,7 +2497,7 @@ honest position is that the frozen text says both, and this entry says so.
 
 ---
 
-## D074 — A third labelling pass, salted, for the frames the rater and judge disagree on
+## D075 — A third labelling pass, salted, for the frames the rater and judge disagree on
 
 18 of the 93 primary labels disagree with `qwen3-vl` on hand count, manipulation, or both. A
 frame-by-frame read of all 18 against `RUBRIC.md` 1.2.0 found roughly a third of them worth

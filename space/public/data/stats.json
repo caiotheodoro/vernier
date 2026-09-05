@@ -298,7 +298,7 @@
   }
  },
  "generated_from": {
-  "card_digest": "sha256:ed75109a174e3e46c315628d8f730b6f24c9d81148bc83e7eb9462e0dff85343",
+  "card_digest": "sha256:3aacbe46237ebba411038ea7ed5d4cfb8405b7fd5c7e9100bc041ed05b228622",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
   "git_rev": "758acae5a062a6c95412e8acd59a2c314c3256d3",
