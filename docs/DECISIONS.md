@@ -3075,3 +3075,64 @@ text we read" and records the rest as best-effort absence.
 
 **Reverses if:** a second rater is found, at which point the limitations section changes
 materially and the margin may become decidable rather than underpowered.
+
+## D087 — An adversarial review of the paper found two errors in it, one of them also live on the site
+
+The paper was reviewed by a fresh context given the brief of an unsympathetic referee. It
+returned "reject, with a clear path to accept", and two of its findings were checked against the
+artifacts and are correct.
+
+**1. The headline asymmetry was computed on the wrong estimand, and overstated by a factor of
+roughly three.** The published figure this project audits is the proportion of frames showing
+**at least one** hand, which is a binary indicator. `error_direction.hand_count` was computed on
+the **ternary** count, so a one-hand-against-two confusion counted as an over-report. The hand
+matrix is `[[18,0,0],[3,25,0],[3,10,94]]`: of the 16 ternary over-reports, **10 are 1 against 2
+and bear on the two-hands figure**, which the paper itself attributes to its own judge rather
+than to the vendor. Only **6 of 24** bear on the audited indicator.
+
+The old denominators gave it away and nobody noticed: 59 at-risk-over plus 129 at-risk-under is
+188, more than the 153 frames, because a frame the rater scored as one hand is at risk in both
+directions. The indicator's denominators are 24 and 129, which partition 153 exactly.
+
+The result survives on the correct estimand, at 6/24 against 0/129 and 10/33 against 2/120, both
+$p < 10^{-5}$ by Fisher's exact test. `export_space_data.py` now emits `hand_ge1` and
+`hand_one_to_two` alongside the ternary block, the paper's table leads with the indicator, and
+the abstract and contributions were rewritten.
+
+**2. The design-effect width was stated backwards, and the artifact's key name encouraged it.**
+`sqrt(deff) - 1` is how much **wider** a cluster-aware interval is than an iid one. `1 -
+1/sqrt(deff)` is how much **narrower** the iid interval is than it should be. They are different
+numbers, 12--29% and 11--22%, and the export stored the first under the key
+`width_understatement_pct` with a code comment describing the second.
+
+`docs/WRITEUP.md`, `paper/vernier.tex` in four places, and the Space's own Replication view all
+said "12--29% too narrow". The Space's Coverage view said "widens an interval by 12--29%", which
+was right, so the same artifact was being read two ways in one product. The key is now split
+into `cluster_width_excess_pct` and `iid_width_understatement_pct`, the test pins both and
+asserts the ordering, and every prose site is corrected.
+
+**Also fixed from the same review.** The hypothesis-ledger caption said four of eight failed
+where the generated table shows five, in a paper whose premise is that generated tables cannot
+drift from hand-typed prose; it now states the real slate and that **none of the eight was
+confirmed**. The rubric was described as twelve numbered rules when it has ten for hand count
+and twelve for manipulation. The claim that the vendor's judge "carries the same sign" was
+checked per corpus and is weaker than stated: 25 over against 7 under pooled, versus the open
+judge's 26 against 2, and it reverses on the EPIC manipulation cell. The abstract was 2,028
+characters against arXiv's 1,920 limit and is now 1,813, and it names the single rater.
+
+**Six appendices added**, four generated from artifacts: per-corpus confusion matrices for both
+judges, the PPI variance decomposition, cluster structure with the implied ICC, and the run and
+cost ledger. Two are written: the deviation ledger and the citation-verification table, which
+publishes this project's eight mis-attributions. The variance decomposition earns its place
+twice, since it shows the gold term carries 55 to 80% of every interval's width, which is the
+quantitative form of D085's finding that buying labels narrowed nothing.
+
+**The reviewer's largest open item is not addressed here.** The PPI unlabelled arms are 200
+frames per corpus, not 10,000, so roughly half the variance of the margin is a consequence of
+discarding most of the unlabelled sample, which is the one thing prediction-powered inference
+exists to exploit. Closing it needs live judge runs on `E10k-epic` and `E10k-ego4d`, which do not
+exist; the per-frame responses for the Egocentric run were never persisted (D069 is forward-only).
+That is the highest-value remaining experiment and it is recorded rather than done.
+
+**Reverses if:** the full-size unlabelled arms are judged, at which point the margin intervals
+narrow by roughly a third and the central "cannot be resolved" claim has to be re-tested.

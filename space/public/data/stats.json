@@ -224,6 +224,13 @@
     "over": 16,
     "under": 0
    },
+   "hand_ge1": {
+    "at_risk_over": 24,
+    "at_risk_under": 129,
+    "over": 6,
+    "under": 0
+   },
+   "hand_one_to_two": 10,
    "manipulation": {
     "at_risk_over": 33,
     "at_risk_under": 120,
@@ -325,7 +332,7 @@
   "card_digest": "sha256:f850d3622c13d64c4567c4a8c404a775c4b2d792ce593673a4f691d26ef6b215",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
-  "git_rev": "e57a0dda36ae5c96309f83cbd6e58d7ee3029d3b",
+  "git_rev": "b7f28671cde2ce2d9c27e0b2a99c59176fdc8296",
   "judge": "qwen3-vl",
   "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
   "n_gold_frames": 600,
@@ -527,15 +534,19 @@
    }
   },
   "cluster_by": "worker_id",
+  "cluster_width_excess_pct": {
+   "hi": 28.647561836763135,
+   "lo": 12.023086469347511
+  },
   "design_effect_max": 1.6550195166543795,
   "design_effect_min": 1.254917190211891,
   "holds": false,
+  "iid_width_understatement_pct": {
+   "hi": 22.26825089239789,
+   "lo": 10.732686313403217
+  },
   "seed": 777,
-  "threshold": 2.0,
-  "width_understatement_pct": {
-   "hi": 28.647561836763135,
-   "lo": 12.023086469347511
-  }
+  "threshold": 2.0
  },
  "health": {
   "e2_arms": {
@@ -1446,8 +1457,8 @@
   }
  },
  "repo": {
-  "n_decisions": 84,
-  "n_tests": 510
+  "n_decisions": 86,
+  "n_tests": 515
  },
  "rows_api": {
   "config": "default",

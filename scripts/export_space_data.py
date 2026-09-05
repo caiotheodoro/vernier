@@ -291,10 +291,17 @@ def _h2() -> dict[str, Any]:
         "B": first["B"],
         "design_effect_min": lo,
         "design_effect_max": hi,
-        # sqrt(deff) - 1: how much narrower an iid interval is than the cluster-aware one. The
-        # page states this; it does NOT widen any published interval, which would be a new
-        # estimator nobody pre-registered (docs/RED-TEAM.md A13).
-        "width_understatement_pct": {"lo": (lo**0.5 - 1) * 100, "hi": (hi**0.5 - 1) * 100},
+        # D087: these are two different quantities and the old single key conflated them.
+        # sqrt(deff) - 1 is how much WIDER the cluster-aware interval is than the iid one.
+        # 1 - 1/sqrt(deff) is how much NARROWER the iid interval is than it should be, which is
+        # the smaller number and the one to use when saying an interval understates its width.
+        # Neither widens any published interval, which would be a new estimator nobody
+        # pre-registered (docs/RED-TEAM.md A13).
+        "cluster_width_excess_pct": {"lo": (lo**0.5 - 1) * 100, "hi": (hi**0.5 - 1) * 100},
+        "iid_width_understatement_pct": {
+            "lo": (1 - 1 / lo**0.5) * 100,
+            "hi": (1 - 1 / hi**0.5) * 100,
+        },
     }
 
 
@@ -574,6 +581,20 @@ def _confusion(frames: list[dict[str, Any]]) -> dict[str, Any]:
             "at_risk_under": manipulation[0][1] + manipulation[1][1],
         },
     }
+    # D087: the ternary hand count and the >=1-hand indicator are different estimands, and the
+    # published figure this project audits (96.42%) is the indicator. A 1->2 confusion is an
+    # error on the ternary count and no error at all on the indicator, so reporting only the
+    # ternary version overstates the evidence bearing on the headline. Both are emitted; the
+    # indicator's denominators also partition the sample exactly, which the ternary ones do not
+    # (a frame the rater scored 1 is at risk in both directions).
+    error_direction["hand_ge1"] = {
+        "over": sum(hands[j][0] for j in (1, 2)),
+        "under": sum(hands[0][r] for r in (1, 2)),
+        "at_risk_over": sum(hands[j][0] for j in range(3)),
+        "at_risk_under": sum(hands[j][r] for j in range(3) for r in (1, 2)),
+    }
+    # The 1->2 confusions, which bear on the published two-hands figure and not on >=1 hand.
+    error_direction["hand_one_to_two"] = hands[2][1]
     error_direction["total_errors"] = (
         over_hands + under_hands + manipulation[1][0] + manipulation[0][1]
     )

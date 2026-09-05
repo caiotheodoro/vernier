@@ -172,7 +172,9 @@ export function Replication({ stats }: { stats: Stats }): JSX.Element {
           {fixed(h2.design_effect_min, 2)} to {fixed(h2.design_effect_max, 2)} across two arms and three tasks, so{" "}
           <strong>H2 does not hold</strong>. What is nonetheless true is that every figure exceeds 1: an iid interval
           on this corpus is genuinely too narrow, by{" "}
-          {fixed(h2.width_understatement_pct.lo, 0)}–{fixed(h2.width_understatement_pct.hi, 0)}% in width rather than
+          {fixed(h2.iid_width_understatement_pct.lo, 0)}–{fixed(h2.iid_width_understatement_pct.hi, 0)}% in width,
+          equivalently the cluster-aware interval is{" "}
+          {fixed(h2.cluster_width_excess_pct.lo, 0)}–{fixed(h2.cluster_width_excess_pct.hi, 0)}% wider, rather than
           the ≥41% H2 asserted. No interval above has been widened by that factor — rescaling a published interval
           would be an estimator nobody pre-registered. The number is reported; the correction is not applied.
         </p>

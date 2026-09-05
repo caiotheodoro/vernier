@@ -190,7 +190,8 @@ export type H2Block = {
   design_effect_min: number;
   design_effect_max: number;
   /** sqrt(deff) - 1: how much narrower an iid interval is. Not a rescaled interval. */
-  width_understatement_pct: { lo: number; hi: number };
+  cluster_width_excess_pct: { lo: number; hi: number };
+  iid_width_understatement_pct: { lo: number; hi: number };
 };
 
 export type TestRetest = {

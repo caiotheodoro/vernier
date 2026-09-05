@@ -318,13 +318,22 @@ def test_h2_equals_both_committed_arms(committed_stats: dict[str, Any]) -> None:
     assert max(effects) < h2["threshold"], "H2 does not hold; the export must not say otherwise"
 
 
-def test_h2_width_understatement_is_the_root_of_the_design_effect(committed_stats: dict[str, Any]) -> None:
+def test_h2_width_figures_are_two_distinct_quantities(committed_stats: dict[str, Any]) -> None:
+    """D087: one key used to hold both readings and the paper quoted the wrong one.
+
+    sqrt(deff) - 1 is how much WIDER the cluster-aware interval is. 1 - 1/sqrt(deff) is how much
+    NARROWER the iid interval is than it should be. They are not the same number and the second
+    is the smaller one.
+    """
     h2 = committed_stats["h2"]
-    lo, hi = h2["width_understatement_pct"]["lo"], h2["width_understatement_pct"]["hi"]
-    assert lo == (h2["design_effect_min"] ** 0.5 - 1) * 100
-    assert hi == (h2["design_effect_max"] ** 0.5 - 1) * 100
-    # The card states this range in words; the export must agree with it.
-    assert (round(lo), round(hi)) == (12, 29)
+    excess, under = h2["cluster_width_excess_pct"], h2["iid_width_understatement_pct"]
+    assert excess["lo"] == (h2["design_effect_min"] ** 0.5 - 1) * 100
+    assert excess["hi"] == (h2["design_effect_max"] ** 0.5 - 1) * 100
+    assert under["lo"] == (1 - 1 / h2["design_effect_min"] ** 0.5) * 100
+    assert under["hi"] == (1 - 1 / h2["design_effect_max"] ** 0.5) * 100
+    assert (round(excess["lo"]), round(excess["hi"])) == (12, 29)
+    assert (round(under["lo"]), round(under["hi"])) == (11, 22)
+    assert under["lo"] < excess["lo"] and under["hi"] < excess["hi"]
 
 
 def test_no_ppi_interval_was_widened_by_the_design_effect(committed_stats: dict[str, Any]) -> None:

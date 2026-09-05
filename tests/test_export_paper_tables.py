@@ -18,13 +18,17 @@ _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "scripts"))
 
 from export_paper_tables import (  # noqa: E402
+    _cluster_detail,
+    _confusion_per_corpus,
     _design_effect,
     _error_direction,
     _ledger,
     _load,
     _margins,
+    _ppi_variance,
     _prevalence,
     _provenance,
+    _run_ledger,
     _replication,
     _tex_escape,
 )
@@ -40,6 +44,10 @@ def data() -> dict[str, Any]:
 @pytest.mark.parametrize(
     "name,builder",
     [
+        ("confusion_per_corpus", _confusion_per_corpus),
+        ("ppi_variance", _ppi_variance),
+        ("run_ledger", _run_ledger),
+        ("cluster_detail", _cluster_detail),
         ("replication", _replication),
         ("error_direction", _error_direction),
         ("prevalence", _prevalence),
@@ -77,6 +85,8 @@ def test_every_table_is_a_complete_booktabs_tabular(data: dict[str, Any]) -> Non
         assert tex.startswith("\\begin{tabular}"), path.name
         assert tex.rstrip().endswith("\\end{tabular}"), path.name
         assert tex.count("\\toprule") == tex.count("\\bottomrule") == 1, path.name
+        # appendix tables use \\midrule inside the body to separate estimands (D087),
+        # so the count is not pinned to 1.
 
 
 def test_the_ledger_carries_every_pre_registered_hypothesis(data: dict[str, Any]) -> None:

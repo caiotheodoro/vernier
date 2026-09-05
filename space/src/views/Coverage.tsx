@@ -127,7 +127,7 @@ export function Coverage({ stats, state }: Props): JSX.Element {
         Build AI's evaluation frames ship no worker id ({stats.provenance.no_worker_ids?.decision}), so no interval
         here is clustered and each is a lower bound on its true width. How much of one is now measured rather than
         guessed: on vernier's own draws from the same corpus, clustering by worker widens an interval by{" "}
-        {fixed(stats.h2.width_understatement_pct.lo, 0)}–{fixed(stats.h2.width_understatement_pct.hi, 0)}% (see
+        {fixed(stats.h2.cluster_width_excess_pct.lo, 0)}–{fixed(stats.h2.cluster_width_excess_pct.hi, 0)}% (see
         below). Prompt sensitivity over{" "}
         {int(stats.prompt_sweep.n)} frames: hand count moves {fixed(stats.prompt_sweep.hand_count_spread_pp, 2)} pp
         across {Object.keys(stats.prompt_sweep.hand_count).length} prompt variants, manipulation{" "}

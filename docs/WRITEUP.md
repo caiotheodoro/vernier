@@ -105,7 +105,8 @@ B = 10,000, on both draws (read to two decimals; the bootstrap's own resolution 
 | active manipulation | 1.27 | 1.29 |
 
 None reaches 2, so H2 fails as stated. All six exceed 1, so the effect is real: an interval
-computed as if frames were independent is 12–29% too narrow in width on this corpus. Concretely,
+computed as if frames were independent understates its width by 11–22% on this corpus,
+equivalently the cluster-aware interval is 12–29% wider. Concretely,
 the 2-hands rate on `S10k-U` is 80.8%, iid interval [80.0, 81.6], clustered [79.8, 81.8]. Two
 separate draws with different cluster structures land within the bootstrap's own resolution
 of each other on every task, and an independent re-run at a different seed reproduced the
@@ -151,7 +152,7 @@ than predicted, reported above.
 The published number is not wrong in any way this work can show. It is a point without an
 interval, produced by a judge that over-calls manipulation on the frames a human looked at,
 and the honest range for the figure on the batch you would buy is roughly 70–92%. Any interval
-on this corpus that treats frames as independent is 12–29% too narrow, and the published figure
+on this corpus that treats frames as independent understates its width by 11–22%, and the published figure
 has no interval at all. The
 instrument that produces that range costs about $9 per 10,000 frames to re-run on any batch,
 needs no API vendor, and is public.

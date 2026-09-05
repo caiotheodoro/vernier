@@ -83,12 +83,20 @@ def _replication(d: dict[str, Any]) -> str:
 
 
 def _error_direction(d: dict[str, Any]) -> str:
+    """D087: the indicator rows come first because they are the estimand the published figure
+    reports. The ternary hand count is kept underneath, and the 1->2 confusions that separate
+    the two are called out, so a reader can see exactly which errors bear on which claim."""
     e = d["stats"]["confusion"]["error_direction"]
+    g, m, h = e["hand_ge1"], e["manipulation"], e["hand_count"]
     rows = [
-        f"hand count & {e['hand_count']['over']} & {e['hand_count']['at_risk_over']} & "
-        f"{e['hand_count']['under']} & {e['hand_count']['at_risk_under']} \\\\",
-        f"active manipulation & {e['manipulation']['over']} & {e['manipulation']['at_risk_over']} & "
-        f"{e['manipulation']['under']} & {e['manipulation']['at_risk_under']} \\\\",
+        f"$\\geq$1 hand (the published indicator) & {g['over']} & {g['at_risk_over']} & "
+        f"{g['under']} & {g['at_risk_under']} \\\\",
+        f"active manipulation & {m['over']} & {m['at_risk_over']} & "
+        f"{m['under']} & {m['at_risk_under']} \\\\",
+        "\\midrule",
+        f"hand count, ternary & {h['over']} & {h['at_risk_over']} & "
+        f"{h['under']} & {h['at_risk_under']} \\\\",
+        f"\\quad of which one-against-two & {e['hand_one_to_two']} & --- & 0 & --- \\\\",
     ]
     body = "\n".join(rows)
     return (
@@ -208,6 +216,136 @@ def _provenance(d: dict[str, Any]) -> str:
     )
 
 
+
+# ── appendices ──────────────────────────────────────────────────────────────────────────────
+
+
+def _mean(xs: list[float]) -> float:
+    return sum(xs) / len(xs)
+
+
+def _var(xs: list[float]) -> float:
+    """Sample variance, matching numpy's ddof=1 as `estimation/ppi.py` uses it."""
+    m = _mean(xs)
+    return sum((x - m) ** 2 for x in xs) / (len(xs) - 1)
+
+
+def _confusion_per_corpus(d: dict[str, Any]) -> str:
+    """Appendix C. Per corpus and judge, which the pooled matrix in stats.json does not carry.
+    The vendor's own confusion matrices are analysis this project has not published before."""
+    frames = json.loads((_ROOT / "space" / "public" / "data" / "frames.json").read_text())
+    labelled = [f for f in frames if f.get("r")]
+    rows = []
+    for corpus in ("egocentric-10k", "epic-kitchens-100", "ego4d"):
+        arm = [f for f in labelled if f["corpus"] == corpus]
+        for judge, key in (("Qwen3-VL", "q"), ("gemini-2.5-flash", "g")):
+            hands = [[0, 0, 0] for _ in range(3)]
+            manip = [[0, 0], [0, 0]]
+            for f in arm:
+                hands[f[key]["h"]][f["r"]["h"]] += 1
+                manip[int(f[key]["m"])][int(f["r"]["m"])] += 1
+            flat = " & ".join(str(hands[j][r]) for j in range(3) for r in range(3))
+            rows.append(
+                f"{corpus} & {judge} & {len(arm)} & {flat} & "
+                f"{manip[0][0]} & {manip[0][1]} & {manip[1][0]} & {manip[1][1]} \\\\"
+            )
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}llr rrrrrrrrr rrrr@{}}\n\\toprule\n"
+        "& & & \\multicolumn{9}{c}{hand count, judge row $\\times$ rater column} "
+        "& \\multicolumn{4}{c}{manipulation} \\\\\n"
+        "\\cmidrule(lr){4-12}\\cmidrule(lr){13-16}\n"
+        "corpus & judge & $n$ & 00 & 01 & 02 & 10 & 11 & 12 & 20 & 21 & 22 "
+        "& FF & FT & TF & TT \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
+def _ppi_variance(d: dict[str, Any]) -> str:
+    """Appendix D. The estimator throws its variance components away, so they are recomputed
+    here from the same per-frame data. Answers "why not just label more": the gold term
+    dominates, so the unlabelled pool is not the binding constraint."""
+    frames = json.loads((_ROOT / "space" / "public" / "data" / "frames.json").read_text())
+    corpus_of = {"G200-ego": "egocentric-10k", "G200-ego4d": "ego4d", "G200-epic": "epic-kitchens-100"}
+    rows = []
+    for arm, corpus in corpus_of.items():
+        pool = [f for f in frames if f["corpus"] == corpus]
+        gold = [f for f in pool if f.get("r")]
+        unl = [f for f in pool if not f.get("r")]
+        for task, key in (("hand_count", "h"), ("manipulation", "m")):
+            def ind(v: Any, _t: str = task) -> float:
+                return float(v >= 1) if _t == "hand_count" else float(bool(v))
+            y = [ind(f["r"][key]) for f in gold]
+            fg = [ind(f["q"][key]) for f in gold]
+            fu = [ind(f["q"][key]) for f in unl]
+            n, N = len(y), len(fu)
+            vfg = _var(fg)
+            mfg, my = _mean(fg), _mean(y)
+            cov = sum((a - mfg) * (b - my) for a, b in zip(fg, y)) / (n - 1)
+            lam = min(1.0, max(0.0, cov / vfg)) if vfg > 0 else 0.0
+            resid = [b - lam * a for a, b in zip(fg, y)]
+            gold_term = _var(resid) / n
+            unl_term = (lam**2) * _var(fu) / N
+            share = 100 * gold_term / (gold_term + unl_term)
+            rows.append(
+                f"{_CORPUS_LABEL[arm]} & {_TASK_LABEL[task]} & {n} & {N} & {lam:.3f} & "
+                f"{gold_term:.2e} & {unl_term:.2e} & {share:.1f} \\\\"
+            )
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}llrrrrrr@{}}\n\\toprule\n"
+        "corpus & task & $n_{\\text{gold}}$ & $N$ & $\\lambda$ & gold term & unlabelled term "
+        "& gold \\% \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
+def _run_ledger(d: dict[str, Any]) -> str:
+    """Appendix F. Every live judge run, so the cost claim is inspectable."""
+    rows = []
+    total = 0.0
+    for r in d["stats"]["runs"]:
+        cost = r.get("cost_usd")
+        if cost is not None:
+            total += cost
+        cost_s = f"{cost:.4f}" if cost is not None else "---"
+        rows.append(
+            f"{r['id'].replace('_', ' ')} & {r['sample']} & {r['n_requested']} & {r['n_ok']} & {cost_s} \\\\"
+        )
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}llrrr@{}}\n\\toprule\n"
+        "run & sample & requested & ok & cost (USD) \\\\\n"
+        f"\\midrule\n{body}\n\\midrule\n"
+        f"\\multicolumn{{4}}{{l}}{{attributable total}} & {total:.2f} \\\\\n"
+        "\\bottomrule\n\\end{tabular}\n"
+    )
+
+
+def _cluster_detail(d: dict[str, Any]) -> str:
+    """Appendix E. Cluster structure behind the design effect, and the implied ICC, which is the
+    quantity that transfers to a different draw. The design effect itself does not, because it
+    depends on the mean cluster size."""
+    rows = []
+    for name, key in (("S10k-U", "h2u"), ("S10k-S", "h2s")):
+        c = d[key]["clusters"]
+        mbar = c["mean_cluster_size"]
+        lo, hi = d[key]["design_effect_min"], d[key]["design_effect_max"]
+        icc_lo = (lo - 1) / (mbar - 1)
+        icc_hi = (hi - 1) / (mbar - 1)
+        rows.append(
+            f"{name} & {c['n_clusters']} & {c['n_observations']} & {mbar:.2f} & "
+            f"{c['min_cluster_size']} & {c['max_cluster_size']} & "
+            f"{lo:.2f}--{hi:.2f} & {icc_lo:.3f}--{icc_hi:.3f} \\\\"
+        )
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}lrrrrrll@{}}\n\\toprule\n"
+        "draw & clusters & obs & mean size & min & max & design effect & implied ICC \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
 def main() -> int:
     d = _load()
     _OUT.mkdir(parents=True, exist_ok=True)
@@ -218,6 +356,10 @@ def main() -> int:
         "margins": _margins(d),
         "design_effect": _design_effect(d),
         "ledger": _ledger(d),
+        "confusion_per_corpus": _confusion_per_corpus(d),
+        "ppi_variance": _ppi_variance(d),
+        "run_ledger": _run_ledger(d),
+        "cluster_detail": _cluster_detail(d),
     }
     for name, tex in tables.items():
         (_OUT / f"{name}.tex").write_text(tex)
