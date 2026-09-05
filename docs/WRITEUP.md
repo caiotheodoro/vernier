@@ -13,7 +13,7 @@ assumption the comparison rests on. The margin over EPIC-KITCHENS-100 is about s
 
 vernier measured the judge. The protocol was frozen before any frame was drawn
 (`docs/PRE-REGISTRATION.md`), every deviation is a dated entry in a decision log
-(`docs/DECISIONS.md`, D001–D069), and the result is a machine-checked card that exits nonzero
+(`docs/DECISIONS.md`, D001–D072), and the result is a machine-checked card that exits nonzero
 unless every claim is backed by a record.
 
 ## What was done
@@ -24,12 +24,19 @@ unless every claim is backed by a record.
   comparison runs against those.
 - **Human gold**: 93 frames labelled by one rater against a written rubric, balanced across
   the three corpora, plus a blind re-label of 34 of them at least a week later.
+- **The raw corpus, drawn twice**: 10,000 frames uniform over frames (`S10k-U`) and 10,000
+  stratified by factory worker-hours, at most one per clip (`S10k-S`), from 19,495 video shards
+  (~16 TB) without downloading them: a tar index built from 512-byte headers, then one frame per
+  clip via ffmpeg over HTTP range requests. These are the only frames in the project that carry
+  a worker id, so the only ones on which an interval can be clustered.
 - **Live judge calls**: 10,000 frames × 2 prompt arms on `Egocentric-10K-Evaluation`; the same
   on `Egocentric-100K-Evaluation`, their current release; 2,000 frames × 8 prompt variants;
-  600 gold frames. Judge cost for the four 10k passes: $17.63 (`data/e2_full_n10000.json`,
-  `data/e2_100k_eval.json`).
+  600 gold frames; 20,000 raw-corpus frames on a spot GPU. Judge cost for the four
+  evaluation-release 10k passes: $17.63 (`data/e2_full_n10000.json`,
+  `data/e2_100k_eval.json`); for the two corpus arms, about $7.50 (`docs/DECISIONS.md` D072).
 - **Statistics**: Gwet's AC1 with bootstrap intervals for agreement; PPI++ for prevalence, so
-  the interval is valid however biased the judge is; ECE for calibration.
+  the interval is valid however biased the judge is; ECE for calibration; a cluster bootstrap
+  over worker id, against its iid counterpart, wherever a worker id exists.
 
 ## What was found
 
@@ -61,6 +68,36 @@ down because every judge error in the gold set is a false positive (the judge sa
 on this arm, and it is a lower bound on the true width because the evaluation release ships
 no worker id to cluster over.
 
+**Their 10,000 frames are not 10,000 independent observations, and the gap is smaller than
+pre-registered.** (`data/h2_design_effect.S10k-U.json`, `data/h2_design_effect.S10k-S.json`)
+
+Frames from one worker share scene, lighting, task, gloves and camera. The pre-registration
+predicted a design effect of at least 2: a clustered interval at least twice as wide as the iid
+one. Measured at N = 10,000 per arm, B = 10,000, on both draws:
+
+| figure | `S10k-U` | `S10k-S` |
+|---|---:|---:|
+| ≥1 hand | 1.25 | 1.31 |
+| 2 hands | **1.62** | **1.66** |
+| active manipulation | 1.27 | 1.29 |
+
+None reaches 2, so H2 fails as stated. All six exceed 1, so the effect is real: an interval
+computed as if frames were independent is 12–29% too narrow in width on this corpus. Concretely,
+the 2-hands rate on `S10k-U` is 80.8%, iid interval [80.0, 81.6], clustered [79.8, 81.8]. Two
+separate draws with different cluster structures land within 0.05 of each other on every task,
+which is the result's own robustness check. The 2-hands figure carries the largest design effect
+on both arms, and it is the same figure the independent judge missed by six points on both
+releases; three measurements now single it out, and none explains it.
+
+This is measured on vernier's own draws, not on Build AI's evaluation frames, which ship no
+worker id at all. A published interval would inherit this; theirs was never measured, because
+there is none.
+
+Building the index also counted the corpus: 2,144 distinct workers against the published 2,153,
+with 85 factories, 10,000 hours and 192,903 clips reconciling essentially exactly
+(`docs/UPSTREAM-FINDINGS.md` F12). Nine workers, 0.42%, too few to move anything above;
+recorded so a reader comparing counts knows why they differ.
+
 **The rubric is decidable.** Intra-rater AC1 0.876 (hand count) and 0.904 (manipulation) on
 34 blind re-labels, against a pre-registered gate of 0.70. The audit is not deferred.
 
@@ -78,13 +115,16 @@ one confidence bin under greedy decoding, so the curve is degenerate by construc
 Distillation (H6): a DINOv2-small linear probe reaches 0.69 fidelity to the teacher against a
 0.90 target, and the abstention cascade cannot reach a 0.80 floor at 95% confidence on 46
 calibration frames (`data/rung1_distillation.json`). The probe is published anyway, labelled
-as a negative result.
+as a negative result. Design effect (H2): 1.25–1.66 against a pre-registered 2; real, smaller
+than predicted, reported above.
 
 ## What this means for someone buying the corpus
 
 The published number is not wrong in any way this work can show. It is a point without an
 interval, produced by a judge that over-calls manipulation on the frames a human looked at,
-and the honest range for the figure on the batch you would buy is roughly 70–92%. The
+and the honest range for the figure on the batch you would buy is roughly 70–92%. Any interval
+on this corpus that treats frames as independent is 12–29% too narrow, and the published figure
+has no interval at all. The
 instrument that produces that range costs about $9 per 10,000 frames to re-run on any batch,
 needs no API vendor, and is public.
 
@@ -99,5 +139,6 @@ cannot produce alone, and the dataset release is set up to receive it.
 - The probe: https://huggingface.co/caiotheodoro/vernier-rung1-probe
 - Code, pre-registration, decision log, measurement card: https://github.com/caiotheodoro/vernier
 
-No frame is redistributed anywhere above. One rater. n = 93. Every limitation is in
+No frame is redistributed anywhere above; the 20,000 corpus frames are identified by clip and
+frame index only. One rater. n = 93. Every limitation is in
 `docs/RED-TEAM.md`, written before the results existed.
