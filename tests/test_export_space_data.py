@@ -131,9 +131,12 @@ def test_committed_stats_equal_a_fresh_build(
     # four of five consecutive pushes without any number the Space shows having changed. It is
     # checked for shape and monotonicity below, not equality -- every result-derived field
     # (ppi, published, runs, generated_from minus git_rev) is still strict.
+    # Copy before popping: `committed_stats` is module-scoped, so popping from it would
+    # empty the key for every later test in this file.
+    committed = dict(committed_stats)
     fresh_repo = fresh.pop("repo")
-    committed_repo = committed_stats.pop("repo")
-    assert fresh == committed_stats
+    committed_repo = committed.pop("repo")
+    assert fresh == committed
     assert set(fresh_repo) == set(committed_repo) == {"n_tests", "n_decisions"}
     for key in ("n_tests", "n_decisions"):
         assert isinstance(fresh_repo[key], int) and fresh_repo[key] > 0
@@ -292,3 +295,175 @@ def test_generated_from_names_the_card_digest(committed_stats: dict[str, Any], c
         "epic-kitchens-100": "epic_kitchens",
     }
     assert export_space_data._OUT_DIR == _OUT
+
+
+def test_h2_equals_both_committed_arms(committed_stats: dict[str, Any]) -> None:
+    """Both arms are read. They differ in cluster count and n, so templating one onto the
+    other would silently invent numbers -- this is the regression test for that."""
+    h2 = committed_stats["h2"]
+    assert set(h2["arms"]) == {"S10k-U", "S10k-S"}
+    assert h2["arms"]["S10k-S"]["clusters"]["n_clusters"] != h2["arms"]["S10k-U"]["clusters"]["n_clusters"]
+    effects: list[float] = []
+    for arm, block in h2["arms"].items():
+        source = json.loads((_ROOT / "data" / f"h2_design_effect.{arm}.json").read_text())
+        assert block["n_ok"] == source["n_ok"]
+        assert block["clusters"] == source["clusters"]
+        for task, entry in block["tasks"].items():
+            assert entry == source["tasks"][task]
+            effects.append(float(entry["design_effect"]))
+    assert h2["design_effect_min"] == min(effects)
+    assert h2["design_effect_max"] == max(effects)
+    assert h2["holds"] is False and h2["threshold"] == 2.0
+    assert all(e > 1.0 for e in effects), "every design effect exceeds 1: the effect is real"
+    assert max(effects) < h2["threshold"], "H2 does not hold; the export must not say otherwise"
+
+
+def test_h2_width_understatement_is_the_root_of_the_design_effect(committed_stats: dict[str, Any]) -> None:
+    h2 = committed_stats["h2"]
+    lo, hi = h2["width_understatement_pct"]["lo"], h2["width_understatement_pct"]["hi"]
+    assert lo == (h2["design_effect_min"] ** 0.5 - 1) * 100
+    assert hi == (h2["design_effect_max"] ** 0.5 - 1) * 100
+    # The card states this range in words; the export must agree with it.
+    assert (round(lo), round(hi)) == (12, 29)
+
+
+def test_no_ppi_interval_was_widened_by_the_design_effect(committed_stats: dict[str, Any]) -> None:
+    """docs/RED-TEAM.md A13: the licensed claim is that a published interval *inherits* this,
+    not that theirs was measured. Emitting a rescaled interval would be a new estimator nobody
+    pre-registered, so every PPI bound must still equal wave4's."""
+    wave4 = json.loads((_ROOT / "data" / "wave4_analysis.json").read_text())
+    for corpus, tasks in committed_stats["ppi"].items():
+        for task, entry in tasks.items():
+            source = wave4["ppi"][f"{corpus}/{task}"] if f"{corpus}/{task}" in wave4.get("ppi", {}) else None
+            if source is None:
+                continue
+            assert entry["lo"] == source["ci_lo"] and entry["hi"] == source["ci_hi"]
+        assert all("clustered_width_estimate" not in e for e in tasks.values())
+
+
+def test_h1_diff_and_tolerance_equal_the_e2_files(committed_stats: dict[str, Any]) -> None:
+    h1 = committed_stats["h1"]
+    assert h1["egocentric-10k"]["pre_registered"] is True
+    assert h1["egocentric-100k"]["pre_registered"] is False, "the 100K re-run was not pre-registered (D066)"
+    failures = {
+        (corpus, task)
+        for corpus, block in h1.items()
+        for task, entry in block["tasks"].items()
+        if not entry["within_tolerance"]
+    }
+    assert failures == {("egocentric-10k", "hand_eq2"), ("egocentric-100k", "hand_eq2")}, (
+        "2 hands is the only figure outside tolerance, and it misses on both releases"
+    )
+    for corpus, block in h1.items():
+        assert block["tolerance_pp"] == 2.0
+        for task, entry in block["tasks"].items():
+            assert entry["published"] == committed_stats["published"][corpus][task]
+            # The E2 files record diff_pp as a magnitude, not a signed difference.
+            assert abs(entry["diff_pp"] - abs(entry["observed"] - entry["published"]) * 100) < 1e-9
+
+
+def test_the_2_hands_figure_is_singled_out_by_every_measurement(committed_stats: dict[str, Any]) -> None:
+    """The convergence the card records in words: the same task fails H1 on both releases and
+    carries the largest design effect on both H2 arms."""
+    h1, h2 = committed_stats["h1"], committed_stats["h2"]
+    for block in h1.values():
+        worst = max(block["tasks"], key=lambda t: abs(block["tasks"][t]["diff_pp"]))
+        assert worst == "hand_eq2"
+    for arm in h2["arms"].values():
+        worst = max(arm["tasks"], key=lambda t: arm["tasks"][t]["design_effect"])
+        assert worst == "hand_eq2"
+
+
+def test_test_retest_equals_the_committed_file(committed_stats: dict[str, Any]) -> None:
+    source = json.loads((_ROOT / "data" / "judge_test_retest.json").read_text())
+    block = committed_stats["test_retest"]
+    assert block["hand_count_self_agreement_rate"] == source["hand_count_self_agreement_rate"] == 1.0
+    assert block["manipulation_self_agreement_rate"] == source["manipulation_self_agreement_rate"] == 1.0
+    assert len(block["per_frame"]) == block["n_frames"] == source["n_frames"]
+    assert block["repeats_per_frame"] == 3
+    # The sampling was NOT pinned for this run; the page must not present 1.0 as greedy decoding.
+    assert "are NOT set" in block["judge_config"]
+
+
+def test_health_latency_strip_is_all_600_gold_calls(committed_stats: dict[str, Any]) -> None:
+    """Health.tsx plotted `runs.find(r => r.latency_ms)` -- the first run's 200 points -- under
+    a caption saying 600. The chart and its summary must describe one population."""
+    import statistics
+
+    gold = committed_stats["health"]["gold_calls"]
+    latencies = gold["latency_ms"]
+    assert len(latencies) == gold["n"] == 600
+    assert statistics.median(latencies) == gold["p50_ms"]
+    assert max(latencies) == gold["max_ms"]
+    from_runs = [ms for run in committed_stats["runs"] if run["latency_ms"] for ms in run["latency_ms"]]
+    assert latencies == from_runs
+
+
+def test_per_frame_raw_latency_and_cost_equal_the_gold_judged_records(
+    committed_frames: list[dict[str, Any]],
+) -> None:
+    for sample, corpus in export_space_data._GOLD_SAMPLES.items():
+        source = {r.frame_id: r for r in export_space_data._load_judged(sample)}
+        for frame in (f for f in committed_frames if f["corpus"] == corpus):
+            record = source[frame["id"]]
+            assert frame["q"]["raw"] == record.raw
+            assert frame["q"]["lat"] == record.latency_ms
+            assert frame["q"]["cost"] == record.cost_usd
+
+
+def test_rater_edge_cases_come_from_the_rubric_closed_list(committed_frames: list[dict[str, Any]]) -> None:
+    from typing import get_args
+
+    from vernier.models import EdgeCaseTag
+
+    allowed = set(get_args(EdgeCaseTag))
+    labelled = [f for f in committed_frames if f["r"] is not None]
+    assert len(labelled) == 93
+    tags = [t for f in labelled for t in f["r"]["e"]]
+    assert set(tags) <= allowed
+    assert {"between-actions", "other-person", "blur"} <= set(tags)
+    seconds = [f["r"]["s"] for f in labelled]
+    assert (min(seconds), max(seconds)) == (4, 1984)
+
+
+def test_thumbnail_reference_is_present_only_where_a_frame_actually_ships(
+    committed_frames: list[dict[str, Any]], committed_stats: dict[str, Any]
+) -> None:
+    index = json.loads((_ROOT / "data" / "space_thumbnails.json").read_text())
+    with_tile = [f for f in committed_frames if f["t"] is not None]
+    assert {f["id"] for f in with_tile} == set(index["tiles"])
+    assert len(with_tile) == committed_stats["thumbnails"]["n"] == 24
+    for frame in with_tile:
+        assert frame["corpus"] == "egocentric-10k", "a restricted corpus reached the atlas"
+        assert frame["r"] is not None, "a frame with no human label reached the atlas"
+        assert frame["t"] == index["tiles"][frame["id"]]
+
+
+def test_repo_counts_reach_the_package_subdirectories(committed_stats: dict[str, Any]) -> None:
+    """`glob` was non-recursive and dropped 97 tests in four subdirectories."""
+    import re
+
+    root = _ROOT / "tests"
+    recursive = sum(len(re.findall(r"^def test_", p.read_text(), re.M)) for p in root.rglob("test_*.py"))
+    top_only = sum(len(re.findall(r"^def test_", p.read_text(), re.M)) for p in root.glob("test_*.py"))
+    # Same convention as the determinism test above: `n_tests` counts the test files
+    # themselves, so it moves whenever a test is added and is checked for monotonicity, not
+    # equality. What matters here is the recursive scan.
+    assert committed_stats["repo"]["n_tests"] <= recursive
+    assert committed_stats["repo"]["n_tests"] > top_only, (
+        "n_tests is at or below a top-level-only count: the scan stopped being recursive"
+    )
+    assert recursive > top_only
+
+
+def test_provenance_cites_the_decision_that_is_actually_about_republication(
+    committed_stats: dict[str, Any],
+) -> None:
+    """It cited D040 -- "FrameRef.fps/codec join the eval-arm null-together group" -- since the
+    Space landed."""
+    provenance = committed_stats["provenance"]
+    assert "no_frames_republished" not in provenance
+    assert provenance["frames_republished"] == {"claim_ref": "docs/ETHICS.md#4", "decision": "D073"}
+    decisions = (_ROOT / "docs" / "DECISIONS.md").read_text()
+    for entry in provenance.values():
+        assert f"\n## {entry['decision']} " in decisions, f"{entry['decision']} is not a real entry"

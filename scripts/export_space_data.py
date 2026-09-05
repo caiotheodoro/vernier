@@ -65,6 +65,12 @@ _GOLD_JUDGED_ROOT = _ROOT / "data" / "gold_judged"
 _PREREG_PATH = _ROOT / "docs" / "PRE-REGISTRATION.md"
 _DECISIONS_PATH = _ROOT / "docs" / "DECISIONS.md"
 _TESTS_ROOT = _ROOT / "tests"
+_TEST_RETEST_PATH = _ROOT / "data" / "judge_test_retest.json"
+_THUMBS_PATH = _ROOT / "data" / "space_thumbnails.json"
+_H2_PATHS = {
+    "S10k-U": _ROOT / "data" / "h2_design_effect.S10k-U.json",
+    "S10k-S": _ROOT / "data" / "h2_design_effect.S10k-S.json",
+}
 
 _GOLD_SAMPLES: dict[str, Corpus] = {
     "G200-ego": "egocentric-10k",
@@ -89,6 +95,12 @@ _PREREG_ROW_LABEL: dict[str, Corpus] = {
     "EPIC-KITCHENS-100": "epic-kitchens-100",
 }
 _CORPUS_100K = "egocentric-100k"
+# The 10k replication files name the same three rates under two different keys: E2 puts them
+# under "H1", the 100K re-run under "published_comparison" (it was not pre-registered, D066).
+_H1_BLOCKS = {"egocentric-10k": (_E2_PATH, "H1"), _CORPUS_100K: (_E2_100K_PATH, "published_comparison")}
+# The rate keys the E2 runs use, mapped to this project's task names. One definition: _h1()
+# and _published() both read it.
+_E2_KEYS = {"hand_ge1_rate": "hand_count", "hand_eq2_rate": "hand_eq2", "active_manipulation_rate": "manipulation"}
 _TASKS: tuple[Task, ...] = ("hand_count", "hand_eq2", "manipulation")
 _JUDGE = "qwen3-vl"
 _VARIANT = "P0b"
@@ -179,6 +191,110 @@ def _load_primary() -> list[HumanLabel]:
     return [HumanLabel.model_validate(r) for r in json.loads(_PRIMARY_LABELS_PATH.read_text())]
 
 
+def _load_thumbnails() -> dict[str, Any]:
+    """The atlas index built by `scripts/export_space_thumbnails.py`. Committed, so this stays a
+    pure-JSON read: no Pillow, no parquet, no network, and a cold HF cache changes nothing."""
+    payload: dict[str, Any] = json.loads(_THUMBS_PATH.read_text())
+    return payload
+
+
+def _thumbnails() -> dict[str, Any]:
+    index = _load_thumbnails()
+    return {
+        "n": index["n"],
+        "corpus": index["corpus"],
+        "tile": index["tile"],
+        "atlas": {k: index["atlas"][k] for k in ("file", "w", "h", "cols", "rows", "n_tiles", "bytes")},
+        "n_withheld_for_likeness": len(index["withheld_for_likeness"]),
+        "source": index["source"],
+    }
+
+
+def _h1() -> dict[str, Any]:
+    """Build AI's published figure against vernier's own 10,000-frame run, per task, with the
+    pre-registered tolerance verdict. `tolerance_pp` is parsed out of the source key name rather
+    than typed (AGENTS.md rule 2)."""
+    out: dict[str, Any] = {}
+    for corpus, (path, key) in _H1_BLOCKS.items():
+        if not path.exists():
+            continue
+        block = json.loads(path.read_text())[key]
+        tasks: dict[str, Any] = {}
+        tolerances: set[float] = set()
+        for src, task in _E2_KEYS.items():
+            entry = block[src]
+            verdict = next(k for k in entry if k.startswith("within_") and k.endswith("_tolerance"))
+            tolerances.add(float(verdict.removeprefix("within_").removesuffix("pp_tolerance")))
+            tasks[task] = {
+                "published": entry["published"],
+                "observed": entry["observed_P0a"],
+                "diff_pp": entry["diff_pp"],
+                "within_tolerance": entry[verdict],
+            }
+        if len(tolerances) != 1:
+            raise ValueError(f"{path.name}#{key}: mixed tolerances {tolerances}")
+        out[corpus] = {
+            "tasks": tasks,
+            "tolerance_pp": tolerances.pop(),
+            "n": 10000,
+            "pre_registered": key == "H1",
+        }
+    return out
+
+
+def _h2() -> dict[str, Any]:
+    """The cluster bootstrap over `worker_id` (D072). Both arms are read; they differ in cluster
+    count and n, so templating one onto the other would silently invent numbers."""
+    arms: dict[str, Any] = {}
+    effects: list[float] = []
+    for arm, path in sorted(_H2_PATHS.items()):
+        if not path.exists():
+            continue
+        block = json.loads(path.read_text())
+        tasks = {t: block["tasks"][t] for t in ("hand_ge1", "hand_eq2", "active_manipulation")}
+        effects.extend(float(v["design_effect"]) for v in tasks.values())
+        arms[arm] = {
+            "n_ok": block["n_ok"],
+            "clusters": block["clusters"],
+            "tasks": tasks,
+        }
+    if not arms:
+        return {}
+    first = json.loads(next(iter(sorted(_H2_PATHS.values()))).read_text())
+    lo, hi = min(effects), max(effects)
+    return {
+        "arms": arms,
+        "threshold": first["h2_threshold"],
+        "holds": bool(first["h2_holds"]),
+        "cluster_by": first["cluster_by"],
+        "seed": first["seed"],
+        "B": first["B"],
+        "design_effect_min": lo,
+        "design_effect_max": hi,
+        # sqrt(deff) - 1: how much narrower an iid interval is than the cluster-aware one. The
+        # page states this; it does NOT widen any published interval, which would be a new
+        # estimator nobody pre-registered (docs/RED-TEAM.md A13).
+        "width_understatement_pct": {"lo": (lo**0.5 - 1) * 100, "hi": (hi**0.5 - 1) * 100},
+    }
+
+
+def _test_retest() -> dict[str, Any]:
+    """The judge's agreement with itself -- the companion to the human intra-rater number."""
+    block = json.loads(_TEST_RETEST_PATH.read_text())
+    return {
+        "n_frames": block["n_frames"],
+        "repeats_per_frame": block["repeats_per_frame"],
+        "judge_rev": block["judge_rev"],
+        # Verbatim: this run did not pin temperature/top_p/seed, unlike D053's greedy decoding
+        # elsewhere. A self-agreement of 1.0 under unpinned sampling is a stronger result than
+        # under greedy decoding, and the page must not present it as the latter.
+        "judge_config": block["judge_config"],
+        "hand_count_self_agreement_rate": block["hand_count_self_agreement_rate"],
+        "manipulation_self_agreement_rate": block["manipulation_self_agreement_rate"],
+        "per_frame": block["per_frame"],
+    }
+
+
 def row_base(corpus: Corpus, rows_per_file: dict[str, int]) -> int:
     """Offset of `corpus`'s file within the concatenated datasets-server split."""
     base = 0
@@ -192,6 +308,7 @@ def row_base(corpus: Corpus, rows_per_file: dict[str, int]) -> int:
 def build_frames(index: ParquetIndex | None) -> list[dict[str, Any]]:
     """The grid index: one record per gold frame (600), sorted by corpus then row."""
     primary = {label.frame_id: label for label in _load_primary()}
+    thumbs = _load_thumbnails()["tiles"]
     if index is not None:
         rows_per_file = {c: len(ids) for c, ids in index["frame_ids"].items()}
     else:
@@ -223,6 +340,11 @@ def build_frames(index: ParquetIndex | None) -> list[dict[str, Any]]:
                     "m": label.manipulation,
                     "d": label.difficulty,
                     "note": label.note or None,
+                    # `edge_case` is a closed list (docs/RUBRIC.md, models.EdgeCaseTag); the
+                    # model validation above already rejects anything outside it.
+                    "e": list(label.edge_case),
+                    "s": label.seconds_spent,
+                    "at": label.labelled_at.isoformat(),
                 }
             frames.append(
                 {
@@ -236,9 +358,19 @@ def build_frames(index: ParquetIndex | None) -> list[dict[str, Any]]:
                         "m": q.manipulation,
                         "c": q.confidence.value,
                         "s": q.status,
+                        # The judge's literal output. Six distinct strings across 600 calls --
+                        # showing it is the cheapest way to demystify what an LLM judge emits.
+                        "raw": q.raw,
+                        "lat": q.latency_ms,
+                        "cost": q.cost_usd,
                     },
                     "g": g,
                     "r": r,
+                    # Where this frame's thumbnail sits in the atlas, or null. The null is the
+                    # flag: the UI never infers "is this instant?" from the corpus name, because
+                    # the rule is not "which corpus" but "which corpus AND is anyone else in
+                    # shot" (docs/ETHICS.md section 4, D073).
+                    "t": thumbs.get(ref.frame_id),
                 }
             )
     frames.sort(key=lambda f: (str(f["corpus"]), int(f["row"])))
@@ -274,15 +406,14 @@ def _published() -> dict[str, dict[str, float]]:
             if prereg[corpus][task] != _WAVE4_PUBLISHED[sample][task]:
                 raise ValueError(f"published {corpus}/{task}: PRE-REGISTRATION {prereg[corpus][task]} != wave4 {_WAVE4_PUBLISHED[sample][task]}")
     e2 = json.loads(_E2_PATH.read_text())
-    e2_keys = {"hand_ge1_rate": "hand_count", "hand_eq2_rate": "hand_eq2", "active_manipulation_rate": "manipulation"}
-    for key, task in e2_keys.items():
+    for key, task in _E2_KEYS.items():
         if e2["H1"][key]["published"] != prereg["egocentric-10k"][task]:
             raise ValueError(f"published egocentric-10k/{task}: PRE-REGISTRATION != e2_full_n10000.json")
     published: dict[str, dict[str, float]] = {c: dict(v) for c, v in prereg.items()}
     if _E2_100K_PATH.exists():
         e100k = json.loads(_E2_100K_PATH.read_text())
         published[_CORPUS_100K] = {
-            task: float(e100k["published_comparison"][key]["published"]) for key, task in e2_keys.items()
+            task: float(e100k["published_comparison"][key]["published"]) for key, task in _E2_KEYS.items()
         }
     return published
 
@@ -538,6 +669,11 @@ def _health(e2: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
             "p50_ms": statistics.median(gold_latencies),
             "p95_ms": statistics.quantiles(gold_latencies, n=20)[18],
             "max_ms": max(gold_latencies),
+            # The array the percentiles above were computed from. Health.tsx used to plot
+            # `runs.find(r => r.latency_ms)` -- the FIRST gold run's 200 points -- under a
+            # caption reading n=600, so the chart and its own summary described different
+            # populations. Emitting the list makes them provably the same one.
+            "latency_ms": gold_latencies,
         },
     }
 
@@ -557,13 +693,21 @@ def _provenance() -> dict[str, dict[str, str]]:
         "prompt_sweep": {"claim_ref": "data/e5_full_n2000.json#H3", "decision": "D055"},
         "gold_sets": {"claim_ref": "data/gold_judged/G200-*.P0b.json", "decision": "D059"},
         "no_worker_ids": {"claim_ref": "CONTRACTS.md#FrameRef", "decision": "D039"},
-        "no_frames_republished": {"claim_ref": "docs/ETHICS.md#4", "decision": "D040"},
+        # Was cited as D040 since the Space landed. D040 is "FrameRef.fps/codec join the
+        # eval-arm null-together group" and has nothing to do with republication.
+        "frames_republished": {"claim_ref": "docs/ETHICS.md#4", "decision": "D073"},
+        "h1": {"claim_ref": "data/e2_full_n10000.json#H1", "decision": "D054"},
+        "h2": {"claim_ref": "data/h2_design_effect.S10k-S.json", "decision": "D072"},
+        "test_retest": {"claim_ref": "data/judge_test_retest.json", "decision": "D059"},
+        "thumbnails": {"claim_ref": "data/space_thumbnails.json", "decision": "D073"},
     }
 
 
 def _repo_counts() -> dict[str, int]:
     n_tests = 0
-    for path in sorted(_TESTS_ROOT.glob("test_*.py")):
+    # rglob, not glob: tests/{agreement,calibration,distil,estimation}/ hold 97 more tests
+    # that a non-recursive scan silently dropped, so the footer under-reported for months.
+    for path in sorted(_TESTS_ROOT.rglob("test_*.py")):
         n_tests += len(re.findall(r"^def test_", path.read_text(), flags=re.MULTILINE))
     n_decisions = len(re.findall(r"^## D\d+", _DECISIONS_PATH.read_text(), flags=re.MULTILINE))
     return {"n_tests": n_tests, "n_decisions": n_decisions}
@@ -613,6 +757,10 @@ def build_stats(frames: list[dict[str, Any]]) -> dict[str, Any]:
             "file_order": list(_ROWS_API_FILE_ORDER),
         },
         "published": _published(),
+        "h1": _h1(),
+        "h2": _h2(),
+        "test_retest": _test_retest(),
+        "thumbnails": _thumbnails(),
         "ppi": _ppi(wave4),
         "judge_alone": _judge_alone(frames),
         "agreement": _agreement(wave4),

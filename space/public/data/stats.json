@@ -298,15 +298,220 @@
   }
  },
  "generated_from": {
-  "card_digest": "sha256:2638e2ee47313bb908eb3dcffce3be8613d69260d312c7e4c2c2350e72d5ca75",
+  "card_digest": "sha256:ed75109a174e3e46c315628d8f730b6f24c9d81148bc83e7eb9462e0dff85343",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
-  "git_rev": "1a8506486d5ae120bb748fea9b80cf78deb5bf60",
+  "git_rev": "758acae5a062a6c95412e8acd59a2c314c3256d3",
   "judge": "qwen3-vl",
   "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
   "n_gold_frames": 600,
   "n_rater_labels": 93,
   "prompt_variant": "P0b"
+ },
+ "h1": {
+  "egocentric-100k": {
+   "n": 10000,
+   "pre_registered": false,
+   "tasks": {
+    "hand_count": {
+     "diff_pp": 0.8603910391039138,
+     "observed": 0.9608960896089609,
+     "published": 0.9695,
+     "within_tolerance": true
+    },
+    "hand_eq2": {
+     "diff_pp": 6.1385188518851885,
+     "observed": 0.8518851885188519,
+     "published": 0.7905,
+     "within_tolerance": false
+    },
+    "manipulation": {
+     "diff_pp": 0.6207860786078601,
+     "observed": 0.9213921392139214,
+     "published": 0.9276,
+     "within_tolerance": true
+    }
+   },
+   "tolerance_pp": 2.0
+  },
+  "egocentric-10k": {
+   "n": 10000,
+   "pre_registered": true,
+   "tasks": {
+    "hand_count": {
+     "diff_pp": 0.970455045504548,
+     "observed": 0.9544954495449545,
+     "published": 0.9642,
+     "within_tolerance": true
+    },
+    "hand_eq2": {
+     "diff_pp": 6.318265826582659,
+     "observed": 0.8265826582658266,
+     "published": 0.7634,
+     "within_tolerance": false
+    },
+    "manipulation": {
+     "diff_pp": 0.3808720872087168,
+     "observed": 0.9127912791279128,
+     "published": 0.9166,
+     "within_tolerance": true
+    }
+   },
+   "tolerance_pp": 2.0
+  }
+ },
+ "h2": {
+  "B": 10000,
+  "arms": {
+   "S10k-S": {
+    "clusters": {
+     "max_cluster_size": 112,
+     "mean_cluster_size": 4.99399699849925,
+     "min_cluster_size": 1,
+     "n_clusters": 1999,
+     "n_observations": 9983
+    },
+    "n_ok": 9983,
+    "tasks": {
+     "active_manipulation": {
+      "cluster": {
+       "B": 10000,
+       "clusters": 1999,
+       "hi": 0.9103448797485082,
+       "lo": 0.8972565722802248,
+       "method": "cluster-bootstrap"
+      },
+      "design_effect": 1.2909024919332928,
+      "iid": {
+       "B": null,
+       "clusters": null,
+       "hi": 0.9095462285886006,
+       "lo": 0.8980266452970049,
+       "method": "iid"
+      },
+      "point_estimate": 0.9038365220875488,
+      "why_absent": null
+     },
+     "hand_eq2": {
+      "cluster": {
+       "B": 10000,
+       "clusters": 1999,
+       "hi": 0.8300938242716644,
+       "lo": 0.8107638290041952,
+       "method": "cluster-bootstrap"
+      },
+      "design_effect": 1.6550195166543795,
+      "iid": {
+       "B": null,
+       "clusters": null,
+       "hi": 0.8280076129420014,
+       "lo": 0.8129820695181809,
+       "method": "iid"
+      },
+      "point_estimate": 0.8204948412300912,
+      "why_absent": null
+     },
+     "hand_ge1": {
+      "cluster": {
+       "B": 10000,
+       "clusters": 1999,
+       "hi": 0.9558417700398205,
+       "lo": 0.9461991964223844,
+       "method": "cluster-bootstrap"
+      },
+      "design_effect": 1.3132563110735354,
+      "iid": {
+       "B": null,
+       "clusters": null,
+       "hi": 0.9553240508865071,
+       "lo": 0.9469097465691676,
+       "method": "iid"
+      },
+      "point_estimate": 0.9511168987278373,
+      "why_absent": null
+     }
+    }
+   },
+   "S10k-U": {
+    "clusters": {
+     "max_cluster_size": 90,
+     "mean_cluster_size": 5.08087487283825,
+     "min_cluster_size": 1,
+     "n_clusters": 1966,
+     "n_observations": 9989
+    },
+    "n_ok": 9989,
+    "tasks": {
+     "active_manipulation": {
+      "cluster": {
+       "B": 10000,
+       "clusters": 1966,
+       "hi": 0.904946632001388,
+       "lo": 0.8912721936598443,
+       "method": "cluster-bootstrap"
+      },
+      "design_effect": 1.2743604373621555,
+      "iid": {
+       "B": null,
+       "clusters": null,
+       "hi": 0.9041946140754831,
+       "lo": 0.8920812894183602,
+       "method": "iid"
+      },
+      "point_estimate": 0.8981880068074882,
+      "why_absent": null
+     },
+     "hand_eq2": {
+      "cluster": {
+       "B": 10000,
+       "clusters": 1966,
+       "hi": 0.8178293024567629,
+       "lo": 0.7981902460415058,
+       "method": "cluster-bootstrap"
+      },
+      "design_effect": 1.6227208635034607,
+      "iid": {
+       "B": null,
+       "clusters": null,
+       "hi": 0.8155971568725598,
+       "lo": 0.8001801982180399,
+       "method": "iid"
+      },
+      "point_estimate": 0.8079887876664331,
+      "why_absent": null
+     },
+     "hand_ge1": {
+      "cluster": {
+       "B": 10000,
+       "clusters": 1966,
+       "hi": 0.9537285865173507,
+       "lo": 0.9440811883658584,
+       "method": "cluster-bootstrap"
+      },
+      "design_effect": 1.254917190211891,
+      "iid": {
+       "B": null,
+       "clusters": null,
+       "hi": 0.9531509660626689,
+       "lo": 0.9445389928921814,
+       "method": "iid"
+      },
+      "point_estimate": 0.9489438382220442,
+      "why_absent": null
+     }
+    }
+   }
+  },
+  "cluster_by": "worker_id",
+  "design_effect_max": 1.6550195166543795,
+  "design_effect_min": 1.254917190211891,
+  "holds": false,
+  "seed": 777,
+  "threshold": 2.0,
+  "width_understatement_pct": {
+   "hi": 28.647561836763135,
+   "lo": 12.023086469347511
+  }
  },
  "health": {
   "e2_arms": {
@@ -323,6 +528,608 @@
   "e2_frames": 10000,
   "e2_judge_time_both_arms_h": 10.70578,
   "gold_calls": {
+   "latency_ms": [
+    229546,
+    1987,
+    3335,
+    1925,
+    1783,
+    1865,
+    1733,
+    1833,
+    1747,
+    2009,
+    2100,
+    1812,
+    1922,
+    3086,
+    1996,
+    1746,
+    1780,
+    1879,
+    1710,
+    1755,
+    1712,
+    2228,
+    2101,
+    1822,
+    1794,
+    1958,
+    1789,
+    2700,
+    1899,
+    1723,
+    1906,
+    2252,
+    1848,
+    2080,
+    1759,
+    1915,
+    1714,
+    1801,
+    2118,
+    2235,
+    1988,
+    2138,
+    2654,
+    1927,
+    2272,
+    2194,
+    1804,
+    1981,
+    2120,
+    1907,
+    1898,
+    2063,
+    1902,
+    2926,
+    1911,
+    1793,
+    1842,
+    2221,
+    1879,
+    2282,
+    1985,
+    1942,
+    2028,
+    2008,
+    2805,
+    1886,
+    1838,
+    1869,
+    1810,
+    2151,
+    1924,
+    1932,
+    1822,
+    1747,
+    2949,
+    2135,
+    1843,
+    1965,
+    1742,
+    1962,
+    2311,
+    1769,
+    1747,
+    1801,
+    1919,
+    2024,
+    2124,
+    1951,
+    1723,
+    1828,
+    1902,
+    1806,
+    2866,
+    1814,
+    2115,
+    1780,
+    1748,
+    1999,
+    1851,
+    1776,
+    2172,
+    1882,
+    2040,
+    1766,
+    1971,
+    1765,
+    2002,
+    2111,
+    1926,
+    2042,
+    1842,
+    3091,
+    1930,
+    1778,
+    3041,
+    2858,
+    1788,
+    1835,
+    2113,
+    2002,
+    1943,
+    2064,
+    1887,
+    1815,
+    1623,
+    2553,
+    2380,
+    1851,
+    2725,
+    1925,
+    2177,
+    2469,
+    1826,
+    1908,
+    1803,
+    2227,
+    1916,
+    1988,
+    1936,
+    1927,
+    2317,
+    2041,
+    1645,
+    2568,
+    3342,
+    1864,
+    1958,
+    1870,
+    1778,
+    2398,
+    2577,
+    1961,
+    1816,
+    1872,
+    2264,
+    2443,
+    1722,
+    1986,
+    2005,
+    2166,
+    1971,
+    2871,
+    1856,
+    1863,
+    2104,
+    2842,
+    1797,
+    1877,
+    1847,
+    2009,
+    1995,
+    1819,
+    1994,
+    1890,
+    1769,
+    1857,
+    2686,
+    2556,
+    2162,
+    1798,
+    1939,
+    1940,
+    1988,
+    2083,
+    1836,
+    2004,
+    2095,
+    1795,
+    2721,
+    1888,
+    2174,
+    1874,
+    2081,
+    1834,
+    2023,
+    1855,
+    1906,
+    1954,
+    2011,
+    2096,
+    4219,
+    1964,
+    1861,
+    3114,
+    1307,
+    2457,
+    2144,
+    1385,
+    1722,
+    2361,
+    1986,
+    2479,
+    1232,
+    2473,
+    1315,
+    1791,
+    1843,
+    801,
+    2277,
+    5286,
+    1700,
+    2193,
+    2119,
+    5007,
+    2010,
+    1872,
+    4063,
+    2256,
+    2433,
+    2681,
+    1990,
+    2201,
+    1167,
+    1677,
+    1380,
+    3173,
+    1490,
+    4771,
+    2255,
+    1827,
+    1476,
+    3012,
+    1802,
+    1226,
+    2201,
+    2136,
+    1218,
+    2049,
+    1602,
+    2515,
+    1620,
+    1691,
+    1685,
+    1154,
+    2303,
+    735,
+    1363,
+    671,
+    2033,
+    2243,
+    1843,
+    1841,
+    4133,
+    2288,
+    2322,
+    3758,
+    4729,
+    2531,
+    1990,
+    2184,
+    2243,
+    4091,
+    1847,
+    2341,
+    2364,
+    2502,
+    1398,
+    3333,
+    1547,
+    1540,
+    1744,
+    2238,
+    1914,
+    1895,
+    2157,
+    1768,
+    1639,
+    1316,
+    2916,
+    1983,
+    1360,
+    2163,
+    1388,
+    2004,
+    1662,
+    1595,
+    1943,
+    1797,
+    1344,
+    1623,
+    3952,
+    5531,
+    1772,
+    1472,
+    1420,
+    1684,
+    2311,
+    1721,
+    2420,
+    2681,
+    1449,
+    1572,
+    4493,
+    1608,
+    1589,
+    1384,
+    1747,
+    2156,
+    1482,
+    1671,
+    2494,
+    3790,
+    1797,
+    3399,
+    3825,
+    4049,
+    2448,
+    1707,
+    1177,
+    2293,
+    1494,
+    1705,
+    1680,
+    1996,
+    1709,
+    1711,
+    2326,
+    2945,
+    1775,
+    1460,
+    1475,
+    1382,
+    1375,
+    1466,
+    2922,
+    5559,
+    2014,
+    2223,
+    2056,
+    3234,
+    1726,
+    1490,
+    1424,
+    1999,
+    2925,
+    2420,
+    1962,
+    1970,
+    3985,
+    1659,
+    1717,
+    1639,
+    1530,
+    2387,
+    2356,
+    1818,
+    2435,
+    2199,
+    4940,
+    1705,
+    1796,
+    2189,
+    1774,
+    1752,
+    2260,
+    1427,
+    1790,
+    1813,
+    4681,
+    2199,
+    1520,
+    1639,
+    1653,
+    3889,
+    2431,
+    3879,
+    1469,
+    1512,
+    1866,
+    1743,
+    1415,
+    1692,
+    2904,
+    2577,
+    2278,
+    1640,
+    1313,
+    1277,
+    3736,
+    1680,
+    1831,
+    1117,
+    1756,
+    2514,
+    1991,
+    2027,
+    1899,
+    1712,
+    1703,
+    2175,
+    2982,
+    1833,
+    2046,
+    2070,
+    1818,
+    1710,
+    1710,
+    1845,
+    2143,
+    1811,
+    1951,
+    1813,
+    1779,
+    2062,
+    1689,
+    2544,
+    2506,
+    2125,
+    2707,
+    1775,
+    1974,
+    2163,
+    2027,
+    1885,
+    1830,
+    1701,
+    2123,
+    1821,
+    1658,
+    1726,
+    1952,
+    1831,
+    1994,
+    1856,
+    2105,
+    1777,
+    1931,
+    2003,
+    1746,
+    2161,
+    1874,
+    1966,
+    2002,
+    1829,
+    2145,
+    1754,
+    1620,
+    1815,
+    1783,
+    1799,
+    1776,
+    2008,
+    1726,
+    2047,
+    2221,
+    2099,
+    2095,
+    1816,
+    1786,
+    1876,
+    1665,
+    2801,
+    2906,
+    1946,
+    1668,
+    1740,
+    1821,
+    1770,
+    2089,
+    2045,
+    1879,
+    1676,
+    2976,
+    2037,
+    1761,
+    1829,
+    2148,
+    1868,
+    1987,
+    2032,
+    1935,
+    1680,
+    1088,
+    3210,
+    1710,
+    2555,
+    1864,
+    2108,
+    1882,
+    1764,
+    2005,
+    1784,
+    1771,
+    2036,
+    2203,
+    2509,
+    1725,
+    1728,
+    1837,
+    2325,
+    1928,
+    1780,
+    1947,
+    1987,
+    1814,
+    2982,
+    1642,
+    1835,
+    1815,
+    1736,
+    2718,
+    2088,
+    1770,
+    1728,
+    2517,
+    2004,
+    2526,
+    1915,
+    2170,
+    1803,
+    1803,
+    2255,
+    1789,
+    2019,
+    5465,
+    1746,
+    1724,
+    1857,
+    2099,
+    2055,
+    3798,
+    2054,
+    2264,
+    1751,
+    2672,
+    1811,
+    1782,
+    2539,
+    2685,
+    1764,
+    1788,
+    1879,
+    1803,
+    1808,
+    2378,
+    1728,
+    1696,
+    1742,
+    2027,
+    4012,
+    2215,
+    1783,
+    1845,
+    1884,
+    1768,
+    1829,
+    2268,
+    2586,
+    1802,
+    2256,
+    1879,
+    1884,
+    1717,
+    2102,
+    3204,
+    1939,
+    1860,
+    2050,
+    2314,
+    2846,
+    1702,
+    2004,
+    1793,
+    1735,
+    1807,
+    2157,
+    2354,
+    2841,
+    1826,
+    1810,
+    2097,
+    3172,
+    2523,
+    1753,
+    1883,
+    1760,
+    1794,
+    2862,
+    1919,
+    1718
+   ],
    "max_ms": 229546,
    "n": 600,
    "p50_ms": 1920.5,
@@ -535,9 +1342,21 @@
    "claim_ref": "data/e2_full_n10000.json#H1",
    "decision": "D054"
   },
+  "frames_republished": {
+   "claim_ref": "docs/ETHICS.md#4",
+   "decision": "D073"
+  },
   "gold_sets": {
    "claim_ref": "data/gold_judged/G200-*.P0b.json",
    "decision": "D059"
+  },
+  "h1": {
+   "claim_ref": "data/e2_full_n10000.json#H1",
+   "decision": "D054"
+  },
+  "h2": {
+   "claim_ref": "data/h2_design_effect.S10k-S.json",
+   "decision": "D072"
   },
   "h4": {
    "claim_ref": "data/wave4_analysis.json#H4",
@@ -550,10 +1369,6 @@
   "intra_rater": {
    "claim_ref": "data/wave4_analysis.json#intra_rater",
    "decision": "D058"
-  },
-  "no_frames_republished": {
-   "claim_ref": "docs/ETHICS.md#4",
-   "decision": "D040"
   },
   "no_worker_ids": {
    "claim_ref": "CONTRACTS.md#FrameRef",
@@ -570,6 +1385,14 @@
   "published": {
    "claim_ref": "docs/PRE-REGISTRATION.md#headline-table",
    "decision": "D001"
+  },
+  "test_retest": {
+   "claim_ref": "data/judge_test_retest.json",
+   "decision": "D059"
+  },
+  "thumbnails": {
+   "claim_ref": "data/space_thumbnails.json",
+   "decision": "D073"
   }
  },
  "published": {
@@ -595,8 +1418,8 @@
   }
  },
  "repo": {
-  "n_decisions": 72,
-  "n_tests": 355
+  "n_decisions": 73,
+  "n_tests": 479
  },
  "rows_api": {
   "config": "default",
@@ -1431,5 +2254,439 @@
     "ok": 200
    }
   }
- ]
+ ],
+ "test_retest": {
+  "hand_count_self_agreement_rate": 1.0,
+  "judge_config": "model=Qwen/Qwen3-VL-8B-Instruct-FP8 (FP8, Modal L4); vllm serve --max-model-len 8192, tensor-parallel-size 1; completion call sets max_tokens=64, logprobs=True; temperature, top_p, and seed are NOT set by this project's own client code, so the server's own default sampling behavior applies -- unpinned, and itself part of what this measures.",
+  "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+  "manipulation_self_agreement_rate": 1.0,
+  "n_frames": 20,
+  "per_frame": [
+   {
+    "frame_id": "00059401-1b67-4f87-a11e-236e81a0dfa4",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     0,
+     0,
+     0
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     false,
+     false,
+     false
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "0017a89b-d4c7-4d57-a180-1bc9fe037141",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "001e3d8b-cacd-4aab-a9ae-c262522ee762",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     1,
+     1,
+     1
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "00223d91-e2d5-4ed5-afa3-8196e664b557",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     1,
+     1,
+     1
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "0023f87a-9d01-4b61-9b56-03f8bc102a8c",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     1,
+     1,
+     1
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "002ecd04-b2ed-415a-81d8-4b354a3b5d2b",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "00308ae8-e3b1-4e2a-9b88-0bdb7ec171ce",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "003cccb7-8e8d-4348-a46b-3bc883933156",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     0,
+     0,
+     0
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     false,
+     false,
+     false
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "00483495-ebbe-44d6-9ce6-a767ce79c083",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "00486166-9e04-4457-a870-18d992522688",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "0049fc7a-0276-4db6-9e6e-135360407db1",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "004dff06-cbb6-4060-be86-c37818a5f7cf",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "0051fc45-8aa4-4bcd-a11b-744fb167e86d",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "0053aa15-c2b7-4226-a7b7-e9005046795c",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "005b4ee4-673c-490f-abc4-b6a443a05bec",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     1,
+     1,
+     1
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "0069bd2c-8ad3-4d9e-a820-c0d395059b99",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "00759b29-4698-45cb-bc1f-f2ff394274fd",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "007822e6-f66b-4d94-91d6-da41882e0026",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "007866ac-8460-4990-9ae2-39a4e7befb5d",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     1,
+     1,
+     1
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   },
+   {
+    "frame_id": "007cccc2-37d8-4e1d-b4d9-c0b71bf3a6f7",
+    "hand_count_unanimous": true,
+    "hand_counts": [
+     2,
+     2,
+     2
+    ],
+    "manipulation_unanimous": true,
+    "manipulations": [
+     true,
+     true,
+     true
+    ],
+    "statuses": [
+     "ok",
+     "ok",
+     "ok"
+    ]
+   }
+  ],
+  "repeats_per_frame": 3
+ },
+ "thumbnails": {
+  "atlas": {
+   "bytes": 183992,
+   "cols": 5,
+   "file": "atlas/e10k-256.webp",
+   "h": 720,
+   "n_tiles": 24,
+   "rows": 5,
+   "w": 1280
+  },
+  "corpus": "egocentric-10k",
+  "n": 24,
+  "n_withheld_for_likeness": 9,
+  "source": {
+   "dataset": "builddotai/Egocentric-10K-Evaluation",
+   "license": "apache-2.0",
+   "revision": "d74b7883c998dd360e3f051830fcc792a83985e6",
+   "source_dataset": "egocentric_10k"
+  },
+  "tile": {
+   "h": 144,
+   "w": 256
+  }
+ }
 }
