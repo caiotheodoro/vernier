@@ -4,7 +4,8 @@
 
 The published dataset is **labels and frame identifiers only**. No image content is
 redistributed: frames are obtained from the vendor under the vendor's own terms, and
-`ETHICS.md` explains why this project does not republish recordings of identifiable people.
+`ETHICS.md` §4 explains what this project does and does not republish: nothing in *this
+dataset*, and 24 downscaled Egocentric-10K stills in the Space (D073).
 
 Card shape is fixed now so the eventual Hugging Face release has a settled structure. Values
 marked *produced by* name the experiment that fills them; none is filled yet, because no

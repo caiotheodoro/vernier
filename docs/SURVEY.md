@@ -116,7 +116,9 @@ publication(s), an academic publication(s), or any website through which such pu
 is made available" and separately bars any portion of the data from appearing in "any program,
 dataset, or product, whatsoever, commercial or otherwise" outside that exception. A standalone
 repository redistributing raw Ego4D frames would violate the licence; this is consistent with
-— and gives a concrete legal basis for — `ETHICS.md`'s existing no-republish policy.
+— and gives the concrete legal basis for — the Ego4D half of `ETHICS.md` §4's split
+policy (D073): Ego4D frames are never republished by this project, while Build AI's own
+Apache-2.0 Egocentric-10K frames may be.
 
 **The domain-bias gap is open.** No prior work both compares egocentric datasets on a common
 quality metric with a shared labeller *and* tests whether that labeller behaves consistently

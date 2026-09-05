@@ -43,15 +43,45 @@ is absent:
    for every interval in this project because frames from one person are not independent
    observations. It is never used to characterise an individual, and no per-worker result is
    published.
-4. **No frames are republished.** Human labelling happens locally. The released artifacts
-   contain frame *identifiers* and labels, never image content, so no worker's likeness is
-   redistributed by this project. Anyone reproducing the work obtains the frames from the
-   vendor under the vendor's own terms. For Ego4D specifically this is not just policy but a
-   licence requirement: its terms restrict redistribution to "a research publication(s), an
-   academic publication(s), or any website through which such publication(s) is made
-   available" (`SURVEY.md`, Wave S) — a standalone repository redistributing raw frames would
-   violate it. EPIC-KITCHENS-100's CC BY-NC 4.0 is more permissive but is held to the same
-   no-republish policy here regardless.
+4. **Frames are republished only where a human judgment attaches to them, only from the
+   corpus whose owner licensed them for it, and only where nobody but the camera wearer is
+   in shot.** 24 frames, of the 30,000 in the evaluation release. They are the Egocentric-10K
+   frames carrying a `HumanLabel` in `data/labels/caio/primary.json`, downscaled to 256 pixels
+   wide into one sprite atlas built by `scripts/export_space_thumbnails.py` and enumerated in
+   `data/space_thumbnails.json`. Nothing else is: the other 576 gold frames, and every frame
+   outside the gold sets, are still fetched live from the vendor's own copy at view time.
+   A judge-versus-rater disagreement a reader cannot look at is not a checkable claim, and
+   this is the smallest set of frames that makes the disagreements checkable (D073).
+
+   **Corpus.** Of the 93 human-labelled frames, 33 are Egocentric-10K, 30 are Ego4D and 30 are
+   EPIC-KITCHENS-100. Only the Egocentric-10K third is Build AI's own recording, released by
+   Build AI under Apache-2.0, and it is the corpus the published headline figures describe.
+   Ego4D's terms restrict redistribution to "a research publication(s), an academic
+   publication(s), or any website through which such publication(s) is made available"
+   (`SURVEY.md`, Wave S) — a standalone repository redistributing raw frames would violate it.
+   EPIC-KITCHENS-100's CC BY-NC 4.0 would permit it and it is withheld anyway: a rule applied
+   to one restricted corpus and not the other is not a rule. Neither corpus's frames are ever
+   written to the atlas, and that restriction raises in the build script rather than being a
+   comment.
+
+   **Likeness, which is a separate argument and survives the licence one.** Apache-2.0 is Build
+   AI's licence to grant, not a recorded worker's consent, and section 2 of this document
+   records that the consent instrument is not published and so is not knowable. 9 of the 33
+   eligible frames are therefore withheld because a person other than the camera wearer is
+   visible in them; 3 carry a clearly identifiable face. The rubric's `other-person` tag is
+   **not** a substitute for that review and was not used as one — it marks frames where a third
+   party affects the hand count, and it catches only one of the nine. The exclusions are a
+   manual visual review recorded frame by frame with its reason in
+   `scripts/export_space_thumbnails.py`; no test can confirm them, and if the gold sample is
+   ever redrawn the review must be redone by eye before the atlas ships. Two of the three
+   Egocentric-10K manipulation disagreements are withheld under this rule, and the Space says
+   so rather than showing a partial set silently.
+
+   **Withdrawal is built, not promised.** `scripts/export_space_thumbnails.py --exclude
+   <frame_id>` rebuilds the atlas without a frame and records the omission in the index. There
+   is no second copy of any frame anywhere in this project. Attribution travels with the
+   atlas: `builddotai/Egocentric-10K-Evaluation`, revision `d74b7883`, Apache-2.0.
+
 5. **No attempt to identify anyone.** No face recognition, no re-identification across clips,
    no linkage to any external source. The rubric's `other-person` tag exists to *exclude*
    third parties from the hand count, not to study them.

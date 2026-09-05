@@ -12,9 +12,11 @@ Nothing here is decoration.
 
 ## Non-negotiables (from the repo's own rules)
 
-- **No frame is republished** (`docs/ETHICS.md` §4). Images load at runtime from the HF
-  datasets-server rows/filter API for the source dataset. The Space ships identifiers, labels,
-  and statistics only. Never cache image bytes anywhere the Space serves from.
+- **Only the frames `docs/ETHICS.md` §4 names are republished** (D073): the 24 human-labelled
+  Egocentric-10K frames with nobody but the camera wearer in shot, as one 256px atlas built by
+  `scripts/export_space_thumbnails.py`. Every other frame -- including all Ego4D and
+  EPIC-KITCHENS-100 frames -- loads at runtime from the HF datasets-server rows API and is
+  never cached anywhere the Space serves from.
 - **No transcribed numbers** (`AGENTS.md` rule 2). Every figure comes from a committed
   `data/*.json` via the export script below. No hand-typed percentages in TSX.
 - **Judge is never the oracle** (`AGENTS.md` rule 3). Human labels are shown as ground truth;
@@ -352,9 +354,11 @@ Sentence case. Plain verbs. Say what a thing is, not what it proves.
   this release ships none (D039).`
 
 Footer, one line, each item a link:
-`Statistics PPI++, Gwet AC1, bootstrap · Judge Qwen3-VL-8B on Modal vLLM · Frames via Hugging
-Face rows API, never copied · Method pre-registered, 63 logged decisions · Code 416 tests, mypy
-strict · MEASUREMENT_CARD.json`
+`Statistics PPI++, Gwet AC1, bootstrap · Judge Qwen3-VL-8B on Modal vLLM · 24 frames shipped,
+the rest via the Hugging Face rows API · Method pre-registered, N logged decisions · Code N
+tests, mypy strict · MEASUREMENT_CARD.json`
+
+Every count in that line is read from `stats.json` at render time, never typed.
 
 ## Accessibility and quality floor
 

@@ -506,8 +506,8 @@ adapter's pattern (parquet vs. video-shard decoding are different problems).
 - **EPIC-KITCHENS-100 registration requires an institutional email**, which an unaffiliated
   researcher does not have. A Result-2 risk, not a Result-1 blocker.
 - **Ego4D frame redistribution is licence-restricted** to research/academic-publication
-  contexts (Wave S, `SURVEY.md`); consistent with `ETHICS.md`'s existing no-republish policy,
-  now with a concrete legal basis.
+  contexts (Wave S, `SURVEY.md`). This is the reason `ETHICS.md` §4 excludes Ego4D's 30
+  human-labelled frames from the atlas D073 ships, and EPIC-KITCHENS-100's 30 with it.
 - ~~**Whether the evaluation parquets contain the frames the published labels refer to**
   (D016)~~ — **closed, real, run at scale.** `scripts/check_eval_parquets.py` run for real
   against all three evaluation parquets and the real membership `scripts/draw_all_samples.py`

@@ -172,3 +172,31 @@ def test_build_is_a_clean_no_op_without_the_parquet(monkeypatch: pytest.MonkeyPa
     assert export_space_thumbnails.main([]) == 0
     after = (_INDEX_PATH.read_bytes(), (_ROOT / "space" / "public" / "atlas" / "e10k-256.webp").read_bytes())
     assert before == after
+
+
+def test_ethics_section_4_counts_match_the_committed_index(index: dict[str, Any]) -> None:
+    """Section 4 states counts. AGENTS.md rule 2: they are read from files, never typed."""
+    text = (_ROOT / "docs" / "ETHICS.md").read_text()
+    body = text[text.index("4. **Frames are republished only where") :]
+    # Collapse the wrapping so the assertions below are about the prose, not the line breaks.
+    section = " ".join(body[: body.index("\n5. **No attempt to identify anyone")].split())
+
+    frames = json.loads((_ROOT / "space" / "public" / "data" / "frames.json").read_text())
+    labelled = _labelled()
+    by_corpus: dict[str, int] = {}
+    for frame in frames:
+        if frame["id"] in labelled:
+            by_corpus[frame["corpus"]] = by_corpus.get(frame["corpus"], 0) + 1
+
+    for claim in [
+        f"{index['n']} frames",
+        f"{len(frames) - index['n']} gold frames",
+        f"{len(labelled)} human-labelled frames",
+        f"{by_corpus['egocentric-10k']} are Egocentric-10K",
+        f"{by_corpus['ego4d']} are Ego4D",
+        f"{by_corpus['epic-kitchens-100']} are EPIC-KITCHENS-100",
+        f"{len(index['withheld_for_likeness'])} of the {by_corpus['egocentric-10k']} eligible",
+        index["source"]["revision"][:8],
+        "30,000",
+    ]:
+        assert claim in section, f"docs/ETHICS.md section 4 no longer states {claim!r}"

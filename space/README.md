@@ -29,9 +29,14 @@ the same frames, and what the figure becomes once 93 human labels correct it —
 interval. Every count on the page opens the frames behind it, because a number you cannot look
 through is the problem this project exists to fix.
 
-Frames are fetched live from Hugging Face's dataset server. **No frame is copied into this
-Space or into the dataset release** — vernier redistributes identifiers, labels and statistics
-only.
+24 frames ship with this Space: the human-labelled Egocentric-10K frames with nobody but the
+camera wearer in shot, downscaled to 256px, from Build AI's own Apache-2.0 release. **Every
+other frame is fetched live from Hugging Face's dataset server and copied nowhere** — including
+all Ego4D and EPIC-KITCHENS-100 frames, whose licences this project does not read as permitting
+redistribution. The dataset release carries no image content at all.
+[`docs/ETHICS.md` §4](https://github.com/caiotheodoro/vernier/blob/main/docs/ETHICS.md) states
+which frames and why; two of the three Egocentric-10K judge/rater disagreements are withheld
+under that rule and load live like the rest.
 
 ## Not here, and why
 

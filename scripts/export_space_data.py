@@ -7,7 +7,8 @@ is a no-op diff (`tests/test_export_space_data.py` asserts the committed output 
 build, and that every figure equals `MEASUREMENT_CARD.json`'s / `data/wave4_analysis.json`'s --
 the same rule as `tests/test_emit_card.py`, AGENTS.md rule 2).
 
-**No frame is republished** (`docs/ETHICS.md` section 4): `frames.json` carries identifiers,
+**This script writes no image bytes** (`docs/ETHICS.md` section 4; the 24 frames the Space
+ships are packed by `scripts/export_space_thumbnails.py`, D073): `frames.json` carries identifiers,
 labels and one integer per frame -- `row`, the frame's offset in the datasets-server `train`
 split of `builddotai/Egocentric-10K-Evaluation` -- so the Space can address a frame in the
 rows API without a full scan. Image bytes never pass through here.

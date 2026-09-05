@@ -111,9 +111,9 @@ function Loaded({ stats, frames, state, rowsStatus, setRowsStatus, gridRef, scro
             <a className="footer-link" href={repoFile("src/vernier/estimation/ppi.py")}>
               estimation
             </a>{" "}
-            · Judge {stats.generated_from.judge_rev} on Modal vLLM · Frames via the Hugging Face rows API,{" "}
+            · Judge {stats.generated_from.judge_rev} on Modal vLLM ·{" "}
             <a className="footer-link" href={repoFile("docs/ETHICS.md")}>
-              never copied
+              {int(stats.thumbnails.n)} frames shipped, the rest fetched live
             </a>{" "}
             · Method pre-registered,{" "}
             <a className="footer-link" href={repoFile("docs/DECISIONS.md")}>

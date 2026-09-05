@@ -182,7 +182,7 @@ active-manipulation rates for `Egocentric-10K` / `Egocentric-100K`, judged once 
 floor and a home kitchen on the same scale. This release is the data behind an independent,
 pre-registered measurement of that claim: human labels against a written rubric, a live
 open-weights judge on the same frames, Build AI's own stored labels, and every computed
-result. **No image is redistributed** -- frames are identified by `frame_id` and fetched from
+result. **No image is redistributed in this dataset** -- frames are identified by `frame_id` and fetched from
 the vendor's own release.
 
 Code, protocol and decision log: [{_REPO_URL}]({_REPO_URL}). Frame-by-frame view:

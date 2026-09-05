@@ -139,6 +139,7 @@ cannot produce alone, and the dataset release is set up to receive it.
 - The probe: https://huggingface.co/caiotheodoro/vernier-rung1-probe
 - Code, pre-registration, decision log, measurement card: https://github.com/caiotheodoro/vernier
 
-No frame is redistributed anywhere above; the 20,000 corpus frames are identified by clip and
-frame index only. One rater. n = 93. Every limitation is in
+The dataset and model releases above redistribute no frame; the 20,000 corpus frames are
+identified by clip and frame index only. The Space ships 24 downscaled Egocentric-10K stills,
+and `docs/ETHICS.md` §4 says which and why (D073). One rater. n = 93. Every limitation is in
 `docs/RED-TEAM.md`, written before the results existed.

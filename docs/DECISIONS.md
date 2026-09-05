@@ -2355,3 +2355,78 @@ cannot exclude, since a judge that answers near-identically everywhere would pro
 design effect regardless of the corpus's true clustering. The 2-hands figure's higher effect is
 weak evidence against that, since it shows the estimator does move. A second judge, or a
 human-labelled subsample with cluster structure, would settle it.
+
+---
+
+## D073 — 24 frames are republished, and §4 stops being a flat promise
+
+`ETHICS.md` §4 has said "No frames are republished" since the first commit, and the Space was
+built to honour it: `space/src/data/rows.ts` resolves every tile through the datasets-server
+`/rows` API at view time, and its own header says images are "never cached anywhere the Space
+serves from". That works, and it is slow in a way that defeats the page's argument. Measured
+live against the real endpoint: a `/rows` call costs **9–20 seconds regardless of `length`** —
+2 rows and 100 rows both take about ten — and the 600 gold frames are scattered across 30,000
+rows, so a screenful of tiles is a screenful of ten-second requests against an endpoint that
+rate-limits anonymous callers. `rows.ts` already carries the scar tissue: `MAX_ROWS_IN_FLIGHT
+= 2` and a four-step backoff, both there because 429 arrives early. On the published page, 2 of
+48 visible tiles had images after 20 seconds. A page whose whole claim is "every number opens
+the frames behind it" cannot take twenty minutes to open a grid.
+
+**Two alternatives were measured before any code was written.** Parquet range-reads over HTTP:
+the transport works (`accept-ranges: bytes`, 206 in 0.76 s) but the row groups are 489 rows /
+~98 MB with `offset_index_offset` unset — no page index — so one frame costs a ~50 MB read.
+Deriving asset URLs: impossible, they are CloudFront canned-policy signatures valid for exactly
+one object. Neither was used. The bytes were already on disk — the pinned evaluation parquets
+sit in the local `huggingface_hub` cache that `scripts/export_space_data.py` has read since the
+Space landed, and `pyarrow`'s row-group reader pulls all 33 candidates in about a second at one
+row group of peak memory. The new script makes no network call at all.
+
+**Which frames may ship is not a byte question, and it took two cuts.**
+
+*The corpus cut.* §4 never rested on Build AI's licence. It rests on the upstream corpora's own
+terms and on worker likeness. `SURVEY.md` Wave S established that Ego4D restricts redistribution
+to research- and academic-publication contexts and that "a standalone repository redistributing
+raw frames would violate the licence"; EPIC-KITCHENS-100's CC BY-NC 4.0 would permit it and is
+held to the same rule regardless, because a rule applied to one restricted corpus and not the
+other is not a rule. The 93 human-labelled frames split 33 Egocentric-10K / 30 Ego4D / 30 EPIC —
+so "the labelled frames" is precisely the set that pulls in both restricted corpora, and only
+the Egocentric-10K third is Build AI's own recording under the Apache-2.0 they chose. It is also
+the corpus the headline figures describe and the one `space/SPEC.md`'s acceptance test 3 slices.
+
+*The likeness cut, which is separate and which the licence does not settle.* Apache-2.0 is Build
+AI's grant to make, not a recorded worker's consent, and §2 records that the consent instrument
+is not published and so is not knowable. Building the 33-frame atlas and looking at it showed
+three clearly identifiable faces — one filling much of its frame, well lit, straight to camera.
+**The rubric's `other-person` tag is not a face filter and must never be used as one:** it marks
+frames where a third party affects the hand count, and it catches exactly one of the nine frames
+withheld here — not `d8876fdb`, the most identifiable of them. So nine frames are withheld by a
+manual visual review of all 33, recorded frame by frame with its reason in
+`scripts/export_space_thumbnails.py`. **No test can confirm that review.** The script asserts
+only that it is applied and that it is not stale; if the gold sample is redrawn the review must
+be redone by eye before the atlas ships, and the script raises if the list names a frame outside
+the current sample.
+
+**The cost, stated rather than hidden.** Two of the three Egocentric-10K manipulation
+disagreements — `715f008d` and `7801bb78` — are withheld under the likeness rule. Only
+`8e715a4b` ships locally. Those six off-diagonal frames are the page's core evidence, and after
+both cuts it holds one of them instantly and fetches the rest. The Space says so. A page that
+argued for looking at the frames and then quietly showed a third of them would be making the
+vendor's mistake in miniature.
+
+**What ships.** 24 tiles, 5×5 at 256×144, one WebP atlas, 180 KB, byte-identical on rebuild.
+Committed rather than generated: building at view time would put a 1.8 GB parquet on the
+critical path of `make space`, which no fresh clone and no CI runner has. Two digests guard it —
+`file_sha256` over the encoded bytes, checkable anywhere with no Pillow and no parquet, and
+`raster_sha256` over the pre-encode pixel buffer, which survives a libwebp bump while still
+catching a changed frame, crop, tile order or resample filter. The blank cell is decoded and
+checked against its declared fill: verified to catch a frame planted in the padding by 248
+levels against a threshold of 4. `make privacy-gate` could not have caught any of this — it
+greps staged paths for `docs/private/`, and nothing under `space/public/` is gitignored.
+
+**Withdrawal is built, not promised.** `--exclude <frame_id>` rebuilds without a frame and
+records the omission in the index.
+
+**Reverses if:** Build AI, or anyone acting for a recorded worker, asks for withdrawal — the
+frames come out of the atlas first and this entry is amended second; or the datasets-server
+grows a fast batch path for image rows, in which case the atlas is a cache rather than a
+republication and can be dropped for the live path it replaced.

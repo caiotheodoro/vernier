@@ -40,6 +40,16 @@ _STALE_PATTERNS = (
     "not authorized for the raw",
     "still-inaccessible gated raw corpus",
     "Nothing here is an engineering gap",
+    # D073 replaced ETHICS.md section 4's flat promise with a split policy. The old
+    # sentence was repeated in eight other files that would have gone stale silently --
+    # exactly what this lint exists to catch. The Space now ships 24 frames; any document
+    # still saying none are is wrong, in every context.
+    "No frames are republished",
+    "No frame is republished",
+    "no-republish policy",
+    "No frame is copied into this Space",
+    "No frame is redistributed anywhere",
+    "never copied",
 )
 
 # Historical-record files: DECISIONS.md documents what WAS true and when it changed, by design;
@@ -49,7 +59,11 @@ _STALE_PATTERNS = (
 # rule is that "Attack" paragraphs are "published unedited" once written, by design (its own
 # header) -- an attack posed using the language of the flaw it describes is not itself a stale
 # claim, and rewriting it to dodge a lint would violate the file's own discipline.
+# `check_stale_prose.py` itself is exempt for the obvious reason: it is where the retired
+# sentences are written down. Same class as DECISIONS.md -- a record of what is no longer
+# true is not a claim that it is.
 _EXEMPT_FILES = {
+    "scripts/check_stale_prose.py",
     "docs/DECISIONS.md",
     "docs/UPSTREAM-FINDINGS.md",
     "docs/LINEAGE.md",
@@ -68,7 +82,15 @@ def find_stale_prose(repo_root: Path) -> dict[str, list[tuple[int, str]]]:
     `_STALE_PATTERNS`. Returns `{relative_path: [(line_number, pattern), ...]}` for every file
     with a hit."""
     hits: dict[str, list[tuple[int, str]]] = {}
-    paths = sorted(repo_root.rglob("*.md")) + [repo_root / "Makefile", repo_root / "llms.txt"]
+    # D073 widened the scope again: the retired no-republish sentence also lived in
+    # `space/src/App.tsx` and in two export scripts' docstrings, neither of which any
+    # earlier scope could see.
+    paths = (
+        sorted(repo_root.rglob("*.md"))
+        + sorted((repo_root / "space" / "src").rglob("*.tsx"))
+        + sorted((repo_root / "scripts").glob("*.py"))
+        + [repo_root / "Makefile", repo_root / "llms.txt"]
+    )
     for path in paths:
         if not path.is_file():
             continue
