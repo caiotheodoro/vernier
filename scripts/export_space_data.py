@@ -189,10 +189,16 @@ def _load_judged(sample: str) -> list[JudgeResponse]:
 
 
 def _load_review() -> dict[str, HumanLabel]:
-    """The D074 re-read, keyed by frame. The rater's current answer where one exists -- shown on
+    """The re-read, keyed by frame. The rater's current answer where one exists -- shown on
     the page, but NOT used for any statistic: every number still comes from the pre-registered
     primary pass, because the review set was selected by disagreement and a set selected that way
-    can only move agreement one direction."""
+    can only move agreement one direction.
+
+    Empty between attempts, and that is the intended state rather than a missing file: D077
+    discarded the first review pass (its control arm was added after the labels were written) and
+    archived it to `review_first_unblinded.json`, which is deliberately not a `PassType` and so is
+    never read here. The page shows the primary answer alone until the re-planned pass is
+    labelled."""
     if not _REVIEW_LABELS_PATH.exists():
         return {}
     return {

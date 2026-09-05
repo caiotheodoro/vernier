@@ -309,7 +309,7 @@
   "card_digest": "sha256:d77e591bbe384eb5af217bcb85fbe4da7688d24b24cff97351db1f99bec5b333",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
-  "git_rev": "ef9709740a573ba4c959e918f6e5f8c5844efcd1",
+  "git_rev": "14f9f47cd586c9c2f7d69be3014ac3a247137a85",
   "judge": "qwen3-vl",
   "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
   "n_gold_frames": 600,
@@ -1430,8 +1430,8 @@
   }
  },
  "repo": {
-  "n_decisions": 76,
-  "n_tests": 486
+  "n_decisions": 77,
+  "n_tests": 490
  },
  "rows_api": {
   "config": "default",

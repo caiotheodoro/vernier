@@ -2585,3 +2585,48 @@ plainly.
 **Reverses if:** a rater who has not seen the results labels `G200-ego` at a real separation.
 In practice that is the second rater `RED-TEAM.md` A1 has wanted since before any result
 existed, which would supply inter-rater agreement and a valid intra-rater interval at once.
+
+## D077 — D075's control arm was added after the labels, so the pass is re-run and its second attempt is still not clean
+
+D075 built a control arm because a review of only disagreement frames prompts the rater to change
+an answer rather than to read a frame. The arm did not do its job, for a reason that is visible
+in the git history rather than in the data: `git show 4a9444c:data/labels/caio/review_set.json`
+is **18 frames, every one of them a disagreement**. The 18 review labels were written against
+that plan at 02:43Z. The control arm arrived afterwards, in `f086851`, and rewrote the plan file
+underneath labels that already existed on disk.
+
+`scripts/review_labels_cli.py`'s own `_interleave` docstring names the failure this produces:
+the arms are interleaved rather than shuffled because "a sitting that is almost all one arm is
+exactly the tell the controls exist to remove." The pass ran as one solid block of 18
+disagreements. Whatever the rater inferred from that, the controls cannot now un-infer.
+
+**The seed was a constant, so a second attempt needed a new argument.** `plan` seeded its RNG
+with `f"{_SEED}:{rater}:{_PASS}"`, all three fixed, so `--force` reproduced the identical set in
+the identical order. `--salt` folds a caller-supplied string into that seed and records it in the
+written set, keeping the draw reproducible from the file alone. The pass is re-planned under
+salt `D077-rerun`: 36 frames, 18 of each arm, interleaved.
+
+**The first pass is archived, not deleted.** `data/labels/caio/review_first_unblinded.json` holds
+the 18 labels and `review_set_first_unblinded.json` the 18-frame plan they were collected
+against. Neither filename is a `PassType`, so `HumanLabelStore` never reads them. `review.json`
+is removed so that `label` actually re-asks those frames, since it skips any frame that already
+carries a label for the pass.
+
+**What the re-run still cannot fix, stated before it runs.** The rater has now read the 18
+disagreement frames twice, and the 18 controls once. The re-run gives the disagreements a third
+reading and the controls a second, and `report` compares both arms against `primary`. So the arms
+differ by one exposure, and if re-reading alone moves labels, a higher revision rate on the
+disagreement arm is explainable by exposure count rather than by the frames. That is a weaker
+version of the confound the control arm was built to remove, and it is not removable now by any
+ordering of the remaining work.
+
+**So the bar for using this pass is set here, before the numbers exist.** A revision-rate gap
+between the arms is not on its own evidence that the review found something in the frames. If
+the arms move about equally, the pass is reported as having measured relabelling noise and is
+used for nothing else, exactly as D075 said. If they differ, the exposure asymmetry above is
+reported beside the gap, and folding anything into a published number still needs its own entry
+with the before and after.
+
+**Reverses if:** a rater who has not seen these frames labels them, which removes the exposure
+asymmetry and the anchoring at the same time and is the second-rater work `RED-TEAM.md` A1 has
+wanted since before any result existed.

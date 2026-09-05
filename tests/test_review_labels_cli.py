@@ -119,3 +119,33 @@ def test_the_review_pass_never_touches_primary(
     monkeypatch.setattr("builtins.input", lambda *_: next(answers))
     cli.label("caio", stop_after=1)
     assert (tmp_path / "caio" / "primary.json").read_text() == before
+
+
+def test_a_salt_changes_the_draw_and_is_recorded_in_the_written_set(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, planned: dict[str, Any]
+) -> None:
+    """D077: the seed is a constant, so without a salt a re-plan reproduces the same set in the
+    same order -- which is useless when a pass has to be attempted a second time."""
+    monkeypatch.setattr(cli, "_LABEL_STORE_ROOT", tmp_path)
+    assert cli.plan("caio", 1.0, force=True, salt="D077-rerun") == 0
+    salted: dict[str, Any] = json.loads((tmp_path / "caio" / "review_set.json").read_text())
+
+    assert salted["salt"] == "D077-rerun"
+    assert planned.get("salt", "") == ""
+    assert [f["frame_id"] for f in salted["frames"]] != [f["frame_id"] for f in planned["frames"]]
+    # same frames, same arms -- only the order and control choice are re-randomised
+    assert {f["frame_id"] for f in salted["frames"] if f["arm"] == "disagreement"} == {
+        f["frame_id"] for f in planned["frames"] if f["arm"] == "disagreement"
+    }
+
+
+def test_the_salted_set_is_still_interleaved_over_every_prefix(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, planned: dict[str, Any]
+) -> None:
+    monkeypatch.setattr(cli, "_LABEL_STORE_ROOT", tmp_path)
+    assert cli.plan("caio", 1.0, force=True, salt="D077-rerun") == 0
+    frames = json.loads((tmp_path / "caio" / "review_set.json").read_text())["frames"]
+    seen = {"disagreement": 0, "control": 0}
+    for i, frame in enumerate(frames, start=1):
+        seen[frame["arm"]] += 1
+        assert abs(seen["disagreement"] - seen["control"]) <= 2, f"prefix of {i} is lopsided"

@@ -2,25 +2,30 @@
  "rater": "caio",
  "rubric_rev": "1.2.0",
  "seed": 777,
+ "salt": "D077-rerun",
  "frames": [
   {
-   "frame_id": "d7e64dad-7436-4177-b5d9-1e890f5c697a",
+   "frame_id": "eb84758e-134b-4dcb-ac1b-423772124815",
+   "arm": "control"
+  },
+  {
+   "frame_id": "2561b3f1-0ffd-4aab-8677-633f4a15241f",
    "arm": "disagreement"
-  },
-  {
-   "frame_id": "4862973f-5be8-429d-b4e4-d9f979aa9b43",
-   "arm": "control"
-  },
-  {
-   "frame_id": "43561fa5-f907-41aa-a2cd-537f59e12c55",
-   "arm": "control"
   },
   {
    "frame_id": "d8876fdb-eb0a-4ae3-8fce-55f5771969be",
    "arm": "disagreement"
   },
   {
-   "frame_id": "58ac6332-0fdd-46ee-8187-10cce2bbc8b5",
+   "frame_id": "c7afbcf2-cac2-4efc-b7c9-11695ca2dc04",
+   "arm": "control"
+  },
+  {
+   "frame_id": "7801bb78-b711-4859-bf14-eb725fbda0cd",
+   "arm": "disagreement"
+  },
+  {
+   "frame_id": "05059514-1a18-4024-9b54-2b4ad733eef2",
    "arm": "control"
   },
   {
@@ -28,19 +33,7 @@
    "arm": "disagreement"
   },
   {
-   "frame_id": "48548b29-b04d-4575-9068-d3bee4176b5c",
-   "arm": "disagreement"
-  },
-  {
-   "frame_id": "aed8e233-dabc-47cd-afb2-70ac22717802",
-   "arm": "control"
-  },
-  {
-   "frame_id": "f152de1f-f600-4015-aad4-15500c2c40b4",
-   "arm": "disagreement"
-  },
-  {
-   "frame_id": "c4fa24d0-f686-4b47-b430-9dab7b802e07",
+   "frame_id": "f54e2f11-f304-4e00-8821-2493e067fc05",
    "arm": "control"
   },
   {
@@ -52,31 +45,11 @@
    "arm": "control"
   },
   {
-   "frame_id": "ba2f16e3-1038-47f0-9244-8148acad79ac",
-   "arm": "control"
-  },
-  {
-   "frame_id": "4bd94e12-9d87-4835-9ecd-57f5bdd9c3d4",
+   "frame_id": "715f008d-46ea-429d-9a07-13f2858ebc88",
    "arm": "disagreement"
   },
   {
-   "frame_id": "ca7e98e9-ecf4-4916-b75a-e771a3069f63",
-   "arm": "disagreement"
-  },
-  {
-   "frame_id": "0677d71f-a320-49a3-9aba-e2358dd99128",
-   "arm": "control"
-  },
-  {
-   "frame_id": "2561b3f1-0ffd-4aab-8677-633f4a15241f",
-   "arm": "disagreement"
-  },
-  {
-   "frame_id": "9455979e-72fe-4e07-9cf8-c1bce5a8f268",
-   "arm": "control"
-  },
-  {
-   "frame_id": "ebb3db47-db29-4680-b13c-20d9d40dc3bb",
+   "frame_id": "d28e2e28-53d0-4e0a-a6b1-40c777b14949",
    "arm": "control"
   },
   {
@@ -84,7 +57,23 @@
    "arm": "disagreement"
   },
   {
-   "frame_id": "fa8e4abb-5622-43a4-ac09-de12420e4b4e",
+   "frame_id": "0677d71f-a320-49a3-9aba-e2358dd99128",
+   "arm": "control"
+  },
+  {
+   "frame_id": "afbf17fa-7a67-44cd-bbaa-53cf5de1449f",
+   "arm": "control"
+  },
+  {
+   "frame_id": "e7cf0a19-464a-4f35-bab2-6c393db75a41",
+   "arm": "disagreement"
+  },
+  {
+   "frame_id": "d7e64dad-7436-4177-b5d9-1e890f5c697a",
+   "arm": "disagreement"
+  },
+  {
+   "frame_id": "0b237fd8-1e99-467f-ae4c-94f689845b7d",
    "arm": "control"
   },
   {
@@ -92,23 +81,23 @@
    "arm": "disagreement"
   },
   {
-   "frame_id": "36ff84fb-27c9-41ed-9303-e4025d6b133b",
+   "frame_id": "fa8e4abb-5622-43a4-ac09-de12420e4b4e",
    "arm": "control"
   },
   {
-   "frame_id": "abfa63d5-976a-456a-bd27-ee1b72bf4552",
-   "arm": "disagreement"
-  },
-  {
-   "frame_id": "7801bb78-b711-4859-bf14-eb725fbda0cd",
-   "arm": "disagreement"
-  },
-  {
-   "frame_id": "782c1345-7ce8-4a53-99a6-be388a424729",
+   "frame_id": "b0baf213-8ff8-43ab-aa00-2ddd04e58ec3",
    "arm": "control"
   },
   {
-   "frame_id": "67114079-6e55-4660-8dd6-9a89b18d9bb0",
+   "frame_id": "48548b29-b04d-4575-9068-d3bee4176b5c",
+   "arm": "disagreement"
+  },
+  {
+   "frame_id": "54e59589-01c7-491b-af62-7520a919f8b4",
+   "arm": "disagreement"
+  },
+  {
+   "frame_id": "f0b8f0f2-4f9e-472b-9298-ca7326537cb1",
    "arm": "control"
   },
   {
@@ -116,7 +105,11 @@
    "arm": "disagreement"
   },
   {
-   "frame_id": "715f008d-46ea-429d-9a07-13f2858ebc88",
+   "frame_id": "1d24c2f6-d16b-4fa0-9e29-c2007d3616d2",
+   "arm": "control"
+  },
+  {
+   "frame_id": "f152de1f-f600-4015-aad4-15500c2c40b4",
    "arm": "disagreement"
   },
   {
@@ -124,8 +117,20 @@
    "arm": "control"
   },
   {
-   "frame_id": "a34aa4d2-bd68-440a-ac18-616daa74cac4",
+   "frame_id": "abfa63d5-976a-456a-bd27-ee1b72bf4552",
+   "arm": "disagreement"
+  },
+  {
+   "frame_id": "0fc24c81-ec3f-4dbf-a990-e8e6bc444877",
    "arm": "control"
+  },
+  {
+   "frame_id": "ba2f16e3-1038-47f0-9244-8148acad79ac",
+   "arm": "control"
+  },
+  {
+   "frame_id": "4bd94e12-9d87-4835-9ecd-57f5bdd9c3d4",
+   "arm": "disagreement"
   },
   {
    "frame_id": "17dbd724-f715-4a69-9602-881971246115",
@@ -136,15 +141,11 @@
    "arm": "control"
   },
   {
-   "frame_id": "e7cf0a19-464a-4f35-bab2-6c393db75a41",
+   "frame_id": "ca7e98e9-ecf4-4916-b75a-e771a3069f63",
    "arm": "disagreement"
   },
   {
-   "frame_id": "54e59589-01c7-491b-af62-7520a919f8b4",
-   "arm": "disagreement"
-  },
-  {
-   "frame_id": "bf411945-70e3-4019-b451-4df7b5aeff64",
+   "frame_id": "c9da980c-f545-4285-a63d-302b4958c590",
    "arm": "control"
   }
  ]

@@ -139,7 +139,7 @@ def _judge_answers() -> dict[str, tuple[int | None, bool | None]]:
     return answers
 
 
-def plan(rater: str, controls_per_disagreement: float, force: bool) -> int:
+def plan(rater: str, controls_per_disagreement: float, force: bool, salt: str = "") -> int:
     path = _set_path(rater)
     if path.exists() and not force:
         print(f"{path} already exists. Re-planning mid-review would change the question halfway", file=sys.stderr)
@@ -164,13 +164,23 @@ def plan(rater: str, controls_per_disagreement: float, force: bool) -> int:
         )
         (disagreements if differs else controls).append(frame_id)
 
-    rng = random.Random(f"{_SEED}:{rater}:{_PASS}")
+    # `--salt` exists because the seed above is otherwise a constant, so re-planning reproduced
+    # the identical set in the identical order -- useless for a second attempt at a pass whose
+    # first attempt has to be discarded (`docs/DECISIONS.md` D077). The salt is recorded in the
+    # written set so the draw stays reproducible from the file alone.
+    rng = random.Random(f"{_SEED}:{rater}:{_PASS}:{salt}")
     n_controls = min(len(controls), round(len(disagreements) * controls_per_disagreement))
     picked_controls = rng.sample(sorted(controls), n_controls)
     entries = _interleave(rng, sorted(disagreements), picked_controls)
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"rater": rater, "rubric_rev": _RUBRIC_REV, "seed": _SEED, "frames": entries}, indent=1) + "\n")
+    path.write_text(
+        json.dumps(
+            {"rater": rater, "rubric_rev": _RUBRIC_REV, "seed": _SEED, "salt": salt, "frames": entries},
+            indent=1,
+        )
+        + "\n"
+    )
     print(f"wrote {path}: {len(entries)} frames ({len(disagreements)} disagreement, {n_controls} control)")
     print("The arm is recorded for the report and is never shown while labelling.")
     return 0
@@ -380,6 +390,11 @@ def main(argv: list[str] | None = None) -> int:
         default=1.0,
         help="control frames per disagreement frame (default 1.0, i.e. a 50/50 set)",
     )
+    p_plan.add_argument(
+        "--salt",
+        default="",
+        help="re-randomise the draw; the constant seed alone reproduces the same set every time",
+    )
     p_plan.add_argument("--force", action="store_true", help="overwrite an existing review set")
 
     p_label = sub.add_parser("label", help="label the review set, blind")
@@ -391,7 +406,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "plan":
-        return plan(args.rater, args.controls_per_disagreement, args.force)
+        return plan(args.rater, args.controls_per_disagreement, args.force, args.salt)
     if args.command == "label":
         return label(args.rater, args.stop_after)
     return report(args.rater)
