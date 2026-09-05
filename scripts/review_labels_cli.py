@@ -344,6 +344,11 @@ def report(rater: str) -> int:
         print(f"{arm:14s} {s['n']:4d} {s['hands_changed']:7d} {s['manip_changed']:7d} {s['either']:5d} ({rate:.0%})")
 
     d, c = stats["disagreement"], stats["control"]
+    if d["n"] and not c["n"]:
+        print()
+        print("No control arm in this set, so the revision rate above cannot be separated from")
+        print("how often a re-read changes an answer at all. It is a description of what you did,")
+        print("not evidence that the frames were mislabelled.")
     if d["n"] and c["n"]:
         print()
         dr, cr = d["either"] / d["n"], c["either"] / c["n"]
