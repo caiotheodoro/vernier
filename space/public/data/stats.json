@@ -11,23 +11,23 @@
     "raw": 0.8494623655913979
    },
    "manipulation": {
-    "ac1": 0.8990045248868778,
+    "ac1": 0.8629581875115123,
     "ci_method": "iid",
-    "hi": 0.9687342410489158,
-    "kappa": 0.8224061107574792,
-    "lo": 0.8067012052966005,
+    "hi": 0.9499506682213652,
+    "kappa": 0.7712177121771217,
+    "lo": 0.7601768281451465,
     "n": 93,
-    "raw": 0.9354838709677419
+    "raw": 0.9139784946236559
    }
   },
   "h5": {
-   "diff_pp": -9.090909090909093,
+   "diff_pp": -5.757575757575761,
    "egocentric-10k": {
     "error_rate": 0.09090909090909094,
     "n": 33
    },
    "epic-kitchens-100": {
-    "error_rate": 0.0,
+    "error_rate": 0.033333333333333326,
     "n": 30
    },
    "holds": false
@@ -42,10 +42,10 @@
     "n_pairs": 34
    },
    "manipulation": {
-    "ac1": 0.9036827195467422,
+    "ac1": 0.8994082840236687,
     "ci_method": "iid",
     "hi": 1.0,
-    "kappa": 0.8488888888888888,
+    "kappa": 0.8583333333333333,
     "lo": 0.7433962264150943,
     "n_pairs": 34
    }
@@ -203,7 +203,7 @@
      "n": 0
     },
     {
-     "accuracy": 0.9347826086956522,
+     "accuracy": 0.9130434782608695,
      "hi": 1.0,
      "lo": 0.9,
      "mean_conf": 0.9968031177062968,
@@ -211,7 +211,7 @@
     }
    ],
    "confidence_kind": "logprob",
-   "ece": 0.06450350840911169,
+   "ece": 0.0860088847531978,
    "n": 93
   }
  },
@@ -239,8 +239,8 @@
     0
    ],
    [
-    6,
-    68
+    8,
+    66
    ]
   ],
   "n": 93
@@ -306,7 +306,7 @@
   }
  },
  "generated_from": {
-  "card_digest": "sha256:d77e591bbe384eb5af217bcb85fbe4da7688d24b24cff97351db1f99bec5b333",
+  "card_digest": "sha256:62d65220e39515209632b07aa852155a259a4da0dd9d9e4096aeb600dcb59217",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
   "git_rev": "14f9f47cd586c9c2f7d69be3014ac3a247137a85",
@@ -1233,17 +1233,17 @@
    },
    "manipulation": {
     "clustered": false,
-    "hi": 0.6530965188515914,
+    "hi": 0.6334748347766352,
     "judge": "qwen3-vl",
     "level": 0.95,
-    "lo": 0.40572701056017335,
+    "lo": 0.36652516522336476,
     "method": "ppi++",
     "n_gold": 30,
     "n_judged": 200,
     "n_unlabelled": 170,
     "naive": 0.63,
     "prompt_variant": "P0b",
-    "value": 0.5294117647058824,
+    "value": 0.5,
     "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
    }
   },
@@ -1297,17 +1297,17 @@
    },
    "manipulation": {
     "clustered": false,
-    "hi": 0.9405065245697163,
+    "hi": 0.9339345460955732,
     "judge": "qwen3-vl",
     "level": 0.95,
-    "lo": 0.8477287695479309,
+    "lo": 0.776551387408263,
     "method": "ppi++",
     "n_gold": 30,
     "n_judged": 200,
     "n_unlabelled": 170,
     "naive": 0.875,
     "prompt_variant": "P0b",
-    "value": 0.8941176470588236,
+    "value": 0.8552429667519181,
     "why_not_clustered": "HumanLabel carries no shared participant/cluster id with FrameRef (docs/DECISIONS.md D039)"
    }
   }
@@ -1430,8 +1430,8 @@
   }
  },
  "repo": {
-  "n_decisions": 77,
-  "n_tests": 490
+  "n_decisions": 78,
+  "n_tests": 495
  },
  "rows_api": {
   "config": "default",

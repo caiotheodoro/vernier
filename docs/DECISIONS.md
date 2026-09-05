@@ -2630,3 +2630,61 @@ with the before and after.
 **Reverses if:** a rater who has not seen these frames labels them, which removes the exposure
 asymmetry and the anchoring at the same time and is the second-rater work `RED-TEAM.md` A1 has
 wanted since before any result existed.
+
+## D078 — Seven labels broke a rubric rule nothing enforced, and correcting two of them moves published numbers
+
+`docs/RUBRIC.md` rule 12 is a hard consistency constraint rather than a judgment call: *"Zero
+hands visible implies `false`. No hands, no hand manipulation."* Seven collected records broke
+it, and neither the `HumanLabel` model nor either labelling CLI noticed:
+
+| pass | frames |
+|---|---|
+| `primary` | `f152de1f` (G200-ego4d), `4bd94e12` (G200-epic) |
+| `retest` | `4bd94e12` |
+| `review` | `f152de1f`, `4bd94e12`, `ca7e98e9`, `17dbd724` |
+
+It surfaced from the rater, not from the tooling: `17dbd724` was recorded `0` hands with
+manipulation `true` and a note reading "no active manipulation", so the record contradicted
+itself in writing. Checking whether the pair occurred elsewhere found the other six.
+
+**Corrected, in every live pass.** Rule 12 predates the data and admits no reading under which
+these labels are right, so this is a label contradicting the rubric it was collected under, not
+a judgment being second-guessed. `review_first_unblinded.json` (D077's archive) is deliberately
+**not** corrected and still breaks the rule: it is a record of what was collected, and editing
+the past to satisfy a rule found later is the move this repository exists to object to.
+
+**What moved, measured before and after through `scripts/wave4_analysis.py`:**
+
+| figure | before | after |
+|---|---|---|
+| H4 manipulation AC1 | 0.8990 | 0.8630 |
+| H4 manipulation kappa | 0.8224 | 0.7712 |
+| intra-rater manipulation AC1 | 0.9037 | 0.8994 |
+| H5 EPIC-KITCHENS-100 error rate | 0.0000 | 0.0333 |
+| H5 diff_pp | -9.0909 | -5.7576 |
+| PPI Ego4D manipulation | 0.5294 [0.4057, 0.6531] | 0.5000 [0.3665, 0.6335] |
+| PPI EPIC-KITCHENS-100 manipulation | 0.8941 [0.8477, 0.9405] | 0.8552 [0.7766, 0.9339] |
+
+H4 hand_count, H5's Egocentric arm, H1, H2, H3, H6, H7 and H8 are untouched. H5 still does not
+hold and its direction is still reversed. The card digest moves `d77e591b...` to `62d65220...`.
+
+**The consequence worth stating plainly: EPIC no longer has zero judge errors on manipulation.**
+`4bd94e12` is a G200-epic frame, and correcting it gives that arm its first error. Any argument
+resting on a clean `0/30` on EPIC -- and a one-directional-error reading of this data is exactly
+such an argument -- rested on one mislabelled frame. Found before publication rather than after,
+which is the only reason it is a correction and not a retraction.
+
+**Also corrected: one of D077's six revisions was itself a rule-12 violation.** `ca7e98e9` was
+re-read as `0` hands with manipulation `true`. Under rule 12 it returns to `false`, which is
+what the primary pass already said, so it stops being a revision at all. D077's disagreement arm
+moves from 6 of 18 to 5 of 18; the control arm stays at 0 of 18.
+
+**Enforced in the instrument.** `src/vernier/labels/rules.py` holds the rule, both labelling
+CLIs re-ask when a frame breaks it (re-asking rather than auto-correcting, because which of the
+two answers is wrong is the rater's call), and `scripts/check_label_rules.py` reports violations
+across every live pass. It is deliberately **not** in `make validate`: a violation is a question
+for the rater, and gating every commit on it would block the commit that records their reasoning.
+
+**Reverses if:** a rater argues rule 12 is wrong -- that a frame can show manipulation with no
+hand visible, which is arguable for an occluded two-handed grip. That is a rubric change, needs
+a `RUBRIC.md` revision and its own entry, and would reinstate these labels rather than this one.

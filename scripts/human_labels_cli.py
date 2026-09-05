@@ -59,6 +59,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from vernier.labels.rules import ZERO_HANDS_RULE, violates_zero_hands_rule
 from vernier.labels.store import HumanLabelStore
 from vernier.labels.tool import next_frame, record_label
 from vernier.sampling.membership import load_membership
@@ -244,6 +245,13 @@ def _label_one_frame(
     print(f"\nframe_id: {frame.frame_id}  (sample={frame.sample}, pass={pass_})")
     hands_visible = _prompt_int_choice("hands_visible (0/1/2): ", (0, 1, 2))
     manipulation = _prompt_yes_no("active manipulation (y/n): ")
+    while violates_zero_hands_rule(hands_visible, manipulation):
+        # docs/DECISIONS.md D078: this pair went unenforced through seven records, two of
+        # them in the primary pass. Re-asked rather than silently corrected -- which of the
+        # two answers is wrong is the rater's call, not this script's.
+        print(f"  {ZERO_HANDS_RULE}. Both answers stand as given; re-enter them.")
+        hands_visible = _prompt_int_choice("hands_visible (0/1/2): ", (0, 1, 2))
+        manipulation = _prompt_yes_no("active manipulation (y/n): ")
     edge_case = _prompt_edge_case_tags()
     difficulty = _prompt_difficulty("difficulty (easy/medium/hard): ")
     note = input("note (optional): ").strip()
