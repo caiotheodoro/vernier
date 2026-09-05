@@ -1170,3 +1170,10 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
   color: var(--accent);
   border-bottom-color: var(--accent);
 }
+
+.reread-flag {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--v-measured);
+  letter-spacing: 0.04em;
+}

@@ -97,19 +97,34 @@ export function Frame({ frame, stats, state, rows }: Props): JSX.Element {
               <td className="detail-td">—</td>
             </tr>
             <tr className="detail-row-rater">
-              <td className="detail-td">rater</td>
-              <td className="detail-td">{frame.r ? hands(frame.r.h) : "—"}</td>
-              <td className="detail-td">{frame.r ? manip(frame.r.m) : "—"}</td>
+              <td className="detail-td">
+                rater
+                {frame.r?.rr ? <span className="reread-flag"> re-read</span> : null}
+              </td>
+              <td className="detail-td">{frame.r ? hands(frame.r.rr?.h ?? frame.r.h) : "—"}</td>
+              <td className="detail-td">{frame.r ? manip(frame.r.rr?.m ?? frame.r.m) : "—"}</td>
               {/* The rater has no confidence; this column is difficulty and effort, and now
                   says so instead of sitting under a "confidence" header. */}
               <td className="detail-td">
-                {frame.r ? `${frame.r.d}, ${frame.r.s}s` : "—"}
+                {frame.r ? `${frame.r.rr?.d ?? frame.r.d}, ${frame.r.rr?.s ?? frame.r.s}s` : "—"}
               </td>
               <td className="detail-td">—</td>
             </tr>
           </tbody>
         </table>
 
+        {frame.r?.rr?.changed ? (
+          <p className="detail-note">
+            Re-read on {frame.r.rr.at.slice(0, 10)} and revised. The pre-registered label was{" "}
+            {hands(frame.r.h)} {frame.r.h === 1 ? "hand" : "hands"}, manipulation {manip(frame.r.m)} —
+            every statistic on this page is still computed from that one, not from the re-read.
+          </p>
+        ) : null}
+        {frame.r?.rr && !frame.r.rr.changed ? (
+          <p className="detail-note">
+            Re-read on {frame.r.rr.at.slice(0, 10)}; the answer did not change.
+          </p>
+        ) : null}
         {frame.r && frame.r.e.length > 0 ? (
           <p className="detail-note">
             rubric tags:{" "}

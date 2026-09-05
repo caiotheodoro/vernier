@@ -65,6 +65,20 @@ export type Frame = {
     e: EdgeCaseTag[];
     s: number;
     at: string;
+    /**
+     * The rater's later re-read of this frame (D074). Their current answer, and what the page
+     * shows. Every statistic still comes from the pre-registered fields above: the review set
+     * was selected by disagreement, and a set selected that way can only move agreement one way.
+     */
+    rr?: {
+      h: Hands;
+      m: boolean;
+      d: "easy" | "medium" | "hard";
+      e: EdgeCaseTag[];
+      s: number;
+      at: string;
+      changed: boolean;
+    };
   } | null;
   /**
    * Non-null only where the frame ships with this page. `null` is the flag the UI reads: the

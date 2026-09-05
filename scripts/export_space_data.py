@@ -60,6 +60,7 @@ _E5_PATH = _ROOT / "data" / "e5_full_n2000.json"
 _E2_100K_PATH = _ROOT / "data" / "e2_100k_eval.json"
 _STORED_LABELS_PATH = _ROOT / "data" / "rung1_stored_labels.json"
 _PRIMARY_LABELS_PATH = _ROOT / "data" / "labels" / "caio" / "primary.json"
+_REVIEW_LABELS_PATH = _ROOT / "data" / "labels" / "caio" / "review.json"
 _MEMBERSHIP_ROOT = _ROOT / "data" / "membership"
 _GOLD_JUDGED_ROOT = _ROOT / "data" / "gold_judged"
 _PREREG_PATH = _ROOT / "docs" / "PRE-REGISTRATION.md"
@@ -187,6 +188,19 @@ def _load_judged(sample: str) -> list[JudgeResponse]:
     ]
 
 
+def _load_review() -> dict[str, HumanLabel]:
+    """The D074 re-read, keyed by frame. The rater's current answer where one exists -- shown on
+    the page, but NOT used for any statistic: every number still comes from the pre-registered
+    primary pass, because the review set was selected by disagreement and a set selected that way
+    can only move agreement one direction."""
+    if not _REVIEW_LABELS_PATH.exists():
+        return {}
+    return {
+        label.frame_id: label
+        for label in (HumanLabel.model_validate(r) for r in json.loads(_REVIEW_LABELS_PATH.read_text()))
+    }
+
+
 def _load_primary() -> list[HumanLabel]:
     return [HumanLabel.model_validate(r) for r in json.loads(_PRIMARY_LABELS_PATH.read_text())]
 
@@ -308,6 +322,7 @@ def row_base(corpus: Corpus, rows_per_file: dict[str, int]) -> int:
 def build_frames(index: ParquetIndex | None) -> list[dict[str, Any]]:
     """The grid index: one record per gold frame (600), sorted by corpus then row."""
     primary = {label.frame_id: label for label in _load_primary()}
+    review = _load_review()
     thumbs = _load_thumbnails()["tiles"]
     if index is not None:
         rows_per_file = {c: len(ids) for c, ids in index["frame_ids"].items()}
@@ -346,6 +361,18 @@ def build_frames(index: ParquetIndex | None) -> list[dict[str, Any]]:
                     "s": label.seconds_spent,
                     "at": label.labelled_at.isoformat(),
                 }
+                reread = review.get(ref.frame_id)
+                if reread is not None:
+                    r["rr"] = {
+                        "h": reread.hands_visible,
+                        "m": reread.manipulation,
+                        "d": reread.difficulty,
+                        "e": list(reread.edge_case),
+                        "s": reread.seconds_spent,
+                        "at": reread.labelled_at.isoformat(),
+                        "changed": (reread.hands_visible, reread.manipulation)
+                        != (label.hands_visible, label.manipulation),
+                    }
             frames.append(
                 {
                     "id": ref.frame_id,
