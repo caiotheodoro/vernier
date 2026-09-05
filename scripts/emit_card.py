@@ -441,12 +441,16 @@ def _h2_claim() -> Claim:
         block["design_effect"] for data in arms.values() for block in data["tasks"].values()
     )
     statement = (
-        "H2 does NOT hold (D072). Pre-registered: cluster-bootstrap intervals over worker_id at "
-        f"least twice the width of iid ones (design effect >= 2). Measured: {worst:.2f} at the "
-        "highest, across two arms and three tasks -- " + " | ".join(parts) + ". "
+        "H2 does NOT hold (D072). Pre-registered threshold, stated two ways that disagree under "
+        "the pre-registration's own definition design effect = (cluster CI width / iid CI "
+        "width)^2: 'design effect >= 2', and 'intervals at least twice the width of iid ones', "
+        "which is a design effect of 4 (D074). Measured: "
+        f"{worst:.2f} at the highest (read to two decimals; the bootstrap's Monte Carlo band "
+        "at B=10,000 is about +/-0.05, D074), across two arms and three tasks -- "
+        + " | ".join(parts) + ". Clears neither reading. "
         "The effect is real but smaller than pre-registered: every figure exceeds 1, so an iid "
         "interval on this corpus is genuinely too narrow, by 12-29% in width (sqrt of the design "
-        "effect) rather than the >=41% H2 asserted. The 2-hands figure carries the largest "
+        "effect) rather than the >=41% (or, read literally, 100%) H2 asserted. The 2-hands figure carries the largest "
         "design effect on both arms, the same dimension where H1 failed by 6.32pp (D056) and "
         "where the 100K re-run failed again by 6.1pp (D067) -- a convergence recorded, not "
         "explained. Measured on vernier's own corpus draws, never on Build AI's evaluation "
@@ -456,7 +460,7 @@ def _h2_claim() -> Claim:
     return Claim(
         statement=statement,
         record_type="AgreementResult",
-        record_ref=f"{_H2_RESULTS_REF.format(arm='S10k-U')}#H2",
+        record_ref=", ".join(f"{_H2_RESULTS_REF.format(arm=arm)}#H2" for arm in _H2_ARMS),
     )
 
 

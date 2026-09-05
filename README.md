@@ -130,9 +130,12 @@ under the 1pp threshold). Real cost: $9.06. `docs/DECISIONS.md` D066/D067.
 
 **The design effect, measured where a worker id exists.** 10,000 frames drawn from the raw
 corpus under each of the two pre-registered designs, judged, and bootstrapped by worker
-(B = 10,000). Pre-registered threshold: 2. Measured: 1.25–1.66 across both arms and all
-three figures, largest on 2-hands both times. Every figure exceeds 1, so an iid interval on
-this corpus is 12–29% too narrow in width; none reaches 2, so H2 fails as stated. The corpus
+(B = 10,000). Pre-registered threshold: a design effect of 2, which the same frozen document
+also phrases as "twice the width", a design effect of 4 under its own definition
+(`docs/DECISIONS.md` D074). Measured: 1.25–1.66 across both arms and all three figures
+(±0.05 Monte Carlo band), largest on 2-hands both times. Every figure exceeds 1, so an iid
+interval on this corpus is 12–29% too narrow in width; none reaches 2, so H2 fails under
+either reading. Reviewed independently, numbers reproduced bit-for-bit (D074). The corpus
 also ships 2,144 workers against the published 2,153 (`docs/UPSTREAM-FINDINGS.md` F12).
 `docs/DECISIONS.md` D072.
 

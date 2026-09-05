@@ -20,8 +20,11 @@ into ~85 and inflated the design effect into a false positive (D071); and the co
 `REVIEW.md` R2, now much cheaper than when it was written — the ground-truth `worker_id` this
 work produced can calibrate a DINOv2 pseudo-cluster proxy against real labels, which is the
 only route to saying anything about the design effect on *Build AI's own frames*
-(`RED-TEAM.md` A13); and an independent review of D071/D072's units, which `WAVES.md` requires
-from a different context than the producer's and which has not happened for this round.
+(`RED-TEAM.md` A13). The independent review of D071/D072 `WAVES.md` requires has now run
+(D074): the verdict stands, the numbers reproduce bit-for-bit, and the pre-registration turned
+out to state H2's threshold two ways; the card's claim text is corrected in `emit_card.py` and
+the committed `MEASUREMENT_CARD.json` is regenerated with `make card` together with
+`make space-data`, since the Space's `stats.json` pins the card digest.
 
 **Prior header — (D068) the card's own H2/Result 2 text was found actively
 contradicting D065 (still said "confirmed NOT authorized... 403" after access was granted) --

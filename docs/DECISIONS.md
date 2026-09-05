@@ -2344,6 +2344,13 @@ per D053) on one `g6e.2xlarge` spot instance, ~3h45m, ~$7.50, terminated at comp
 20,000 frames were excluded and recorded rather than dropped: 26 undecodable (0.13%, the
 clip-end shortfall F12's neighbours describe) and 2 unparseable.
 
+*Amended 2026-09-05 (D074):* the count above is 28, not 26 -- 10 + 16 undecodable and 1 + 1
+unparseable, per `n_extraction_failed`/`n_excluded_other` in both result files. The
+"twice the width ... a design effect of at least 2" equivalence in this entry's second
+paragraph is also not one the pre-registration's own definition supports; D074 records why,
+and why the verdict is unchanged. The third decimal in the table above is inside the
+bootstrap's Monte Carlo band (about +/-0.05 at B=10,000); read it to two.
+
 **Result 2 is unaffected.** The adapter removed one of D048's three reasons; the other two stand
 and either is sufficient alone (no institutional EPIC-KITCHENS-100 email; no downstream-task
 labels in the release). It remains this card's single `what_could_not_be_checked` item, so the
@@ -2430,3 +2437,60 @@ records the omission in the index.
 frames come out of the atlas first and this entry is amended second; or the datasets-server
 grows a fast batch path for image rows, in which case the atlas is a cache rather than a
 republication and can be dropped for the live path it replaced.
+
+## D074 — Independent review of D071/D072: the verdict stands; the pre-registration states H2's threshold two ways
+
+`WAVES.md` requires every real result to be reviewed from a context other than the one that
+produced it, and `HANDOFF.md` recorded that this had not happened for D071/D072. It has now: a
+fresh context was given the pre-registration, the two entries, the runner, the bootstrap, the
+membership and response files, and none of the producing session's narrative. It recomputed
+every point estimate from the response JSONL (bit-identical to the result files), re-ran the
+repository's own bootstrap (seed 777, B=10,000: intervals and design effects reproduced
+exactly), re-derived the cluster counts from the membership files (1,966 / 1,999; a bare
+`worker_id` would have given 133 / 131, so D071's fix was load-bearing), verified `S10k-S`'s
+one-frame-per-clip cap and its per-factory worker-hour apportionment for all 85 factories,
+confirmed that both intervals are computed on the same kept observations, and ran an
+independent bootstrap under a different seed. **D072's conclusion, that H2 does not hold,
+stands.** Seven findings, none reopening the measurement:
+
+1. **The pre-registration states H2 in two units that disagree under its own definition
+   (major, documentation).** Its hypothesis heading says *design effect ≥ 2*; the sentence under
+   it says *at least twice the width*; its statistics section defines design effect as
+   `(cluster CI width / iid CI width)²`. Twice the width is therefore a design effect of 4.
+   D072, the card's H2 claim and `README.md` had restated the two as synonyms. Under either
+   reading H2 fails -- the largest measured effect is 1.66, a width ratio of 1.29 against 2 --
+   and the literal reading fails by more, so the verdict does not move; what it was measured
+   against was misstated. The frozen text is not rewritten, per its own rule. The card's claim,
+   `README.md` and `docs/WRITEUP.md` now say the threshold was stated two ways and that the
+   result clears neither.
+2. **The third decimal is Monte Carlo noise (minor).** An independent bootstrap at a different
+   seed moved single design effects by up to about 0.05 (`S10k-S` hand ≥ 1: 1.31 → 1.26; `S10k-U`
+   manipulation: 1.27 → 1.33). D072's "the two arms land within 0.05 of each other" is at the
+   estimator's resolution, not a robustness check beyond it. Design effects are read to two
+   decimals with a ±0.05 band from here on; the structure -- every figure in [1.2, 1.7], none
+   near 2, 2-hands about 0.3 above the other two on both arms -- is stable across seeds. A
+   variance-ratio estimator over the bootstrap distributions would be less noisy than the
+   squared percentile-width ratio; the pre-registration fixed the latter, so it stays.
+3. **D072's exclusion arithmetic (minor).** "26 excluded: 26 undecodable and 2 unparseable" sums
+   to 28. Amended in place with a dated note.
+4. **The judge weight revision D072 cites is not in the data records (minor).** `judge_rev` on
+   every response is the served model *name* (`qwen3vl.py` returns `response.model`); the commit
+   `9cdc6310…` exists only as the launch scripts' pin (`cloud/aws_qwen3vl.sh`,
+   `cloud/modal_qwen3vl.py`). The claim holds by inference from the launch script, not from the
+   records. Recording the pin into the result JSON is a runner change for the next real run, not
+   a retroactive edit to this one.
+5. **`cost_usd` basis (note).** Per-response cost uses the Modal L4 rate the judge class was
+   written against; the 20,000 responses sum to $4.92, while D072's ~$7.50 is `g6e.2xlarge` spot
+   wall-clock. Neither is an invoice. D072's figure is what was paid.
+6. **Stale docstring (note).** `qwen3vl.py`'s `_image_bytes_for` still said it raises for
+   `S10k-U`/`S10k-S` frames. Fixed.
+7. **`record_ref` named one arm (note).** The H2 claim quotes both arms; the reference now names
+   both result files.
+
+`scripts/emit_card.py` carries the corrected claim text; the committed `MEASUREMENT_CARD.json`
+is regenerated with `make card` alongside `make space-data`, since the Space's precomputed
+`stats.json` pins the card's digest and the two must move together.
+
+**Reverses if:** nothing in the measurement. Finding 1 would read differently only if the
+pre-registration's "twice the width" is recorded as a slip for "twice the variance"; the
+honest position is that the frozen text says both, and this entry says so.

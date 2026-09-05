@@ -181,8 +181,9 @@ class Qwen3VLJudge(JudgeAdapter):
     def _image_bytes_for(self, frame: FrameRef) -> bytes:
         """Resolve `frame` to its real JPEG bytes via `sampling.draw.image_bytes_for`
         (`ARCHITECTURE.md`: judges depend on sampling for frames, nothing else). Real for the
-        `E10k-*` family; raises `NotImplementedError` for `S10k-U`/`S10k-S` frames, the same as
-        the sampling seam it delegates to.
+        `E10k-*` / `E100k-ego` family (parquet) and, since D071, for `S10k-U`/`S10k-S` (one
+        frame out of an h265 clip over HTTP range requests, `sampling.corpus_frames`); a frame
+        the seam cannot decode surfaces as the seam's own error, never a silent skip.
         """
         return image_bytes_for(frame)
 

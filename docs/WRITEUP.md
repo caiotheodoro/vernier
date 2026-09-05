@@ -72,8 +72,10 @@ no worker id to cluster over.
 pre-registered.** (`data/h2_design_effect.S10k-U.json`, `data/h2_design_effect.S10k-S.json`)
 
 Frames from one worker share scene, lighting, task, gloves and camera. The pre-registration
-predicted a design effect of at least 2: a clustered interval at least twice as wide as the iid
-one. Measured at N = 10,000 per arm, B = 10,000, on both draws:
+predicted a design effect of at least 2, and in the next sentence a clustered interval at
+least twice as wide as the iid one, which under its own definition is a design effect of 4;
+the result clears neither (`docs/DECISIONS.md` D074). Measured at N = 10,000 per arm,
+B = 10,000, on both draws (read to two decimals; the bootstrap's own resolution is about ±0.05):
 
 | figure | `S10k-U` | `S10k-S` |
 |---|---:|---:|
@@ -84,8 +86,9 @@ one. Measured at N = 10,000 per arm, B = 10,000, on both draws:
 None reaches 2, so H2 fails as stated. All six exceed 1, so the effect is real: an interval
 computed as if frames were independent is 12–29% too narrow in width on this corpus. Concretely,
 the 2-hands rate on `S10k-U` is 80.8%, iid interval [80.0, 81.6], clustered [79.8, 81.8]. Two
-separate draws with different cluster structures land within 0.05 of each other on every task,
-which is the result's own robustness check. The 2-hands figure carries the largest design effect
+separate draws with different cluster structures land within the bootstrap's own resolution
+of each other on every task, and an independent re-run at a different seed reproduced the
+structure (`docs/DECISIONS.md` D074). The 2-hands figure carries the largest design effect
 on both arms, and it is the same figure the independent judge missed by six points on both
 releases; three measurements now single it out, and none explains it.
 
