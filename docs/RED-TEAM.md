@@ -167,6 +167,15 @@ frame-level statistic drawn from it inherits some of it* — and the writeup mus
 that to a statement about their specific draw. If this distinction is blurred anywhere in the
 eventual results, this entry is the evidence it was known in advance.
 
+**Update (D072).** The measurement now exists, and it cuts against vernier, which is the useful
+outcome for this entry. The design effect is 1.25–1.66 across two arms and three tasks — real,
+but below H2's own pre-registered threshold of 2. So the attack's hypothetical ("if their frames
+were drawn one-per-worker the effect would be near 1") is closer to the truth than vernier's
+pre-registration was: at one frame per worker the effect *is* near 1, and this corpus at ~5
+frames per worker only reaches 1.66. The narrow claim above stands unchanged and is now
+quantified rather than argued. The attack is not retired — nothing here measures *their* draw,
+and nothing can until a grouping variable ships.
+
 ## A14 — Reporting a vendor's commit history
 
 **Attack.** F10 and F11 read a public commit log and report that an identifier column was

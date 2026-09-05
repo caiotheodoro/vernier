@@ -70,6 +70,11 @@ _E2_RESULTS_REF = "data/e2_full_n10000.json"
 _E5_RESULTS_REF = "data/e5_full_n2000.json"
 _WAVE4_RESULTS_REF = "data/wave4_analysis.json"
 _RUNG1_RESULTS_REF = "data/rung1_distillation.json"
+
+# docs/DECISIONS.md D072: H2's two arms, the first cluster bootstrap over a real worker_id in
+# this project. One file per arm.
+_H2_ARMS = ("S10k-U", "S10k-S")
+_H2_RESULTS_REF = "data/h2_design_effect.{arm}.json"
 _E2_100K_RESULTS_REF = "data/e2_100k_eval.json"
 
 # scripts/wave4_analysis.py's own domain-name/judge/prompt-variant constants, duplicated here
@@ -408,6 +413,53 @@ def _h6_claim() -> Claim:
     return Claim(statement=statement, record_type="DistillationCascade", record_ref=f"{_RUNG1_RESULTS_REF}#H6")
 
 
+def _h2_claim() -> Claim:
+    """H2, measured for real and NOT holding (D072).
+
+    The design effect is genuine -- every one of the six figures exceeds 1, so an iid interval
+    on this corpus really is too narrow -- but none reaches the pre-registered threshold of 2.
+    `PRE-REGISTRATION.md` fixed that threshold in advance and `AGENTS.md` rule 1 binds the
+    project to it, so this is a failed hypothesis reported as one, not a rescoped success.
+
+    Both arms are stated because their agreement is the result's own robustness check: `S10k-U`
+    (uniform over frames) and `S10k-S` (stratified by factory, <=1 frame per clip) are separate
+    draws with different cluster structures, and they land within 0.05 of each other on every
+    task.
+    """
+    arms = {arm: json.loads(Path(_H2_RESULTS_REF.format(arm=arm)).read_text()) for arm in _H2_ARMS}
+    parts = []
+    for arm, data in arms.items():
+        effects = "; ".join(
+            f"{task} deff={block['design_effect']:.2f}" for task, block in data["tasks"].items()
+        )
+        clusters = data["clusters"]
+        parts.append(
+            f"{arm} (n={data['n_ok']}, {clusters['n_clusters']} workers, mean cluster "
+            f"{clusters['mean_cluster_size']:.2f}, max {clusters['max_cluster_size']}): {effects}"
+        )
+    worst = max(
+        block["design_effect"] for data in arms.values() for block in data["tasks"].values()
+    )
+    statement = (
+        "H2 does NOT hold (D072). Pre-registered: cluster-bootstrap intervals over worker_id at "
+        f"least twice the width of iid ones (design effect >= 2). Measured: {worst:.2f} at the "
+        "highest, across two arms and three tasks -- " + " | ".join(parts) + ". "
+        "The effect is real but smaller than pre-registered: every figure exceeds 1, so an iid "
+        "interval on this corpus is genuinely too narrow, by 12-29% in width (sqrt of the design "
+        "effect) rather than the >=41% H2 asserted. The 2-hands figure carries the largest "
+        "design effect on both arms, the same dimension where H1 failed by 6.32pp (D056) and "
+        "where the 100K re-run failed again by 6.1pp (D067) -- a convergence recorded, not "
+        "explained. Measured on vernier's own corpus draws, never on Build AI's evaluation "
+        "frames, which ship no grouping variable at all (UPSTREAM-FINDINGS.md F9): the licensed "
+        "conclusion is that a published interval inherits this, not that theirs was measured."
+    )
+    return Claim(
+        statement=statement,
+        record_type="AgreementResult",
+        record_ref=f"{_H2_RESULTS_REF.format(arm='S10k-U')}#H2",
+    )
+
+
 def _unmet_claims() -> list[UncheckedItem]:
     # H2/Result 2's blocker is no longer access -- docs/DECISIONS.md D065: Caio accepted the
     # gated-access terms, dataset_info()/hf_hub_download both succeed live now, and a real
@@ -415,29 +467,23 @@ def _unmet_claims() -> list[UncheckedItem]:
     # corpus turned out to be h265 video (per-clip, not per-frame), not a stills parquet -- a
     # materially bigger, structurally different adapter (real frame extraction, a new kind of
     # dependency this project doesn't have), not sized past one shard.
-    gated_corpus = (
-        "BLOCKER: requires a real S10k-U/S10k-S adapter over the raw Egocentric-10K corpus. "
-        "Access is granted (docs/DECISIONS.md D065, terms accepted) -- this is no longer an "
-        "access problem. D065's real, live inspection of one shard (out of 19,495) found the "
-        "corpus is h265 video, not stills: two ~7-minute clips per shard, with per-clip "
-        "metadata only (worker_id, factory_id, duration_sec, fps) and no per-frame timestamp "
-        "or frame_index. The real adapter needs video-frame extraction, a kind of dependency "
-        "this project does not have yet, and its scope is not sized past that one shard -- "
-        "Caio needs to decide whether to fund building it, not request access"
+    # D072 built that adapter and ran H2, so H2 leaves this list entirely -- as a real,
+    # checked, FAILED hypothesis, not as something unchecked. Result 2 stays, but its reason is
+    # now only the two the adapter never addressed.
+    result_2_blocker = (
+        "BLOCKER: the raw-corpus adapter D071 built unblocked H2, but not this. Two of D048's "
+        "three reasons stand and either alone is sufficient: EPIC-KITCHENS-100 registration "
+        "requires an institutional email this project does not have (SURVEY.md), and the "
+        "evaluation release ships no downstream-task labels to probe against regardless of "
+        "corpus access. Also still kill-gated pending a compute-budget spike (D008) never run"
     )
     # H4/H5 (D059), H7 (D060), and H6 (D061) are now all real, checked Claims -- Wave 3's human
     # labels, scripts/judge_gold_sets.py's live-judge run, and scripts/distill_rung1.py (a
     # disclosed DINOv2 substitute for the gated DINOv3 pin) all completed for real.
     return [
         UncheckedItem(
-            item="H2 -- cluster-bootstrap design effect >=2 on S10k-U/S10k-S",
-            reason=gated_corpus,
-        ),
-        UncheckedItem(
             item="Result 2 -- matched three-corpus transfer probe",
-            reason=(
-                f"{gated_corpus}; also kill-gated pending a compute-budget spike (D008) not yet run"
-            ),
+            reason=result_2_blocker,
         ),
     ]
 
@@ -454,6 +500,7 @@ def main() -> int:
             _h4_claim(),
             _h5_claim(),
             _h6_claim(),
+            _h2_claim(),
             *ppi_claims,
             _h7_claim(),
         ],

@@ -16,6 +16,13 @@ data/*
 !data/rung1_probe.joblib
 !data/eval_baseline_comparison.json
 !data/e2_100k_eval.json
+# docs/DECISIONS.md D072: H2's real result, both arms, plus the per-frame responses behind it
+# (D069's per-file negation pattern -- these back a Claim, so they are checkable, not inferred).
+# data/corpus_manifest_10k.jsonl is deliberately NOT tracked: 60MB, and it is regenerable
+# exactly by `python3 scripts/build_corpus_manifest.py --limit 0`, which is committed and
+# deterministic -- ~25 minutes against 60MB in every clone forever.
+!data/h2_design_effect.S10k-U.json
+!data/h2_design_effect.S10k-S.json
 frames/
 cache/
 *.mp4
@@ -25,6 +32,11 @@ data/*.checkpoint.json
 # per-frame judge responses (D069): ignored by default; a run whose jsonl backs a card claim
 # gets its own !data/<name>.responses.jsonl negation above, per D062's per-file pattern
 data/*.responses.jsonl
+# ...except H2's, which back a real Claim (D072). These must come AFTER the blanket
+# rule above, not before it: in gitignore the LAST matching pattern wins, so the
+# earlier placement silently left them ignored.
+!data/h2_design_effect.S10k-U.S10k-U.responses.jsonl
+!data/h2_design_effect.S10k-S.S10k-S.responses.jsonl
 data/*.log
 data/e2_n100.json
 data/e2_smoke_n20.json

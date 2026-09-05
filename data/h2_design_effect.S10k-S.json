@@ -1,0 +1,82 @@
+{
+  "sample": "S10k-S",
+  "prompt_variant": "P0a",
+  "n_frames_drawn": 10000,
+  "n_responses": 10000,
+  "n_ok": 9983,
+  "n_extraction_failed": 16,
+  "n_excluded_other": 1,
+  "B": 10000,
+  "seed": 777,
+  "cluster_by": "worker_id",
+  "clusters": {
+    "n_clusters": 1999,
+    "n_observations": 9983,
+    "mean_cluster_size": 4.99399699849925,
+    "min_cluster_size": 1,
+    "max_cluster_size": 112
+  },
+  "h2_threshold": 2.0,
+  "tasks": {
+    "hand_ge1": {
+      "point_estimate": 0.9511168987278373,
+      "iid": {
+        "lo": 0.9469097465691676,
+        "hi": 0.9553240508865071,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
+      "cluster": {
+        "lo": 0.9461991964223844,
+        "hi": 0.9558417700398205,
+        "method": "cluster-bootstrap",
+        "clusters": 1999,
+        "B": 10000
+      },
+      "design_effect": 1.3132563110735354,
+      "why_absent": null
+    },
+    "hand_eq2": {
+      "point_estimate": 0.8204948412300912,
+      "iid": {
+        "lo": 0.8129820695181809,
+        "hi": 0.8280076129420014,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
+      "cluster": {
+        "lo": 0.8107638290041952,
+        "hi": 0.8300938242716644,
+        "method": "cluster-bootstrap",
+        "clusters": 1999,
+        "B": 10000
+      },
+      "design_effect": 1.6550195166543795,
+      "why_absent": null
+    },
+    "active_manipulation": {
+      "point_estimate": 0.9038365220875488,
+      "iid": {
+        "lo": 0.8980266452970049,
+        "hi": 0.9095462285886006,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
+      "cluster": {
+        "lo": 0.8972565722802248,
+        "hi": 0.9103448797485082,
+        "method": "cluster-bootstrap",
+        "clusters": 1999,
+        "B": 10000
+      },
+      "design_effect": 1.2909024919332928,
+      "why_absent": null
+    }
+  },
+  "h2_holds": false,
+  "design_effect_min": 1.2909024919332928,
+  "design_effect_max": 1.6550195166543795
+}

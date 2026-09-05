@@ -1,0 +1,82 @@
+{
+  "sample": "S10k-U",
+  "prompt_variant": "P0a",
+  "n_frames_drawn": 10000,
+  "n_responses": 10000,
+  "n_ok": 9989,
+  "n_extraction_failed": 10,
+  "n_excluded_other": 1,
+  "B": 10000,
+  "seed": 777,
+  "cluster_by": "worker_id",
+  "clusters": {
+    "n_clusters": 1966,
+    "n_observations": 9989,
+    "mean_cluster_size": 5.08087487283825,
+    "min_cluster_size": 1,
+    "max_cluster_size": 90
+  },
+  "h2_threshold": 2.0,
+  "tasks": {
+    "hand_ge1": {
+      "point_estimate": 0.9489438382220442,
+      "iid": {
+        "lo": 0.9445389928921814,
+        "hi": 0.9531509660626689,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
+      "cluster": {
+        "lo": 0.9440811883658584,
+        "hi": 0.9537285865173507,
+        "method": "cluster-bootstrap",
+        "clusters": 1966,
+        "B": 10000
+      },
+      "design_effect": 1.254917190211891,
+      "why_absent": null
+    },
+    "hand_eq2": {
+      "point_estimate": 0.8079887876664331,
+      "iid": {
+        "lo": 0.8001801982180399,
+        "hi": 0.8155971568725598,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
+      "cluster": {
+        "lo": 0.7981902460415058,
+        "hi": 0.8178293024567629,
+        "method": "cluster-bootstrap",
+        "clusters": 1966,
+        "B": 10000
+      },
+      "design_effect": 1.6227208635034607,
+      "why_absent": null
+    },
+    "active_manipulation": {
+      "point_estimate": 0.8981880068074882,
+      "iid": {
+        "lo": 0.8920812894183602,
+        "hi": 0.9041946140754831,
+        "method": "iid",
+        "clusters": null,
+        "B": null
+      },
+      "cluster": {
+        "lo": 0.8912721936598443,
+        "hi": 0.904946632001388,
+        "method": "cluster-bootstrap",
+        "clusters": 1966,
+        "B": 10000
+      },
+      "design_effect": 1.2743604373621555,
+      "why_absent": null
+    }
+  },
+  "h2_holds": false,
+  "design_effect_min": 1.254917190211891,
+  "design_effect_max": 1.6227208635034607
+}

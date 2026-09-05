@@ -50,7 +50,9 @@ def test_h8_claim_is_not_tied_to_a_prevalence_estimate() -> None:
 
 def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
     items = _unmet_claims()
-    assert len(items) == 2  # H2, Result 2 -- H1/H1b/H3/H4/H5/H6/H7 are now real Claims (D054-D056, D059-D061)
+    # Result 2 alone. H2 left this list in D072 -- measured for real and FAILED, which is a
+    # Claim, not an unchecked item. Everything else moved out across D054-D056, D059-D061.
+    assert len(items) == 1
     for item in items:
         assert item.reason.strip()
         assert "BLOCKER:" in item.reason
@@ -58,23 +60,28 @@ def test_every_unmet_claim_has_a_named_blocker_reason() -> None:
 
 def test_unmet_claims_cover_every_still_blocked_hypothesis() -> None:
     items = {i.item for i in _unmet_claims()}
-    for tag in ["H2 ", "Result 2"]:
-        assert any(tag in item for item in items), f"missing {tag!r} in unmet claims"
-    # H1/H1b/H3 (D054/D055), H4/H5 (D059), H7 (D060), and H6 (D061) moved to real Claims --
-    # must not still be listed as blocked, or the card would understate real, completed progress.
-    for tag in ["H1 ", "H1b", "H3 ", "H4 ", "H5 ", "H6 ", "H7 "]:
+    assert any("Result 2" in item for item in items), "Result 2 is still blocked"
+    # Every hypothesis moved to a real Claim must be gone from here, or the card understates
+    # real completed work. H2 joined that list in D072: it was measured on both arms and did
+    # not hold, which the card must report as a failed claim rather than as unchecked --
+    # "not measured" and "measured and false" are the two things this card exists to separate.
+    for tag in ["H1 ", "H1b", "H2 ", "H3 ", "H4 ", "H5 ", "H6 ", "H7 "]:
         assert not any(tag in item for item in items), f"{tag!r} should no longer be unmet"
 
 
 def test_blockers_are_named_specifically() -> None:
-    # H2/Result 2's blocker is real adapter work (D065), not an access problem -- access was
-    # granted and this must say so explicitly, not still claim a 403/authorization gap.
-    items = _unmet_claims()
-    reasons = " ".join(i.reason for i in items)
-    assert "D065" in reasons
-    assert "granted" in reasons
+    """Result 2's blocker must name the reasons that actually still stand. Corpus access was
+    granted (D065) and the adapter was built (D071), so neither may be cited any more -- what
+    remains is the institutional EPIC-KITCHENS-100 email and the absent downstream-task labels,
+    either of which is sufficient on its own."""
+    reasons = " ".join(i.reason for i in _unmet_claims())
+    assert "BLOCKER:" in reasons
+    assert "EPIC-KITCHENS-100" in reasons
+    assert "downstream-task labels" in reasons
+    # Stale framings that D065/D071 each retired, in turn.
     assert "NOT authorized" not in reasons
     assert "403" not in reasons
+    assert "not sized" not in reasons
 
 
 # --- H1/H1b/H3: real claims from the full-N run (D054/D055) -----------------------------------

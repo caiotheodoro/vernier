@@ -2291,3 +2291,67 @@ against dataset objects (then a real decode dependency has to be budgeted after 
 `PyAV`-wheel gap becomes live again); or a broader read of the corpus shows `duration_sec` is
 not a usable proxy for worker-hours, in which case `S10k-S`'s stratification weights need a
 different source and the sample is redrawn.
+
+## D072 — H2 measured for real on both arms, and it does not hold
+
+D071 built the `S10k-U`/`S10k-S` adapter. This entry is the measurement it unblocked: the first
+cluster bootstrap over a real `worker_id` in this project's history. Every interval in
+`MEASUREMENT_CARD.json` before today was `method="iid"` because no arm had a grouping variable
+at all.
+
+**The result. H2 fails.** `docs/PRE-REGISTRATION.md` fixed the threshold in advance:
+*"cluster-bootstrap intervals over `worker_id` are at least twice the width of the corresponding
+iid intervals"* — a design effect of at least 2. Measured, at N=10,000 per arm, `P0a`, B=10,000,
+seed 777:
+
+| Task | `S10k-U` | `S10k-S` |
+|---|---|---|
+| hand >= 1 | 1.255 | 1.313 |
+| **2 hands** | **1.623** | **1.655** |
+| active manipulation | 1.274 | 1.291 |
+
+Six figures, none reaching 2. Reported as a failed hypothesis, not rescoped into a success —
+`AGENTS.md` rule 1 binds the threshold that was fixed before the data existed.
+
+**What is nonetheless true.** Every one of the six exceeds 1, so the effect is real: an iid
+interval on this corpus genuinely is too narrow. It understates width by 12–29% (the square root
+of the design effect) rather than the >=41% H2 asserted. D003's physical argument for clustering
+— *"frames from one worker share scene, lighting, task, gloves and calibration"* — is supported
+in direction and overstated in magnitude. D003 itself is unaffected: it says an iid interval on
+this data would be wrong, and it still would be.
+
+**The two arms agree, which is the result's own robustness check.** `S10k-U` (uniform over
+frames) and `S10k-S` (stratified by factory worker-hours, <=1 frame per clip) are separate draws
+with different cluster structures — 1,966 vs 1,999 workers, max cluster 90 vs 112 — and they
+land within 0.05 of each other on every task. A design effect that survives that is a property
+of the corpus, not of one draw.
+
+**2-hands carries the largest design effect on both arms**, ~30% above the other two tasks. It
+is also the dimension where H1 failed by 6.32pp (D056) and where the 100K re-run failed again by
+6.1pp (D067). Three independent measurements now single out the same figure. Recorded as a
+convergence, not explained — nothing here establishes a mechanism, and inventing one after the
+fact is precisely what pre-registration exists to prevent.
+
+**Where this is measured, and what it licenses.** On vernier's own corpus draws, never on Build
+AI's evaluation frames, which ship no grouping variable at all (`UPSTREAM-FINDINGS.md` F9). The
+licensed conclusion is unchanged from the pre-registration's own amendment: a published interval
+*inherits* this, it was not measured on their sample. `RED-TEAM.md` A13 stands as the honest
+objection, now with a real number attached rather than a blocked hypothesis.
+
+**Cost and conduct.** 20,000 real judge calls on a self-hosted `Qwen3-VL-8B-Instruct-FP8`
+(revision `9cdc6310a8cb770ce18efaf4e9935334512aee45`, vLLM 0.21.0, `temperature=0`/`seed=777`
+per D053) on one `g6e.2xlarge` spot instance, ~3h45m, ~$7.50, terminated at completion. 26 of
+20,000 frames were excluded and recorded rather than dropped: 26 undecodable (0.13%, the
+clip-end shortfall F12's neighbours describe) and 2 unparseable.
+
+**Result 2 is unaffected.** The adapter removed one of D048's three reasons; the other two stand
+and either is sufficient alone (no institutional EPIC-KITCHENS-100 email; no downstream-task
+labels in the release). It remains this card's single `what_could_not_be_checked` item, so the
+verdict stays `NOT_VERIFIED`.
+
+**Reverses if:** the judge's answers turn out to be systematically insensitive to within-worker
+variation in a way that would deflate the measured correlation — a real possibility this entry
+cannot exclude, since a judge that answers near-identically everywhere would produce a low
+design effect regardless of the corpus's true clustering. The 2-hands figure's higher effect is
+weak evidence against that, since it shows the estimator does move. A second judge, or a
+human-labelled subsample with cluster structure, would settle it.
