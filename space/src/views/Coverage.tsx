@@ -58,7 +58,7 @@ export function Coverage({ stats, state }: Props): JSX.Element {
                   <g key={s.label}>
                     <rect className={s.cls} x={x} y={y} width={Math.max(0, w - 1)} height={22} />
                     {w > 42 ? (
-                      <text className="chart-label" x={x + 6} y={y + 15}>
+                      <text className="bar-label" x={x + 6} y={y + 15}>
                         {s.label} {int(s.n)}
                       </text>
                     ) : null}

@@ -71,14 +71,14 @@ export function Hero({ stats, frames, state, onReason }: Props): JSX.Element {
     <section className="hero" aria-labelledby="hero-title" data-fade data-delay="1">
       <p className="eyebrow">vernier · an independent measurement</p>
       <h1 className="hero-title" id="hero-title">
-        Build AI says {typeof published === "number" ? `${pct(published)}%` : "a number"} of frames
-        show {TASK_LABEL[task]}.
-        {ppi ? ` We measured ${pct(ppi.value)}%, with the interval they did not publish.` : ""}
+        {typeof published === "number" ? `Published ${pct(published)}%.` : "Published, unmeasured."}{" "}
+        {ppi ? `Measured ${pct(ppi.value)}%.` : "No human gold here."}
       </h1>
       <p className="hero-deck">
-        {int(stats.generated_from.n_rater_labels)} human labels · judge{" "}
-        {stats.generated_from.judge} {stats.generated_from.prompt_variant} on Modal vLLM · PPI++ ·
-        every count opens the frames behind it
+        Build AI&apos;s {TASK_LABEL[task]} figure for {CORPUS_LABEL[corpus]}, re-measured against{" "}
+        {int(stats.generated_from.n_rater_labels)} human labels with the interval they did not
+        publish. Judge {stats.generated_from.judge} {stats.generated_from.prompt_variant} on Modal
+        vLLM, PPI++, and every count below opens the frames behind it.
       </p>
 
       <ChartFrame

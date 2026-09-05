@@ -6,7 +6,7 @@
 // an image on its own. A tile with no local thumbnail draws the judge's complete output instead,
 // which is real data rather than a placeholder, and one image is fetched only when a reader
 // opens a frame.
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Frame, Hands, Stats, Task } from "../data/types";
 import { useAtlas, useWidth, cssToken } from "../lib/hooks";
 import { agrees, judgeHands, judgeManipulation, raterBinary } from "../state/slice";
@@ -26,24 +26,27 @@ export function tierOf(frame: Frame): Tier {
   return frame.r ? "withheld" : "remote";
 }
 
-const BAND: { tier: Tier; title: string; blurb: (n: number) => string }[] = [
+/** Only the first band is worth showing in full; the rest open on request. */
+const PREVIEW = 12;
+
+const BAND: { tier: Tier; title: string; blurb: string; open: boolean }[] = [
   {
     tier: "local",
     title: "Held locally",
-    blurb: () => "Shipped with this page, from Build AI's own Apache-2.0 release. No network.",
+    blurb: "Shipped with this page. No network.",
+    open: true,
   },
   {
     tier: "withheld",
-    title: "Human-judged, not ours to ship",
-    blurb: (n) =>
-      `${n} frames a rater labelled that this repository does not republish — Ego4D's licence, ` +
-      "EPIC's non-commercial terms, or someone other than the camera wearer is in shot. " +
-      "Hugging Face serves the picture; open one to fetch it.",
+    title: "Judged, not ours to ship",
+    blurb: "A rater labelled these; the licence or a bystander keeps the picture off this page.",
+    open: true,
   },
   {
     tier: "remote",
     title: "On request",
-    blurb: () => "The judge's own output is below each id. Open a frame to fetch its picture.",
+    blurb: "The judge's own output, one card each. Open a frame to fetch its picture.",
+    open: false,
   },
 ];
 
@@ -100,6 +103,7 @@ function drawGlyph(
 
 export function Grid({ frames, stats, state }: Props): JSX.Element {
   const atlas = useAtlas(stats);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const bands = useMemo(() => {
     const by: Record<Tier, Frame[]> = { local: [], withheld: [], remote: [] };
     for (const f of frames) by[tierOf(f)].push(f);
@@ -116,17 +120,33 @@ export function Grid({ frames, stats, state }: Props): JSX.Element {
 
   return (
     <div className="grid-bands">
-      {BAND.map(({ tier, title, blurb }) =>
-        bands[tier].length === 0 ? null : (
+      {BAND.map(({ tier, title, blurb, open }) => {
+        const all = bands[tier];
+        if (all.length === 0) return null;
+        const showAll = open || expanded[tier] === true;
+        const shown = showAll ? all : all.slice(0, PREVIEW);
+        return (
           <section className="band" key={tier} data-fade data-delay="2">
-            <p className="eyebrow">
-              {title} <span className="count-pill">{bands[tier].length}</span>
+            <p className="band-head">
+              <span className="eyebrow">
+                {title} <span className="count-pill">{all.length}</span>
+              </span>
+              <span className="band-blurb">{blurb}</span>
+              {!open && all.length > PREVIEW ? (
+                <button
+                  type="button"
+                  className="band-toggle"
+                  aria-expanded={showAll}
+                  onClick={() => setExpanded((e) => ({ ...e, [tier]: !showAll }))}
+                >
+                  {showAll ? "show fewer" : `show all ${all.length}`}
+                </button>
+              ) : null}
             </p>
-            <p className="band-blurb">{blurb(bands[tier].length)}</p>
-            <Band frames={bands[tier]} stats={stats} state={state} atlas={atlas} tier={tier} />
+            <Band frames={shown} stats={stats} state={state} atlas={atlas} tier={tier} />
           </section>
-        ),
-      )}
+        );
+      })}
       <p className="legend">
         <span className="legend-judge">judge</span>
         <span className="legend-rater">rater</span>

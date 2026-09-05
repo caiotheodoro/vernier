@@ -36,6 +36,10 @@
   --v-published: #a3a3a3;
   --v-judge: #4361ee;
   --v-measured: #c93d1e;
+  /* The third series colour, for the one genuinely three-class encoding on the page
+     (hand count 0/1/2). Same validated set as the CV's --chart-3; every segment carries
+     its own count as a label, so identity is never colour alone. */
+  --v-third: #1f7a3d;
   --accent: #c93d1e;
 
   /* Retained names so the canvas renderer and older rules keep resolving. */
@@ -631,11 +635,11 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
 }
 
 .bar-steel {
-  fill: var(--steel);
+  fill: var(--v-judge);
 }
 
 .bar-ink {
-  fill: var(--ink);
+  fill: var(--v-third);
 }
 
 .bar-empty {
@@ -661,6 +665,14 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
   font-size: 11px;
 }
 
+/* Sits inside a filled segment, so it takes the page ground rather than a text
+   colour: --ink on the rust fill is about 3.5:1. */
+.bar-label {
+  fill: var(--bg);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .chart-value {
   fill: var(--ink);
   font-size: 11px;
@@ -672,8 +684,8 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
 }
 
 .dot-steel {
-  fill: var(--steel);
-  opacity: 0.55;
+  fill: var(--v-judge);
+  opacity: 0.6;
 }
 
 .dot-signal {
@@ -723,17 +735,17 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
 
 /* ── The CV layout: one prose column, and exactly two things that break it ───────────── */
 
+/* One width for everything. The grid sets it; prose, charts and tables share it, so the page
+   has a single left edge and a single right edge rather than a column that some sections
+   escape. */
 .page {
-  max-width: var(--prose);
+  max-width: var(--page);
   margin: 0 auto;
   padding: clamp(2.5rem, 8vh, 5rem) 1.5rem 6rem;
 }
 
-/* The grid and the frame detail are instruments, not prose, so they and nothing else widen. */
 .bleed {
-  width: min(var(--page), calc(100vw - 3rem));
-  margin-left: 50%;
-  transform: translateX(-50%);
+  width: 100%;
 }
 
 .eyebrow {
@@ -746,12 +758,12 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
 }
 
 .hero-title {
-  font-size: var(--fs-display);
+  font-size: clamp(1.75rem, 4.2vw, 3.25rem);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.05;
   margin: 0 0 1.25rem;
-  max-width: 580px;
+  text-wrap: balance;
 }
 
 .hero-deck {
@@ -759,7 +771,7 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
   line-height: 1.75;
   color: var(--muted);
   margin: 0 0 2rem;
-  max-width: 580px;
+  max-width: 82ch;
 }
 
 /* ── Charts ─────────────────────────────────────────────────────────────────────────── */
@@ -938,7 +950,7 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
   line-height: 1.6;
   color: var(--muted);
   margin: 0 0 0.9rem;
-  max-width: 68ch;
+  max-width: 92ch;
 }
 
 .count-pill {
@@ -1028,7 +1040,7 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
   line-height: 1.8;
   color: var(--muted);
   margin: 0 0 1.5rem;
-  max-width: 68ch;
+  max-width: 92ch;
 }
 
 .chart-legend {
@@ -1097,7 +1109,7 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
   font-size: 0.9rem;
   line-height: 1.7;
   color: var(--muted);
-  max-width: 68ch;
+  max-width: 92ch;
 }
 
 .tag {
@@ -1116,4 +1128,45 @@ html.motion [data-fade][data-delay="5"] { transition-delay: 0.33s; }
   font-family: var(--mono);
   font-size: var(--fs-mono);
   color: var(--muted);
+}
+
+/* The band header is one row: label, one line of explanation, and the toggle. */
+.band-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0 0 0.9rem;
+}
+
+.band-head .eyebrow {
+  margin: 0;
+  flex: none;
+}
+
+.band-blurb {
+  font-size: var(--fs-data);
+  color: var(--muted);
+  margin: 0;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.band-toggle {
+  flex: none;
+  margin-left: auto;
+  font: inherit;
+  font-size: var(--fs-data);
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--border-strong);
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.band-toggle:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
