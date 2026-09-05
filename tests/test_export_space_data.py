@@ -126,7 +126,21 @@ def test_committed_stats_equal_a_fresh_build(
     fresh = build_stats(committed_frames)
     # git_rev is the last commit touching MEASUREMENT_CARD.json; history rewrites move it.
     fresh["generated_from"]["git_rev"] = committed_stats["generated_from"]["git_rev"]
+    # `repo` is a count of test functions and DECISIONS.md entries, not a result: it moves on
+    # every commit that adds a test or a decision, and holding it to strict equality broke CI on
+    # four of five consecutive pushes without any number the Space shows having changed. It is
+    # checked for shape and monotonicity below, not equality -- every result-derived field
+    # (ppi, published, runs, generated_from minus git_rev) is still strict.
+    fresh_repo = fresh.pop("repo")
+    committed_repo = committed_stats.pop("repo")
     assert fresh == committed_stats
+    assert set(fresh_repo) == set(committed_repo) == {"n_tests", "n_decisions"}
+    for key in ("n_tests", "n_decisions"):
+        assert isinstance(fresh_repo[key], int) and fresh_repo[key] > 0
+        assert committed_repo[key] <= fresh_repo[key], (
+            f"committed repo.{key}={committed_repo[key]} exceeds a fresh count of "
+            f"{fresh_repo[key]}: tests or decisions were removed; rerun `make space-data`"
+        )
 
 
 def test_ppi_equals_wave4_and_the_card(

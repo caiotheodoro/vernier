@@ -30,6 +30,7 @@ the committed file's `g` count rather than letting a degraded grid ship silently
 from __future__ import annotations
 
 import json
+import math
 import re
 import statistics
 import subprocess
@@ -507,7 +508,10 @@ def _runs(e2: dict[str, Any], e5: dict[str, Any]) -> list[dict[str, Any]]:
                 "n_requested": len(judged),
                 "n_ok": status_counts.get("ok", 0),
                 "status_counts": dict(sorted(status_counts.items())),
-                "cost_usd": sum(r.cost_usd for r in judged),
+                # math.fsum, not sum: Python 3.12+ changed float sum() to compensated summation,
+                # so 3.13 locally and 3.11 in CI disagreed by one ulp here and the committed
+                # snapshot could not equal a fresh build on both. fsum is exactly rounded everywhere.
+                "cost_usd": math.fsum(r.cost_usd for r in judged),
                 "judge_time_ms": sum(r.latency_ms for r in judged),
                 "latency_ms": [r.latency_ms for r in judged],
                 "notes": "D059. The judge ran on preemptible Modal capacity (D055); a call that spans a preemption is retried and its latency includes the wait.",
