@@ -73,10 +73,11 @@ H1: all three figures land within **±2 pp** of published under `P0a`. H1b: `P0a
 differ on the manipulation figure by ≥ 1 pp, which would mean the published number is
 under-determined by the published artifacts.
 
-Then the sampling-design arm: `P0a` on `S10k-U` and `S10k-S` — **not yet run** (`docs/DECISIONS.md`
-D065: corpus access is granted; what is missing is a frame-extraction adapter over the raw h265
-shards). That gap is reported whatever its size once the adapter lands, and it is a different
-question from the comparison above.
+Then the sampling-design arm: `P0a` on `S10k-U` and `S10k-S` — **run, and H2 does not hold**
+(`docs/DECISIONS.md` D071 built the raw-corpus adapter, D072 measured it). The design effect is
+1.25–1.66 across both arms and all three tasks, against a pre-registered threshold of 2. Real,
+so an iid interval here is genuinely too narrow, but by less than H2 asserted. A different
+question from the comparison above, and reported whatever its size, as promised.
 
 A comparison landing outside tolerance is reported as such. It is not investigated until it
 goes away.

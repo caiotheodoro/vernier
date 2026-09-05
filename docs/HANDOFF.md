@@ -3,7 +3,27 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-04 — (D068) the card's own H2/Result 2 text was found actively
+**Last updated: 2026-09-04 — (D071/D072) H2 is measured and closed.** The raw-corpus adapter
+D065 declined to size turned out to be small: ffmpeg's `subfile` protocol extracts one frame
+from an h265 mp4 inside a tar over HTTP range requests, so no new dependency was needed, and a
+tar header is 512 bytes at a computable offset, so `scripts/build_corpus_manifest.py` indexed
+all 19,495 shards (192,903 clips) in 23 minutes moving ~150MB against a ~16TB corpus. H2 then
+ran at the pre-registered N=10,000 on both arms and **does not hold**: design effect 1.25–1.66
+against a threshold of 2. Real — every figure exceeds 1, so an iid interval here is genuinely
+too narrow — but by less than pre-registered. `what_could_not_be_checked` drops from two items
+to one; Result 2 alone remains, and the verdict stays `NOT_VERIFIED`. Two things found on the
+way: `worker_id` is only unique *within* a factory, which would have collapsed ~2,144 clusters
+into ~85 and inflated the design effect into a false positive (D071); and the corpus ships
+2,144 workers against a published 2,153 (`UPSTREAM-FINDINGS.md` F12).
+
+**Still open, in order:** Result 2 (blocked for two reasons the adapter did not touch);
+`REVIEW.md` R2, now much cheaper than when it was written — the ground-truth `worker_id` this
+work produced can calibrate a DINOv2 pseudo-cluster proxy against real labels, which is the
+only route to saying anything about the design effect on *Build AI's own frames*
+(`RED-TEAM.md` A13); and an independent review of D071/D072's units, which `WAVES.md` requires
+from a different context than the producer's and which has not happened for this round.
+
+**Prior header — (D068) the card's own H2/Result 2 text was found actively
 contradicting D065 (still said "confirmed NOT authorized... 403" after access was granted) --
 fixed, along with the same stale claim independently duplicated in `README.md` and
 `docs/BENCHMARK.md`. `llms.txt`'s stale "nothing has run yet" status line (invisible to the
@@ -314,10 +334,12 @@ frames, `P0b`), and `scripts/wave4_analysis.py` computed the real intra-rater/H4
 results -- all folded into the card, D059/D060. See "Where this stands" above for the actual
 numbers.
 
-**What's left is genuinely just two named blockers** (H2, Result 2) -- not automatable further
-without a decision from Caio: both need a real frame-extraction adapter over the raw
-Egocentric-10K corpus, whose access is granted since D065. This *is* an engineering gap, which
-is what makes it a decision about funding the work rather than about requesting access.
+**What's left is one named blocker** (Result 2). H2 was the other and is now measured and
+closed as a real, failed hypothesis (D071 built the adapter, D072 ran it: design effect
+1.25-1.66 across two arms and three tasks, against a pre-registered 2). Result 2 does not
+reduce to the same engineering: the adapter removed one of D048's three reasons, and the
+remaining two each stand alone -- no institutional EPIC-KITCHENS-100 email, and no
+downstream-task labels in the release to probe against at all.
 
 **UPDATE 2026-09-02 (`docs/DECISIONS.md` D054): the full-N run is authorized and in progress.**
 Caio approved N=10,000. First attempt: **P0a completed** (10,000/10,000; H1 = `>=1 hand`

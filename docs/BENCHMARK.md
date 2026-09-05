@@ -12,14 +12,24 @@ in `docs/HANDOFF.md`, not a claim that no experiment has run.
 
 | Corpus | Frames sampled | Participants | Effective N |
 |---|---|---|---|
-| Egocentric-10K | 10,000 | 2,153 | — |
+| Egocentric-10K | 10,000 | 2,153 | 6,000–8,000, *inherited* (D072) |
 | Ego4D | 10,000 | 923 | — |
 | EPIC-KITCHENS-100 | 10,000 | 37 | — |
 
-**Effective N is a distinct, not-yet-computed quantity** (D031). H8 is a raw participant-count
-lookup, not an ICC-adjusted effective sample size — computing the latter needs cluster-size and
-outcome-variance data that only exist once R100/primary labelling has run; `estimation`'s
-`design_effect` is where that computation belongs. The `Effective N` column stays `—` until then.
+**Effective N is a distinct quantity from the participant count** (D031). H8 is a raw
+participant-count lookup, not an ICC-adjusted effective sample size.
+
+D072 makes the Egocentric-10K row partly answerable and leaves the other two blank, and the
+asymmetry is the point. `N_eff = N / deff`, and the measured design effect is 1.25–1.66, so
+10,000 Egocentric-10K frames carry the information of roughly 6,000–8,000 independent ones.
+**That figure is inherited, not measured on the published sample**: it comes from vernier's own
+corpus draws (`S10k-U`/`S10k-S`), because the evaluation release ships no grouping variable at
+all (`UPSTREAM-FINDINGS.md` F9) and so admits no direct calculation. `RED-TEAM.md` A13 is the
+standing objection to the inheritance step and is not retired by having a number.
+
+Ego4D and EPIC-KITCHENS-100 stay `—` for a different and stronger reason: vernier has no
+corpus-side design effect for either. Nothing here licenses reusing Egocentric-10K's, which is
+a measurement of one specific corpus's within-worker redundancy, not a constant.
 
 Published as three estimates of equal precision. They are not. Participant counts confirmed
 against each corpus's own primary documentation (D024, corrected D030): Egocentric-10K from the vendor's own

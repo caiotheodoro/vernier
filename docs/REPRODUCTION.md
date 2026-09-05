@@ -30,10 +30,12 @@ make card
 This yields every structural result this path can actually reach — H8, prompt sensitivity,
 judge–human agreement for the open judge, and PPI-rectified prevalence for that judge — without
 a single dollar of API spend (real Modal/AWS GPU compute time is not zero-cost, just not a paid
-third-party API). **Not included**: H2's design effect specifically needs a cluster bootstrap
-over `worker_id` on the raw, gated Egocentric-10K corpus (`S10k-U`/`S10k-S`) — a different axis
-entirely from this open-judge-only path, currently blocked on access (`docs/DECISIONS.md` D044),
-not something this pipeline yields once wired. `make effective-n` in particular needs nothing
+third-party API). **Not included**: H2's design effect needs a cluster bootstrap over
+`worker_id` on the raw Egocentric-10K corpus (`S10k-U`/`S10k-S`) — a different axis entirely
+from this open-judge-only path. It is no longer blocked: `scripts/build_corpus_manifest.py`
+builds the sampling frame and `scripts/h2_design_effect.py` runs it (D071/D072). Reproducing it
+costs a ~25-minute corpus scan plus 20,000 judge calls on a GPU instance (~3h45m, ~$7.50 on one
+`g6e.2xlarge`), which is why it sits outside this zero-API-spend path rather than inside it. `make effective-n` in particular needs nothing
 but public participant counts, so the cheapest finding in the project is also the most
 reproducible one. What it cannot yield by calling a live judge is a live replication of Build
 AI's own figures — but that
