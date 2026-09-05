@@ -42,6 +42,10 @@ _RESULT_FILES = (
     "rung1_distillation.json",
     "eval_baseline_comparison.json",
     "judge_test_retest.json",
+    # D072: the H2 claim's record_ref names both of these; a release that omits the files its
+    # own card cites is not self-describing.
+    "h2_design_effect.S10k-U.json",
+    "h2_design_effect.S10k-S.json",
 )
 
 _DOC_COPIES = {
