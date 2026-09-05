@@ -2949,3 +2949,70 @@ quotes.
 
 **Reverses if:** the article moves off the author's site, at which point the Hub surfaces are
 pointing at a dead URL and something has to host the argument again.
+
+## D085 — 60 more gold labels: the margin moved toward the vendor, the one-directional finding broke, and the second batch was labelled three times faster
+
+D079 priced the open margin question at about 42 gold frames per arm against the 33 and 30 that
+existed. Caio labelled 60 more, taking Egocentric-10K to 63 and EPIC-KITCHENS-100 to 63 and 60
+respectively, primary pass, same rubric. Every headline number moved and not in the direction an
+audit would have hoped for.
+
+| figure | at n=93 | at n=153 |
+|---|---|---|
+| PPI++ manipulation, Egocentric-10K | 0.8084 [0.7010, 0.9158] | 0.8506 [0.7790, 0.9221] |
+| PPI++ manipulation, EPIC-KITCHENS-100 | 0.8552 [0.7766, 0.9339] | 0.8607 [0.7817, 0.9397] |
+| corrected margin, manipulation | -4.69pp [-18.00, +8.63] | **-1.02pp [-11.68, +9.65]** |
+| corrected margin, hand count | +6.67pp [-5.03, +18.37] | +3.02pp [-5.23, +11.26] |
+| gold per arm needed to exclude the published margin | 42 | **59** |
+| H4 AC1, hand count | 0.7952 | 0.8599 |
+| H4 AC1, manipulation | 0.8630 | 0.8868 |
+| H5 error rates (Egocentric / EPIC) | 9.09% / 3.33% | 4.76% / 8.33% |
+| H5 difference | -5.76pp, reversed | **+3.57pp, the predicted direction** |
+| ECE, hand count / manipulation | 0.1505 / 0.0860 | 0.1043 / 0.0782 |
+
+**The margin did not resolve; it moved toward the published value.** Both corrected margins
+still cover the published figure, and the price of separating them went **up**, from 42 frames
+per arm to 59. Buying labels to settle a question made the vendor's number look better. That is
+reported here and in both writeups rather than filed away.
+
+**The one-directional error finding broke.** At 93 frames the judge made 22 errors and every one
+inflated the statistic. At 153 it makes 28, and two of them are under-reports on manipulation.
+The asymmetry is still large (26 of 28, and zero under-counts on hand count across 129 at-risk
+frames) and it is no longer absolute. The article's title, "The Judge Only Errs One Way", was
+written against the stronger version and now overstates it; the body says so plainly and the
+slug cannot change without breaking five Hub surfaces that hardcode it.
+
+**H5 flipped to its pre-registered direction** and still does not clear the 5pp bar. A hypothesis
+whose sign reverses when the sample doubles is reporting on the sample.
+
+**Two integrity problems the new labels created, both fixed in the instrument.**
+
+1. *A retest that predates its primary.* Frame `bfe54a8b` had a retest label from 2026-09-03 and
+   received a primary label on 2026-09-05, giving a separation of -1.48 days. That is not a
+   re-read of an earlier answer. `_intra_rater` now requires the retest to be at or after the
+   primary and `_retest_separation` counts the exclusions, which returns intra-rater to n=34 and
+   AC1 0.8757 / 0.8994, unchanged from before this batch.
+2. *Thirty frames became republication candidates without a human ever looking at them.*
+   `scripts/export_space_thumbnails.py` selected "every labelled Egocentric-10K frame minus the
+   likeness exclusions", and labelled was the same set as likeness-reviewed exactly once. The
+   next atlas build would have published 30 frames that no one had reviewed, against
+   `docs/ETHICS.md` section 4's own instruction that the review be redone by eye if the sample is
+   redrawn. A `_LIKENESS_REVIEWED` set now gates the atlas, the script reports how many frames
+   are waiting, and `ETHICS.md` section 4 states that reviewed and labelled are different sets.
+
+**The pace, which is the disclosure that matters most.** The first 93 labels ran at a median of
+ten seconds a frame, with one under four seconds and none at two or less. The 60 added afterwards
+ran at a median of **three** seconds, with 24 at two seconds or less and 47 under four. `RUBRIC.md`
+treats `seconds_spent` as the honest input to a cost claim and it is an equally honest input to a
+quality one. Nothing in the data separates a fast correct call from a fast careless one, and the
+faster batch is the half that moved every number above.
+
+**Anchoring, disclosed.** These labels were collected after the results were public. The rater
+knew which direction would move the margin. It moved the other way, which is evidence against the
+bias without being proof of its absence. It remains true that arm-blinding is impossible here:
+EPIC-KITCHENS is home kitchens and Egocentric-10K is factory floors, and a rater can tell by
+looking.
+
+**Reverses if:** a second rater labels these frames. That removes the anchoring, supplies the
+inter-rater agreement this project has never had, and would settle whether the three-second batch
+agrees with the ten-second one.

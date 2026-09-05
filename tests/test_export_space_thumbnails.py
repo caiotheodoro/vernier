@@ -24,7 +24,13 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import export_space_thumbnails  # noqa: E402
-from export_space_thumbnails import _CORPUS, _PRIVACY_EXCLUDED, _SAMPLE, _select  # noqa: E402
+from export_space_thumbnails import (  # noqa: E402
+    _CORPUS,
+    _LIKENESS_REVIEWED,
+    _PRIVACY_EXCLUDED,
+    _SAMPLE,
+    _select,
+)  # noqa: E402
 
 _ROOT = Path(__file__).resolve().parent.parent
 _INDEX_PATH = _ROOT / "data" / "space_thumbnails.json"
@@ -50,8 +56,14 @@ def test_index_is_the_labelled_egocentric_10k_frames_minus_the_likeness_exclusio
     index: dict[str, Any],
 ) -> None:
     gold = _gold()
-    expected = {f for f in gold if f in _labelled()} - set(_PRIVACY_EXCLUDED)
+    # D085: "labelled" and "likeness-reviewed" were the same set exactly once. Adding labels
+    # made them different, and only the reviewed set may ship (docs/ETHICS.md section 4).
+    expected = {f for f in gold if f in _labelled() and f in _LIKENESS_REVIEWED} - set(_PRIVACY_EXCLUDED)
     assert set(index["tiles"]) == expected
+    assert expected < {f for f in gold if f in _labelled()}, (
+        "every reviewed frame must be a labelled frame, and there are now labelled frames "
+        "awaiting review that must not be in the atlas"
+    )
     assert index["n"] == len(expected) == len(index["tiles"])
     assert index["corpus"] == _CORPUS
 
@@ -195,7 +207,8 @@ def test_ethics_section_4_counts_match_the_committed_index(index: dict[str, Any]
         f"{by_corpus['egocentric-10k']} are Egocentric-10K",
         f"{by_corpus['ego4d']} are Ego4D",
         f"{by_corpus['epic-kitchens-100']} are EPIC-KITCHENS-100",
-        f"{len(index['withheld_for_likeness'])} of the {by_corpus['egocentric-10k']} eligible",
+        # D085: withheld is a fraction of the REVIEWED set, not of every labelled frame.
+        f"{len(index['withheld_for_likeness'])} of the {len(_LIKENESS_REVIEWED)} reviewed",
         index["source"]["revision"][:8],
         "30,000",
     ]:

@@ -5,98 +5,98 @@
   "comparisons": {
     "egocentric-10k_minus_epic-kitchens-100": {
       "hand_count": {
-        "corrected_margin_pp": 6.670731402470187,
+        "corrected_margin_pp": 3.015100606341481,
         "ci_pp": {
-          "lo": -5.025226250126568,
-          "hi": 18.366689055066942,
+          "lo": -5.228935292382736,
+          "hi": 11.259136505065698,
           "level": 0.95
         },
         "published_margin_pp": 6.05,
         "published_inside_corrected_ci": true,
         "sign_flipped": false,
         "left": {
-          "value": 0.9271779022599961,
-          "n_gold": 33,
-          "n_unlabelled": 167
+          "value": 0.9243309002433091,
+          "n_gold": 63,
+          "n_unlabelled": 137
         },
         "right": {
-          "value": 0.8604705882352942,
-          "n_gold": 30,
-          "n_unlabelled": 170
+          "value": 0.8941798941798943,
+          "n_gold": 60,
+          "n_unlabelled": 140
         },
-        "se_pp": 5.967434985975752,
-        "approx_gold_per_arm_to_exclude_published": 10651
+        "se_pp": 4.206218054899029,
+        "approx_gold_per_arm_to_exclude_published": 222
       },
       "manipulation": {
-        "corrected_margin_pp": -4.685973321898396,
+        "corrected_margin_pp": -1.015723615608377,
         "ci_pp": {
-          "lo": -18.00068555347502,
-          "hi": 8.62873890967823,
+          "lo": -11.676473227806763,
+          "hi": 9.64502599659001,
           "level": 0.95
         },
         "published_margin_pp": 6.619999999999992,
         "published_inside_corrected_ci": true,
         "sign_flipped": true,
         "left": {
-          "value": 0.8083832335329342,
-          "n_gold": 33,
-          "n_unlabelled": 167
+          "value": 0.850557049558202,
+          "n_gold": 63,
+          "n_unlabelled": 137
         },
         "right": {
-          "value": 0.8552429667519181,
-          "n_gold": 30,
-          "n_unlabelled": 170
+          "value": 0.8607142857142858,
+          "n_gold": 60,
+          "n_unlabelled": 140
         },
-        "se_pp": 6.7933453556296834,
-        "approx_gold_per_arm_to_exclude_published": 42
+        "se_pp": 5.439257913047903,
+        "approx_gold_per_arm_to_exclude_published": 59
       }
     },
     "egocentric-10k_minus_ego4d": {
       "hand_count": {
-        "corrected_margin_pp": 31.513308433282518,
+        "corrected_margin_pp": 31.22860823161382,
         "ci_pp": {
-          "lo": 18.686402094082894,
-          "hi": 44.34021477248214,
+          "lo": 18.95305297780229,
+          "hi": 43.50416348542535,
           "level": 0.95
         },
         "published_margin_pp": 29.089999999999993,
         "published_inside_corrected_ci": true,
         "sign_flipped": false,
         "left": {
-          "value": 0.9271779022599961,
-          "n_gold": 33,
-          "n_unlabelled": 167
+          "value": 0.9243309002433091,
+          "n_gold": 63,
+          "n_unlabelled": 137
         },
         "right": {
           "value": 0.6120448179271709,
           "n_gold": 30,
           "n_unlabelled": 170
         },
-        "se_pp": 6.544460224971798,
-        "approx_gold_per_arm_to_exclude_published": 841
+        "se_pp": 6.263153481716778,
+        "approx_gold_per_arm_to_exclude_published": 989
       },
       "manipulation": {
-        "corrected_margin_pp": 30.83832335329342,
+        "corrected_margin_pp": 35.0557049558202,
         "ci_pp": {
-          "lo": 13.706095523842595,
-          "hi": 47.97055118274424,
+          "lo": 19.910886088929484,
+          "hi": 50.20052382271092,
           "level": 0.95
         },
         "published_margin_pp": 41.589999999999996,
         "published_inside_corrected_ci": true,
         "sign_flipped": false,
         "left": {
-          "value": 0.8083832335329342,
-          "n_gold": 33,
-          "n_unlabelled": 167
+          "value": 0.850557049558202,
+          "n_gold": 63,
+          "n_unlabelled": 137
         },
         "right": {
           "value": 0.5,
           "n_gold": 30,
           "n_unlabelled": 170
         },
-        "se_pp": 8.741093185684864,
-        "approx_gold_per_arm_to_exclude_published": 77
+        "se_pp": 7.727090388574033,
+        "approx_gold_per_arm_to_exclude_published": 162
       }
     }
   }

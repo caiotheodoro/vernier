@@ -119,7 +119,11 @@ def _intra_rater_ac1(
     pairs: list[tuple[object, object]] = []
     for label in primary:
         match = retest_by_frame.get(label.frame_id)
-        if match is not None:
+        # D085: a "retest" written before its primary is not a re-read of an earlier answer,
+        # it is the first answer arriving second. Adding primary labels late created one such
+        # pair; it is excluded here and counted by `_retest_separation` rather than dropped
+        # silently.
+        if match is not None and match.labelled_at >= label.labelled_at:
             pairs.append((label_value(label), label_value(match)))
     return _gwet_ac1_from_pairs(pairs, categories), len(pairs)
 
@@ -135,11 +139,14 @@ def _retest_separation(primary: list[HumanLabel], retest: list[HumanLabel]) -> d
     separation these numbers move on their own.
     """
     retest_by_frame = {label.frame_id: label for label in retest}
-    gaps_days = sorted(
+    all_gaps = [
         (retest_by_frame[label.frame_id].labelled_at - label.labelled_at).total_seconds() / 86_400.0
         for label in primary
         if label.frame_id in retest_by_frame
-    )
+    ]
+    # Pairs where the retest predates the primary are not re-reads at all (D085).
+    inverted = [g for g in all_gaps if g < 0]
+    gaps_days = sorted(g for g in all_gaps if g >= 0)
     if not gaps_days:
         return {"n_pairs": 0, "why_absent": "no frame_id appears in both passes"}
     return {
@@ -149,6 +156,7 @@ def _retest_separation(primary: list[HumanLabel], retest: list[HumanLabel]) -> d
         "max_days": gaps_days[-1],
         "required_days": _RETEST_SEPARATION_REQUIRED_DAYS,
         "n_pairs_meeting_requirement": sum(g >= _RETEST_SEPARATION_REQUIRED_DAYS for g in gaps_days),
+        "n_pairs_excluded_retest_before_primary": len(inverted),
     }
 
 

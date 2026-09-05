@@ -64,8 +64,8 @@ corpora were judged once, in November 2025, and reused.
 **With human gold, the manipulation rate has an interval, and the published number sits at
 its upper edge.** (`data/wave4_analysis.json#ppi`)
 
-PPI++-corrected active-manipulation prevalence on Egocentric-10K: **80.8%, 95% CI
-[70.1, 91.6]**, against a published 91.7%. Judge alone says 90.0%; the human labels pull it
+PPI++-corrected active-manipulation prevalence on Egocentric-10K: **85.1%, 95% CI
+[77.9, 92.2]**, against a published 91.7%. Judge alone says 90.0%; the human labels pull it
 down because every judge error in the gold set is a false positive (the judge says
 "manipulating" when the rater says "holding"). The interval is wide because n = 33 gold frames
 on this arm, and it is a lower bound on the true width because the evaluation release ships
@@ -76,17 +76,18 @@ say.** (`data/margin_exploratory.json`)
 
 What Build AI sells is not a rate but a lead: 6.62 pp over EPIC-KITCHENS-100 on active
 manipulation. Correct both sides for judge error against human gold and that lead becomes
--4.69 pp, 95% CI [-18.00, +8.63]. The point estimate changes sign, and the interval still
+-1.02 pp, 95% CI [-11.68, +9.65]. The point estimate changes sign, and the interval still
 covers the published figure, so the published margin is not refuted here. It is unresolved.
-The hand-visibility lead behaves differently: +6.05 pp published, +6.67 pp corrected, barely
-moved. One of the two claims is robust to judge error and the other is not, which is worth
-knowing before you rely on either.
+The hand-visibility lead keeps its sign and loses about half its size: +6.05 pp published,
++3.02 pp corrected, interval [-5.23, +11.26], which also covers the published value. Neither
+comparative claim is refuted and neither is confirmed.
 
 This estimand is exploratory. The pre-registration asked a narrower question, whether the
-judge's error rate differs by domain, and that one is reported unchanged below. What the margin
-supplies instead is a price: on these variances, roughly 42 gold frames per arm would put the
-published lead outside the corrected interval, against the 33 and 30 that exist. Twenty-five
-more labelled frames would settle a number that is currently sold without one.
+judge's error rate differs by domain, and that one is reported unchanged below. An earlier
+revision of this file priced the gap at roughly 42 gold frames per arm. Sixty more labels were
+then collected, and the corrected margins moved toward the published figures rather than away:
+the price of separating them is now about 59 per arm, against the 63 and 60 that exist. More
+labels made the vendor's number look better, and that is reported here rather than set aside.
 
 **Their 10,000 frames are not 10,000 independent observations, and the gap is smaller than
 pre-registered.** (`data/h2_design_effect.S10k-U.json`, `data/h2_design_effect.S10k-S.json`)
@@ -128,16 +129,16 @@ pre-registered seven days, which makes this a weaker check than intended: it sho
 is applied consistently, and it cannot separate that from the rater recalling the frame
 (`docs/DECISIONS.md` D076).
 
-**Judge–human agreement is high, and higher on the harder task.** AC1 0.795 [0.687, 0.894]
-on hand count, 0.863 [0.760, 0.950] on manipulation. The pre-registered prediction was the
+**Judge–human agreement is high, and higher on the harder task.** AC1 0.860 [0.791, 0.921]
+on hand count, 0.887 [0.815, 0.945] on manipulation. The pre-registered prediction was the
 reverse; the data says otherwise.
 
-**What did not hold, said plainly.** Domain bias (H5): judge error on manipulation is 9.1%
-on Egocentric frames and 3.3% on EPIC-KITCHENS frames at n = 30–33 per arm — reversed from
-the prediction and underpowered by the project's own power analysis; not a finding either
+**What did not hold, said plainly.** Domain bias (H5): judge error on manipulation is 4.8%
+on Egocentric frames and 8.3% on EPIC-KITCHENS frames at n = 30–63 per arm — the predicted
+direction, 3.57pp against a 5pp bar and underpowered by the project's own power analysis; not a finding either
 way. Prompt sensitivity (H3): 1.25 pp spread across manipulation prompts vs 0.25 pp across
 hand-count prompts — direction right, magnitude under the 5 pp bar
-(`data/e5_full_n2000.json#H3`). Calibration (H7): ECE 0.15 / 0.09, but 99% of frames land in
+(`data/e5_full_n2000.json#H3`). Calibration (H7): ECE 0.10 / 0.08, but 99% of frames land in
 one confidence bin under greedy decoding, so the curve is degenerate by construction.
 Distillation (H6): a DINOv2-small linear probe reaches 0.69 fidelity to the teacher against a
 0.90 target, and the abstention cascade cannot reach a 0.80 floor at 95% confidence on 46

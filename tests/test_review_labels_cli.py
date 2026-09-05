@@ -53,14 +53,16 @@ def test_the_disagreement_arm_is_exactly_the_frames_the_rater_and_judge_differ_o
     }
     got = {f["frame_id"] for f in planned["frames"] if f["arm"] == "disagreement"}
     assert got == expected
-    assert len(expected) == 18
+    # D085: 60 more primary labels means more rater/judge disagreements. The count is a
+    # tripwire, so it moves deliberately rather than drifting.
+    assert len(expected) == 24
 
 
 def test_the_set_is_salted_and_stays_salted_over_every_prefix(planned: dict[str, Any]) -> None:
     """A sitting that is almost all one arm is the tell the controls exist to remove, so it is
     not enough for the whole set to be balanced -- every prefix must be."""
     arms = [f["arm"] for f in planned["frames"]]
-    assert arms.count("control") == arms.count("disagreement") == 18
+    assert arms.count("control") == arms.count("disagreement") == 24
     for n in range(2, len(arms) + 1):
         seen = arms[:n].count("disagreement")
         assert abs(seen - n / 2) <= 1.5, f"prefix of {n} is {seen} disagreements, too lopsided"

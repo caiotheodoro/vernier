@@ -53,7 +53,7 @@ is absent:
    A judge-versus-rater disagreement a reader cannot look at is not a checkable claim, and
    this is the smallest set of frames that makes the disagreements checkable (D073).
 
-   **Corpus.** Of the 93 human-labelled frames, 33 are Egocentric-10K, 30 are Ego4D and 30 are
+   **Corpus.** Of the 153 human-labelled frames, 63 are Egocentric-10K, 30 are Ego4D and 60 are
    EPIC-KITCHENS-100. Only the Egocentric-10K third is Build AI's own recording, released by
    Build AI under Apache-2.0, and it is the corpus the published headline figures describe.
    Ego4D's terms restrict redistribution to "a research publication(s), an academic
@@ -64,10 +64,18 @@ is absent:
    written to the atlas, and that restriction raises in the build script rather than being a
    comment.
 
+   **Reviewed is not the same set as labelled, since D085.** The likeness review was done by
+   eye over the 33 Egocentric-10K frames that carried a label when the atlas was first built.
+   Sixty more labels were added afterwards, 30 of them on this corpus, and none of those 30 has
+   been looked at. They are not in the atlas and cannot enter it by accident:
+   `scripts/export_space_thumbnails.py` ships only frames named in its `_LIKENESS_REVIEWED` set
+   and prints how many are waiting. Growing that set is a human act, which is what this section
+   meant when it said the review must be redone by eye if the sample is ever redrawn.
+
    **Likeness, which is a separate argument and survives the licence one.** Apache-2.0 is Build
    AI's licence to grant, not a recorded worker's consent, and section 2 of this document
    records that the consent instrument is not published and so is not knowable. 9 of the 33
-   eligible frames are therefore withheld because a person other than the camera wearer is
+   reviewed frames are therefore withheld because a person other than the camera wearer is
    visible in them; 3 carry a clearly identifiable face. The rubric's `other-person` tag is
    **not** a substitute for that review and was not used as one — it marks frames where a third
    party affects the hand count, and it catches only one of the nine. The exclusions are a

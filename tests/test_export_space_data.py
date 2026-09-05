@@ -80,7 +80,7 @@ def test_committed_frames_are_the_600_gold_frames_with_stored_labels_and_rows(
     assert {f["corpus"] for f in committed_frames} == {"egocentric-10k", "ego4d", "epic-kitchens-100"}
     assert all(f["g"] is not None for f in committed_frames), "g (stored gemini P0b) must come from the parquet scan, never the fallback"
     assert all(f["q"]["s"] == "ok" for f in committed_frames)
-    assert sum(1 for f in committed_frames if f["r"] is not None) == 93
+    assert sum(1 for f in committed_frames if f["r"] is not None) == 153
     rows = [f["row"] for f in committed_frames]
     assert len(set(rows)) == 600
     assert all(0 <= r < 30_000 for r in rows)
@@ -187,7 +187,7 @@ def test_agreement_equals_wave4_and_the_card(
         assert (h4["lo"], h4["hi"]) == (wave4["H4"][task]["ac1_ci"]["lo"], wave4["H4"][task]["ac1_ci"]["hi"])
         assert h4["kappa"] == wave4["H4"][task]["kappa"]
         assert h4["raw"] == wave4["H4"][task]["raw_agreement"]
-        assert h4["n"] == wave4["n_primary"] == 93
+        assert h4["n"] == wave4["n_primary"] == 153
         assert f"{h4['ac1']:.4f}" in statements
         intra = committed_stats["agreement"]["intra_rater"][task]
         assert intra["ac1"] == wave4["intra_rater"][task]["ac1"]
@@ -418,12 +418,12 @@ def test_rater_edge_cases_come_from_the_rubric_closed_list(committed_frames: lis
 
     allowed = set(get_args(EdgeCaseTag))
     labelled = [f for f in committed_frames if f["r"] is not None]
-    assert len(labelled) == 93
+    assert len(labelled) == 153
     tags = [t for f in labelled for t in f["r"]["e"]]
     assert set(tags) <= allowed
     assert {"between-actions", "other-person", "blur"} <= set(tags)
     seconds = [f["r"]["s"] for f in labelled]
-    assert (min(seconds), max(seconds)) == (4, 1984)
+    assert (min(seconds), max(seconds)) == (1, 1984)
 
 
 def test_thumbnail_reference_is_present_only_where_a_frame_actually_ships(

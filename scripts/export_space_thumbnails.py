@@ -87,6 +87,51 @@ _PRIVACY_EXCLUDED: dict[str, str] = {
 }
 
 
+# The frames a human has actually looked at for the likeness rule above.
+#
+# `docs/ETHICS.md` section 4 says the review "must be redone by eye" if the gold sample is ever
+# redrawn, and D085 redrew it: 60 primary labels were added after the first atlas shipped, 30 of
+# them on this corpus. Without this list `_select` would have republished all 30 on the next
+# build, because "labelled" was standing in for "reviewed" and those were the same set exactly
+# once. They are not the same set any more. A frame reaches the atlas only if it appears here.
+#
+# Reviewed 2026-09-04, the 33 candidates that existed then. Growing this list is a human act.
+_LIKENESS_REVIEWED: frozenset[str] = frozenset({
+    "0291c4da-e558-48d8-a23e-e465827e8eec",
+    "0fc24c81-ec3f-4dbf-a990-e8e6bc444877",
+    "1655745b-a95d-4cd7-b523-ecb0d0668e8a",
+    "1c696b5a-795b-4cb3-a9e5-2c0f4753bedb",
+    "1d24c2f6-d16b-4fa0-9e29-c2007d3616d2",
+    "236865e2-2da9-47ed-9abd-0bec01120832",
+    "36ff84fb-27c9-41ed-9303-e4025d6b133b",
+    "3b24f0ea-6ee3-4615-981f-9ce7df13d4b1",
+    "4266c389-9ba4-43af-a292-e8595f83f7c3",
+    "43561fa5-f907-41aa-a2cd-537f59e12c55",
+    "5985bb92-b342-4272-8583-5274c744d1a7",
+    "66f3d326-664c-4f1a-9c31-5e3ff61106af",
+    "6fe7ffba-fc88-4793-8f44-8221fd4ee0ef",
+    "715f008d-46ea-429d-9a07-13f2858ebc88",
+    "7801bb78-b711-4859-bf14-eb725fbda0cd",
+    "782c1345-7ce8-4a53-99a6-be388a424729",
+    "7d9f3379-4d7c-4189-9716-b637dd3469f6",
+    "8e715a4b-5942-4cdd-add8-7edad86c0a85",
+    "923b77b6-4bed-42e4-aa98-9335717a4985",
+    "9858d9a8-cf39-4b3a-a8c4-059abbdc9d40",
+    "98b95d40-29ff-4e33-aa90-8516a5422c86",
+    "beaffe6e-6547-47e3-8e1c-f037c3fddadb",
+    "c7afbcf2-cac2-4efc-b7c9-11695ca2dc04",
+    "c9da980c-f545-4285-a63d-302b4958c590",
+    "d28e2e28-53d0-4e0a-a6b1-40c777b14949",
+    "d2d272e7-1aeb-43fa-9b6a-ddb3e7b15cae",
+    "d5ba6fcf-6500-422c-b535-5e97837bab07",
+    "d7e64dad-7436-4177-b5d9-1e890f5c697a",
+    "d8876fdb-eb0a-4ae3-8fce-55f5771969be",
+    "ebb3db47-db29-4680-b13c-20d9d40dc3bb",
+    "f54e2f11-f304-4e00-8821-2493e067fc05",
+    "f5d5c09d-4053-47e1-8955-2459fb3c784d",
+    "ff727f46-3eb4-456e-a6e0-b111705b5829",
+})
+
 def _load_primary() -> list[HumanLabel]:
     return [HumanLabel.model_validate(r) for r in json.loads(_PRIMARY_LABELS_PATH.read_text())]
 
@@ -112,7 +157,19 @@ def _select(exclude: frozenset[str]) -> list[str]:
         )
     labelled = {label.frame_id for label in _load_primary()}
     withheld = set(_PRIVACY_EXCLUDED) | exclude
-    return sorted(fid for fid in gold if fid in labelled and fid not in withheld)
+    awaiting = sorted(fid for fid in gold if fid in labelled and fid not in _LIKENESS_REVIEWED)
+    if awaiting:
+        print(
+            f"export_space_thumbnails: {len(awaiting)} labelled frame(s) have not had the "
+            "likeness review and are NOT in the atlas; docs/ETHICS.md section 4 requires that "
+            "review by eye before any of them ships",
+            file=sys.stderr,
+        )
+    return sorted(
+        fid
+        for fid in gold
+        if fid in labelled and fid in _LIKENESS_REVIEWED and fid not in withheld
+    )
 
 
 def _parquet_path() -> Path | None:
