@@ -10,7 +10,7 @@ import { ChartFrame } from "../charts/Chart";
 import { JUDGE, MEASURED, PUBLISHED } from "../charts/theme";
 import type { Corpus, Frame, Stats, Task } from "../data/types";
 import { CORPUS_LABEL, TASKS, TASK_LABEL, repoFile } from "../data/types";
-import { int, pct, pctSpan } from "../lib/format";
+import { fixed, int, pct, pctSpan } from "../lib/format";
 import { reasonCounts } from "../state/slice";
 import { update, type SliceState } from "../state/url";
 
@@ -27,6 +27,12 @@ export function Hero({ stats, frames, state, onReason }: Props): JSX.Element {
   const alone = stats.judge_alone[corpus];
   const naive = alone ? alone[task] : undefined;
   const ppi = stats.ppi[corpus]?.[task];
+  // The replication: same protocol, 10,000 frames, no human correction. It is the best-powered
+  // comparison on the page, so it is the one the headline makes -- not the PPI estimate, which
+  // rests on 33 human labels and carries a 21-point interval.
+  const rep = stats.h1[corpus]?.tasks[task];
+  const tol = stats.h1[corpus]?.tolerance_pp;
+  const repN = stats.h1[corpus]?.n;
   const counts = useMemo(() => reasonCounts(frames, state), [frames, state]);
 
   const setTask = (next: Task): void =>
@@ -45,6 +51,14 @@ export function Hero({ stats, frames, state, onReason }: Props): JSX.Element {
       colour: PUBLISHED,
       // The one mark on this page you cannot open. That is the whole argument, as an affordance.
       note: "no sample: this figure ships without one",
+    });
+  }
+  if (rep) {
+    rows.push({
+      label: `Reproduced, n ${int(repN ?? 0)}`,
+      point: rep.observed,
+      colour: JUDGE,
+      note: `same protocol, no human correction · ${fixed(rep.diff_pp, 2)} pp from published`,
     });
   }
   if (naive) {
@@ -72,13 +86,35 @@ export function Hero({ stats, frames, state, onReason }: Props): JSX.Element {
       <p className="eyebrow">vernier · an independent measurement</p>
       <h1 className="hero-title" id="hero-title">
         {typeof published === "number" ? `Published ${pct(published)}%.` : "Published, unmeasured."}{" "}
-        {ppi ? `Measured ${pct(ppi.value)}%.` : "No human gold here."}
+        {rep
+          ? `Reproduced ${pct(rep.observed)}%.`
+          : naive
+            ? `Independently ${pct(naive.rate)}%.`
+            : "No independent run here."}
       </h1>
       <p className="hero-deck">
-        Build AI&apos;s {TASK_LABEL[task]} figure for {CORPUS_LABEL[corpus]}, re-measured against{" "}
-        {int(stats.generated_from.n_rater_labels)} human labels with the interval they did not
-        publish. Judge {stats.generated_from.judge} {stats.generated_from.prompt_variant} on Modal
-        vLLM, PPI++, and every count below opens the frames behind it.
+        Build AI&apos;s {TASK_LABEL[task]} figure for {CORPUS_LABEL[corpus]}, re-run with an open
+        judge on{" "}
+        {rep && repN ? `${int(repN)} frames` : naive ? `${int(naive.n)} frames` : "the gold sets"}
+        {rep && typeof tol === "number" ? (
+          rep.within_tolerance ? (
+            <>
+              {" "}
+              — a {fixed(rep.diff_pp, 2)} pp difference, inside the ±{fixed(tol, 0)} pp tolerance
+              fixed before any frame was fetched.
+            </>
+          ) : (
+            <>
+              {" "}
+              — a {fixed(rep.diff_pp, 2)} pp difference, outside the ±{fixed(tol, 0)} pp tolerance
+              fixed before any frame was fetched, and the same gap appears on the other release.
+            </>
+          )
+        ) : (
+          "."
+        )}{" "}
+        Below, what {int(stats.generated_from.n_rater_labels)} human labels do to it, and the
+        interval that was never published.
       </p>
 
       <ChartFrame
