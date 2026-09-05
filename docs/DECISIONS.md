@@ -2819,3 +2819,42 @@ and passes again on restore. Nine tests cover both directions, table coverage, b
 the transforms, and the real production pin set against the committed artifacts.
 
 **Reverses if:** nothing. This is the check rule 2 always specified, arriving late.
+
+## D082 — `COVERAGE.md` claimed E6 was tested and it was not; the README promised a distilled instrument that missed its target
+
+An external review graded the delivery and landed two hits. Both were checked against the
+repository rather than accepted from the prose, and both are real.
+
+**1. `COVERAGE.md` said "Tested — E6, the decisive experiment".** `docs/METHOD.md` E6 specifies
+a model -- `judge_correct ~ domain + task`, cluster-robust where a grouping variable exists --
+and calls it the decisive experiment. That model was never fitted. `make domain-bias` is
+`NOT_YET` and always has been. What exists is H5 in `scripts/wave4_analysis.py`: two raw error
+rates and the percentage-point gap between them, at n=33 and n=30, with no interval on the
+difference and no interaction term.
+
+The row is now "**Partly**", with a matching entry among the untested items saying exactly what
+did and did not run. This is the worst possible document to overstate in: `COVERAGE.md` exists
+to say what the audit does not cover, and its opening line is that "an audit that enumerates
+only its findings misleads by omission." It was doing the thing it warns about.
+
+**2. `README.md` and `AGENTS.md` opened by promising "distilling the judge that produced it into
+an instrument anyone can re-run".** H6 came back negative: rung-1 fidelity 0.6933 against a 0.90
+target, and the abstention cascade cannot hold a 0.80 floor at any coverage above zero at 95%
+confidence (D061, D063). The distilled instrument does not exist. What re-runs is the
+self-hosted open judge at roughly $9 per 10,000 frames, which is real, useful, and not the thing
+the sentence promised.
+
+Both headlines now say what re-runs, and name the distillation as an attempt that missed. The
+negative result was always reported honestly further down; the top line was writing a cheque the
+body did not cash, and the top line is what gets read.
+
+**Not changed: the power criticism, which is accurate and is not a defect in the reporting.**
+n=93 against a pre-registered 600 (D057), H5 arms at n=33/30 that the project's own power
+analysis called underpowered before any label existed (D035), agreement intervals iid with
+`clusters: None` (D039), a headline manipulation interval of 70-92%, and a margin estimand whose
+interval covers everything (D079). Every one of those is disclosed where it appears. The review
+grades the work weak on power and the work is weak on power; the answer is more labels, not more
+prose. `docs/DECISIONS.md` D079 prices the cheapest version at about 25 more frames.
+
+**Reverses if:** E6's model is actually fitted, at which point the `COVERAGE.md` row changes to
+"Tested" honestly and H5 stops being the only thing standing in for it.

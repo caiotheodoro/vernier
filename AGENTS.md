@@ -1,7 +1,8 @@
 # vernier — orientation for agents and reviewers
 
-**Putting error bars on a dataset vendor's quality claim, and distilling the judge into an
-instrument anyone can re-run.** `README.md` is the argument. This file is the operating
+**Putting error bars on a dataset vendor's quality claim, and re-running the judge behind it
+with an open model anyone can host.** Distillation was attempted and missed its target (H6);
+the probe ships as a labelled negative. `README.md` is the argument. This file is the operating
 rules.
 
 **Current state: results in, one item blocked.** Real data drawn and

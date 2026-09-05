@@ -1,7 +1,8 @@
 # vernier
 
-**Putting error bars on a dataset vendor's quality claim — and distilling the judge that
-produced it into an instrument anyone can re-run.**
+**Putting error bars on a dataset vendor's quality claim — and re-running the judge behind
+it with an open model anyone can host.** Distilling that judge into something cheaper was
+attempted and did not reach its target; the probe ships as a labelled negative (H6, D061).
 
 Build AI sells egocentric factory video with published guarantees on quality. The number
 behind the headline claim comes from `builddotai/Egocentric-10K-Evaluation`: **10,000

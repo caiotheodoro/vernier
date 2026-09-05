@@ -38,7 +38,13 @@ directions, verified by planting drift. `AGENTS.md` rule 2 stopped saying "shoul
 **What is left:** paste the article (body prepared, all figures pinned and current); rebuild the
 paper's framing around what survived; the 25 frames; the second rater.
 
-Decisions now run **D001–D081**.
+An external delivery review then landed two real hits (D082): `COVERAGE.md` claimed E6 was
+"Tested" when its model was never fitted and `make domain-bias` is still unwired, and the
+README/AGENTS headline promised a distilled instrument that H6 shows does not exist. Both
+corrected. Its third criticism, that the work is underpowered, is accurate and is not a
+reporting defect: the answer is the ~25 frames D079 prices, not more prose.
+
+Decisions now run **D001–D082**.
 
 ## Next session: publication
 
@@ -77,7 +83,7 @@ project audits in its subject.
 Then the writeup's own rule: every figure in `docs/WRITEUP.md` is copied from the card or a
 `data/*.json` file, and the card wins on disagreement. Check the ones that have moved most
 recently by hand: the H2 table (1.25 / 1.62 / 1.27 and 1.31 / 1.66 / 1.29), the 2,144-vs-2,153
-worker count, the decision range (D001–D081), and the two cost figures ($17.63 from the two E2
+worker count, the decision range (D001–D082), and the two cost figures ($17.63 from the two E2
 result files; ~$7.50 from D072, the one number in the writeup that cites a decision rather than a
 data file, because no result file carries it).
 
@@ -370,7 +376,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D081 |
+| Decisions | `DECISIONS.md`, D001–D082 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |
