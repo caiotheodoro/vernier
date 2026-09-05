@@ -298,7 +298,7 @@
   }
  },
  "generated_from": {
-  "card_digest": "sha256:115b5137de5634fac5e13bcf5edf70e4898a824113b1f16f6b3067f60b74771c",
+  "card_digest": "sha256:2638e2ee47313bb908eb3dcffce3be8613d69260d312c7e4c2c2350e72d5ca75",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
   "git_rev": "dfb7210fa55798dbdb254b17b3c87d614b94b230",
@@ -595,8 +595,8 @@
   }
  },
  "repo": {
-  "n_decisions": 71,
-  "n_tests": 354
+  "n_decisions": 72,
+  "n_tests": 355
  },
  "rows_api": {
   "config": "default",
