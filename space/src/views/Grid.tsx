@@ -209,25 +209,32 @@ function Band({
         ctx.strokeStyle = border;
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + 0.5, tileW - 1, tileH - 1);
+
         ctx.font = mono;
+        ctx.textAlign = "left";
         ctx.fillStyle = muted;
-        ctx.fillText(frame.id.slice(0, 8), x + 10, y + 20);
-        const parts = frame.q.raw.split(/\n-+\n/);
-        ctx.fillStyle = ink;
-        ctx.font = '13px "Geist Mono", ui-monospace, monospace';
-        ctx.fillText((parts[0] ?? "").trim().slice(0, 12), x + 10, y + tileH / 2 - 4);
-        ctx.strokeStyle = border;
-        ctx.beginPath();
-        ctx.moveTo(x + 10, y + tileH / 2 + 4.5);
-        ctx.lineTo(x + Math.min(48, tileW - 20), y + tileH / 2 + 4.5);
-        ctx.stroke();
-        ctx.fillText((parts[1] ?? "").trim().slice(0, 12), x + 10, y + tileH / 2 + 22);
+        ctx.fillText(frame.id.slice(0, 8), x + 10, y + 19);
+
+        // The rater's answer sits opposite the id rather than under the judge's, where it
+        // collided with both the second output line and the glyph row.
         if (tier === "withheld" && frame.r) {
           ctx.fillStyle = accent;
           ctx.fillRect(x, y, 2, tileH);
-          ctx.font = mono;
-          ctx.fillText(`rater ${raterBinary(frame, state.task) ? "yes" : "no"}`, x + 10, y + tileH - 10);
+          ctx.textAlign = "right";
+          ctx.fillText(`rater ${raterBinary(frame, state.task) ? "yes" : "no"}`, x + tileW - 10, y + 19);
+          ctx.textAlign = "left";
         }
+
+        const parts = frame.q.raw.split(/\n-+\n/);
+        ctx.fillStyle = ink;
+        ctx.font = '13px "Geist Mono", ui-monospace, monospace';
+        ctx.fillText((parts[0] ?? "").trim().slice(0, 12), x + 10, y + 46);
+        ctx.strokeStyle = border;
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 55.5);
+        ctx.lineTo(x + Math.min(52, tileW - 20), y + 55.5);
+        ctx.stroke();
+        ctx.fillText((parts[1] ?? "").trim().slice(0, 12), x + 10, y + 74);
       }
 
       drawGlyph(ctx, x + 8, y + tileH - 8, ink, state.task, judgeHands(frame, state.src), judgeManipulation(frame, state.src));

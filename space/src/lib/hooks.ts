@@ -86,10 +86,11 @@ export function useFadeIn(ready: boolean): void {
  * cannot be fetched -- in which case every tile falls back to its judge-output card, which is
  * the same thing the 576 unshipped frames show anyway.
  */
-export function useAtlas(stats: { thumbnails: { atlas: { file: string } } }): ImageBitmap | null {
+export function useAtlas(stats: { thumbnails?: { atlas?: { file?: string } } }): ImageBitmap | null {
   const [bitmap, setBitmap] = useState<ImageBitmap | null>(null);
-  const file = stats.thumbnails.atlas.file;
+  const file = stats.thumbnails?.atlas?.file;
   useEffect(() => {
+    if (!file) return;
     let live = true;
     const url = `${import.meta.env.BASE_URL}${file}`;
     void fetch(url)

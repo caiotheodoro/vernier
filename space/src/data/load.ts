@@ -8,7 +8,11 @@ let statsPromise: Promise<Stats> | null = null;
 let framesPromise: Promise<Frame[]> | null = null;
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${base}${path}`, { cache: "force-cache" });
+  // NOT `force-cache`. These files ship alongside a hashed JS bundle but are themselves
+  // unhashed, so `force-cache` hands a returning visitor last release's data with this
+  // release's code -- which is exactly how the D073 deploy white-screened for anyone who had
+  // opened the Space before. Default caching revalidates; the CDN still serves a 304.
+  const res = await fetch(`${base}${path}`);
   if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
   return (await res.json()) as T;
 }

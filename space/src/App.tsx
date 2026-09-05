@@ -111,7 +111,7 @@ function Loaded({ stats, frames, state, gridRef, scrollToGrid }: LoadedProps): J
             </a>{" "}
             · Judge {stats.generated_from.judge_rev} on Modal vLLM ·{" "}
             <a className="footer-link" href={repoFile("docs/ETHICS.md")}>
-              {int(stats.thumbnails.n)} frames shipped, the rest fetched live
+              {int(stats.thumbnails?.n ?? 0)} frames shipped, the rest fetched live
             </a>{" "}
             · Method pre-registered,{" "}
             <a className="footer-link" href={repoFile("docs/DECISIONS.md")}>
