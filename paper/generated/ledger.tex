@@ -1,0 +1,18 @@
+\begin{tabular}{@{}lp{0.34\linewidth}p{0.15\linewidth}p{0.20\linewidth}l@{}}
+\toprule
+id & pre-registered claim & threshold & observed & verdict \\
+\midrule
+H8 & participant counts differ across corpora & computable, no threshold & 58.2$\times$ & reported \\
+H1 & all three figures reproduce within $\pm$2\,pp & $\pm$2\,pp & 6.32\,pp on 2 hands & fails \\
+H1b & the two P0 prompts disagree by $\geq$1\,pp & $\geq$1\,pp & 0.32\,pp & null \\
+H2 & design effect over worker id $\geq$ 2 & $\geq$ 2 & 1.66 max & fails \\
+H3 & manipulation prompt spread $\geq$ 5\,pp & $\geq$ 5\,pp & 1.25\,pp & fails \\
+H4 & AC1 higher on hand count than manipulation & direction & 0.860 vs 0.887 & reversed \\
+H5 & judge error higher on EPIC by $\geq$ 5\,pp & $\geq$ 5\,pp & +3.57\,pp & fails \\
+H6 & agreement floor 0.80 at coverage $\geq$ 0.70 & 0.80 at 0.70 & fidelity 0.693 & fails \\
+H7 & calibration not measurable under the published protocol & n/a & ECE 0.104 & measured, degenerate \\
+\midrule
+\multicolumn{5}{l}{\emph{Not pre-registered, reported as exploratory:}} \\
+--- & gold-corrected margin vs.\ EPIC-KITCHENS-100 & none & -1.02\,pp & unresolved \\
+\bottomrule
+\end{tabular}

@@ -102,7 +102,8 @@ def find_stale_prose(repo_root: Path) -> dict[str, list[tuple[int, str]]]:
         sorted(repo_root.rglob("*.md"))
         + sorted((repo_root / "space" / "src").rglob("*.tsx"))
         + sorted((repo_root / "scripts").glob("*.py"))
-        + [repo_root / "Makefile", repo_root / "llms.txt"]
+        + sorted((repo_root / "paper").rglob("*.tex"))
+    + [repo_root / "Makefile", repo_root / "llms.txt"]
     )
     for path in paths:
         if not path.is_file():

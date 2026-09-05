@@ -9,7 +9,7 @@
 # path (D039) cannot structurally supply, not just an unwired one.)
 .PHONY: help effective-n survey sample replicate judge human-labels agreement prompt-sweep check-stale-prose hf-dataset hf-model space space-data lock \
         domain-bias distil calibrate probe card validate privacy-gate \
-        test typecheck fixtures check-eval-parquets check-label-rules check-prose-figures margin install-hooks
+        test typecheck fixtures check-eval-parquets check-label-rules check-prose-figures margin paper paper-tables install-hooks
 
 NOT_YET = @echo "not yet implemented -- see docs/HANDOFF.md for which wave lands this" >&2 && exit 1
 PASS ?= primary
@@ -78,6 +78,12 @@ check-eval-parquets:  ## D016: verify evaluation parquets contain the frames the
 
 check-corpus-manifest:  ## D071: reconcile the raw-corpus clip manifest against the published 2,153-worker/85-factory figures.
 	python3 scripts/check_corpus_manifest.py
+
+paper-tables:  ## Regenerate the paper's LaTeX tables from the committed result files (D086)
+	python3 scripts/export_paper_tables.py
+
+paper: paper-tables  ## Build paper/vernier.pdf with tectonic (not part of validate; needs tectonic)
+	cd paper && tectonic -X compile vernier.tex
 
 check-prose-figures: ## Every figure in prose still equals the file that produces it (AGENTS.md rule 2)
 	python3 scripts/check_prose_figures.py

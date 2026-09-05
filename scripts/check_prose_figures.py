@@ -69,6 +69,7 @@ def _resolve(path: str, pointer: str, root: Path = _ROOT) -> Any:
 
 _W = "docs/WRITEUP.md"
 _B = "docs/blog-vernier.md"
+_P = "paper/vernier.tex"
 _E2 = "data/e2_full_n10000.json"
 _E100K = "data/e2_100k_eval.json"
 _E5 = "data/e5_full_n2000.json"
@@ -171,6 +172,27 @@ _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     (_B, "129", _STATS, f"{_ERRDIR}.hand_count.at_risk_under", "raw_int"),
     (_B, "33", _STATS, f"{_ERRDIR}.manipulation.at_risk_over", "raw_int"),
     (_B, "120", _STATS, f"{_ERRDIR}.manipulation.at_risk_under", "raw_int"),
+    # paper/vernier.tex -- prose figures only; its tables are generated (D086) and cannot drift.
+    (_P, "96.42", _E2, "H1.hand_ge1_rate.published", "pct2"),
+    (_P, "91.66", _E2, "H1.active_manipulation_rate.published", "pct2"),
+    (_P, "76.34", _E2, "H1.hand_eq2_rate.published", "pct2"),
+    (_P, "16", _STATS, f"{_ERRDIR}.hand_count.over", "raw_int"),
+    (_P, "129", _STATS, f"{_ERRDIR}.hand_count.at_risk_under", "raw_int"),
+    (_P, "28", _STATS, f"{_ERRDIR}.total_errors", "raw_int"),
+    (_P, "10", _STATS, f"{_ERRDIR}.manipulation.over", "raw_int"),
+    (_P, "-1.02", _MARGIN, f"{_EPIC_MANIP}.corrected_margin_pp", "pp2"),
+    (_P, "-11.68", _MARGIN, f"{_EPIC_MANIP}.ci_pp.lo", "pp2"),
+    (_P, "9.65", _MARGIN, f"{_EPIC_MANIP}.ci_pp.hi", "pp2"),
+    (_P, "6.62", _MARGIN, f"{_EPIC_MANIP}.published_margin_pp", "pp2"),
+    (_P, "59", _MARGIN, f"{_EPIC_MANIP}.approx_gold_per_arm_to_exclude_published", "raw_int"),
+    (_P, "4.76", _W4, "H5.egocentric.error_rate", "pct2"),
+    (_P, "8.33", _W4, "H5.epic_kitchens.error_rate", "pct2"),
+    (_P, "0.6933", _RUNG1, "fidelity_vs_gemini_2_5_flash", "ratio4"),
+    (_P, "0.1043", _W4, "H7_calibration.hand_count.ece", "ratio4"),
+    (_P, "0.0782", _W4, "H7_calibration.manipulation.ece", "ratio4"),
+    (_P, "0.32", _E2, "H1b.diff_pp", "pp2"),
+    (_P, "1.25", _E5, "H3.manipulation_spread_pp", "pp2"),
+    (_P, "0.25", _E5, "H3.hand_count_spread_pp", "pp2"),
 )
 
 

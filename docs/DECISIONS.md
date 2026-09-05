@@ -3016,3 +3016,62 @@ looking.
 **Reverses if:** a second rater labels these frames. That removes the anchoring, supplies the
 inter-rater agreement this project has never had, and would settle whether the three-second batch
 agrees with the ten-second one.
+
+## D086 — The paper, its tables generated rather than typed, and eight citations checked at the source
+
+`paper/vernier.tex` is the arXiv submission: 11 pages, 4{,}783 words, compiled by `tectonic`
+(no pandoc and no TeX Live on this machine; tectonic fetches packages on demand). Caio's call
+to write it at n=153 with one rater rather than wait for a second is recorded as his, made after
+the single-rater weakness was raised twice.
+
+**The framing is what survived D085, not what was planned.** An earlier plan had the headline as
+"the margin reverses" and a draft had "the judge only errs one way". Sixty labels killed both.
+The title claims neither: *Asymmetric Judge Error and Clustered Frames*. The three results it
+does claim are the error asymmetry (26 of 28, and 16 against 0 on hand counting across 129
+at-risk frames), the design effect (1.25 to 1.66, which depends on no human label at all), and
+that the comparative claim cannot be resolved in either direction at this gold size.
+
+**Tables are generated, not written.** `scripts/export_paper_tables.py` emits six `booktabs`
+tabulars and a `provenance.tex` of `\newcommand`s into `paper/generated/`, which the paper
+`\input`s. A table therefore cannot drift from its artifact, which is stronger than the pinning
+D081 applies to prose. `tests/test_export_paper_tables.py` asserts the committed files equal a
+fresh build, the same rule `test_export_space_data.py` applies to the Space payload. The PDF
+states the git commit and card digest it was built from, both injected from the artifacts.
+
+**Both gates now reach the paper.** `check_stale_prose` scans `paper/**/*.tex`, and
+`check_prose_figures` pins 20 prose figures inside the `.tex`, bringing it to 99 pins across
+three documents. Both were verified by planting a defect and watching them fail.
+
+**Eight citations were re-resolved against arXiv before the bibliography was written**, because
+this project has three refuted and four downgraded references on record and roughly half its ids
+are 2026-series. Results: PPI (2301.09633), PPI++ (2311.01453), CDI (2408.15204), Miller
+(2411.00640), Trust-or-Escalate (2407.18370), IPR/PAR (2604.16413), Rao and Callison-Burch
+(2606.00093) and Learn-then-Test (2110.01052) all resolve exactly as used. Two corrections came
+out of it:
+
+1. **Gwet's AC1 was attributed to the wrong paper.** `LINEAGE.md` cites 2606.00093 for AC1. That
+   paper is an agreement-*reporting* checklist whose abstract covers Cohen's kappa, Pearson,
+   Spearman and Kendall, and does not mention AC1. The paper cites Gwet (2008) for the statistic
+   and 2606.00093 for the reporting standard, which is what it actually supports. This is an
+   eighth mis-citation on the same register as the seven already published.
+2. **`docs/blog-vernier.md` linked the words "PPI++" to 2301.09633**, which is classical PPI, not
+   PPI++. That article is live. Corrected, along with the AC1 link in the same sentence.
+
+**A gap in the survey, found by searching rather than by reading the repo.** A 2026 line applies
+prediction-powered inference to LLM-judge evaluation and is absent from `docs/SURVEY.md`, whose
+verification pass closed 2026-08-31: Divekar 2606.05308 (PPI for ranking metrics), Feng et al.
+2601.20913 (judge TPR/FPR from a calibration set, for safety certification), plus filtered PPI
+and several others. A referee in this area knows them. The paper cites and distinguishes the two
+closest, and the novelty claim comes out **narrower and more defensible**: each of them estimates
+a property of a model or a ranking on the authors' own evaluation, while this work estimates a
+property of a corpus published by a third party, using that party's own frames and labels.
+Feng et al. also frames the first result usefully, since their method needs both error rates and
+this data has one of them at zero.
+
+**The interval-absence claim is weakened deliberately.** `SURVEY.md` says "no egocentric dataset
+publishes a confidence interval ... zero, across every dataset checked", but only four were read
+in full and Ego4D is not among them. The paper says "across the egocentric datasets whose full
+text we read" and records the rest as best-effort absence.
+
+**Reverses if:** a second rater is found, at which point the limitations section changes
+materially and the margin may become decidable rather than underpowered.

@@ -1,0 +1,470 @@
+% Asymmetric Judge Error and Clustered Frames.
+%
+% Numeric tables are NOT written here. They are generated from the committed result files by
+% scripts/export_paper_tables.py into paper/generated/ and pulled in with \input, so a table
+% cannot drift from the artifact it reports. Figures quoted in prose are pinned by
+% scripts/check_prose_figures.py, the same way the two markdown writeups are (D081, D086).
+\documentclass[11pt]{article}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+
+\setlength{\tabcolsep}{4pt}
+\sloppy
+
+\input{generated/provenance}
+
+\title{Asymmetric Judge Error and Clustered Frames:\\
+A Pre-Registered Audit of a Commercial Dataset Quality Claim}
+\author{Caio Theodoro\\\small Independent}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Commercial dataset vendors increasingly advertise corpus quality with statistics produced by a
+vision-language model applied once to a sample of frames. We audit one such claim. Build AI
+publishes, for its Egocentric-10K corpus, that 96.42\% of frames show at least one hand and
+91.66\% show active manipulation, both ahead of Ego4D and EPIC-KITCHENS-100, from 10{,}000
+frames labelled once by a single model with no human label, no interval, and no test that the
+labeller scores the compared corpora on the same scale. We pre-registered a protocol, replicated
+the figures with an independent open-weights judge on two releases a year apart, collected
+\vernierNPrimary{} human labels against a written rubric, and re-estimated the published
+quantities with prediction-powered inference. Three findings. First, judge error against human
+gold is strongly asymmetric: of 28 disagreements, 26 inflate the statistic, and on hand counting
+there are 16 over-reports against zero under-reports across 129 frames that could have been
+under-reported. The vendor's own stored labels, from a different model family, carry the same
+sign. Second, the corpus is clustered by camera wearer, with a design effect of 1.25 to 1.66
+measured on two independent 10{,}000-frame draws, so an interval computed as if frames were
+independent is 12 to 29\% too narrow; no interval is published, and the released evaluation
+frames carry no identifier that would let anyone else compute one. Third, the comparative claims
+cannot be resolved at this gold size in either direction: correcting both sides of the
+manipulation margin against EPIC-KITCHENS-100 moves it from a published $+6.62$ to $-1.02$
+percentage points with a 95\% interval of $[-11.68, +9.65]$, which covers the published value.
+We report what it would cost to settle it, and we report that buying more labels moved the
+estimate toward the vendor and raised that cost. Artifacts, protocol and a decision log are
+public; the measurement card reports \texttt{\vernierVerdict} because one pre-registered item
+could not be checked at all.
+\end{abstract}
+
+\section{Introduction}
+
+A dataset vendor sells a corpus and a number attached to it. Build AI sells egocentric video
+recorded in factories, and its evaluation release publishes the quality figures that justify the
+sale: 96.42\% of frames contain at least one hand, 76.34\% contain two, 91.66\% show active
+manipulation, each ahead of the two most-used academic egocentric corpora. The corpus is
+substantial and the release is unusually open by the standards of commercial data: 10{,}000 hours
+from 2{,}153 workers across 85 factories, per-clip metadata, camera intrinsics, and the
+evaluation frames themselves.
+
+The number attached to it is a point estimate produced by applying \texttt{gemini-2.5-flash} once
+to 10{,}000 frames. It carries no human label, no confidence interval, and no evidence that the
+model scores a factory floor and a domestic kitchen on the same scale. The last of these is what
+the comparative claim rests on, and the margin over EPIC-KITCHENS-100 is about six percentage
+points on both headline tasks. A buyer has no way to check any of it.
+
+We built the check. This paper reports what it found and, equally, what it could not settle.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item \textbf{An asymmetric-error result.} On \vernierNPrimary{} human-labelled frames the
+      independent judge makes 28 errors and 26 of them inflate the published quantity. On hand
+      counting the asymmetry is absolute at this sample size: 16 over-reports, zero
+      under-reports. The vendor's own stored labels, produced by a different model family,
+      carry the same sign. A judge-derived prevalence of this kind is therefore better read as
+      an upper bound than as a point estimate.
+\item \textbf{A design effect for a corpus quality statistic.} Frames from one camera wearer
+      share scene, lighting, task and equipment. Measured on two independent 10{,}000-frame
+      draws from the raw corpus with real worker identifiers, the design effect is 1.25 to 1.66,
+      so an interval that treats frames as independent is 12 to 29\% too narrow. We are not
+      aware of an egocentric dataset that reports this, and the released evaluation frames carry
+      a bare UUID with no worker linkage, so it cannot be computed on the sample the published
+      figures describe.
+\item \textbf{A negative result on the comparative claim, with a price.} Correcting both sides
+      of the margin leaves the published value inside the corrected interval. We report the
+      gold-set size that would separate them, and that this figure rose after we collected more
+      labels.
+\item \textbf{An audit that reports its own failures.} Five corrections to our own published
+      claims are recorded in Section~\ref{sec:moved}, including a protocol violation we found
+      only by measuring it, a rubric rule nothing enforced, and a coverage table that claimed an
+      experiment we never ran.
+\end{enumerate}
+
+\section{Related work}
+
+\paragraph{Gold-corrected estimation with model labels.}
+Prediction-powered inference \citep{angelopoulos2023ppi} and its efficient variant
+\citep{angelopoulos2023ppiplusplus} produce valid intervals from a small human-labelled sample
+plus a large model-labelled one, with no assumption that the model is unbiased. Confidence-driven
+inference \citep{gligoric2025cdi} refines the same idea by spending human effort where the model
+is least confident. A 2026 line applies this machinery to language-model evaluation:
+\citet{divekar2026ranking} extends PPI to ranking metrics such as Precision@$K$, and
+\citet{feng2026noisybutvalid} estimates a judge's true- and false-positive rates from a small
+calibration set in order to certify that a model's failure rate sits below a threshold.
+
+Our estimand differs from all of these in a way that matters. Each of them estimates a property
+of \emph{a model, a ranking, or a system}, on an evaluation the authors themselves constructed.
+We estimate a property of \emph{a corpus}, published by \emph{a third party}, using that party's
+own released frames and their own stored labels, and we ask whether their published number
+survives the correction. We are not aware of prior work that does this.
+
+The connection to \citet{feng2026noisybutvalid} is worth stating precisely, because it frames our
+first result. Their method requires both error rates, since a judge that misses and a judge that
+over-calls distort an estimate differently. In our data one of the two rates is at or near zero.
+That is a special case of their setting rather than a challenge to it, and it is the case in
+which a naive judge-only estimate is biased in a knowable direction.
+
+\paragraph{Judge validation and its limits.}
+Agreement between a model judge and a human is routine to report and easy to report badly.
+\citet{rao2026agreement} shows that protocol choices alone move a reported agreement figure
+substantially and proposes a reporting checklist; we follow it, and we report Gwet's AC1
+\citep{gwet2008ac1} alongside Cohen's $\kappa$ because $\kappa$ is uninformative at the base
+rates involved here, where one class exceeds 90\%.
+
+\paragraph{Clustered inference in evaluation.}
+\citet{miller2024errorbars} argues that evaluation results deserve error bars and that
+dependence between evaluation items inflates the standard errors that flat-rate reporting
+ignores. Our design-effect measurement is that argument applied to a dataset statistic rather
+than a model score, with the clustering variable being the person wearing the camera.
+
+\paragraph{Prompt sensitivity.}
+\citet{liu2026ipr} formalises inter-prompt reliability and its pairwise agreement rate for
+model-based labelling. Our prompt sweep reports the same quantities.
+
+\paragraph{Selective prediction.}
+\citet{jung2024trustorescalate} guarantees a user-specified level of human agreement by
+abstaining, with thresholds selected under distribution-free risk control
+\citep{angelopoulos2021ltt}. Our distillation arm targets that guarantee and does not reach it.
+
+\paragraph{Agreement practice in egocentric datasets.}
+HD-EPIC \citep{perrett2025hdepic} is the most rigorous annotation-agreement pipeline we found in
+this area, with multiple annotators per narration and a minimum agreement threshold, but it
+governs the timing of action segments rather than the density of a model-produced attribute, and
+it reports no interval on a dataset-level number. EPIC-KITCHENS-100 \citep{damen2022epic100}
+reports annotation-density improvements and no inter-annotator agreement statistic. Across the
+egocentric datasets whose full text we read, none reports a confidence interval or an agreement
+statistic on a headline quality claim. We did not exhaust the field, and we record that as a
+best-effort absence rather than a proof.
+
+\section{The audited claim, and what the release ships}
+
+The evaluation release contains three parquet files, one per corpus, 10{,}000 frames each, with
+the image bytes and the vendor's own per-frame labels. That is a genuinely useful release: the
+comparison can be run on the vendor's own frames, so no sampling difference can explain a
+disagreement.
+
+Three properties of it bound what any audit can do.
+
+\paragraph{The frames cannot be traced to the corpus.} \texttt{frame\_id} is a bare UUID4 with no
+factory, worker, clip or timestamp component. The published sample therefore cannot be checked
+against the corpus it was drawn from by anyone outside the vendor, and no clustered interval can
+be computed on it. Our design effect is measured on our own draws for this reason.
+
+\paragraph{The identifier was present and is no longer.} The 10K evaluation release and the 100K
+release that supersedes it differ in schema: the later one does not carry the \texttt{frame\_id}
+column the earlier one shipped. We state this as a fact about reproducibility and draw no
+inference about why.
+
+\paragraph{The corpus count differs slightly from the published one.} Indexing all 19{,}495
+shards of the raw corpus yields 2{,}144 distinct workers against a published 2{,}153, with
+factories, hours and clip count reconciling almost exactly. Nine workers, 0.42\%, consistent with
+ordinary release-time filtering and too few to affect any figure here.
+
+\section{Protocol}
+
+The protocol was frozen before any frame was fetched and every departure from it is a dated entry
+in a public decision log, currently 85 entries.
+
+\paragraph{Judge.} \texttt{Qwen/Qwen3-VL-8B-Instruct-FP8}, self-hosted, temperature 0 and seed
+777 pinned on every call, with the vendor's prompts used verbatim. The original judge could not
+be used: \texttt{gemini-2.5-flash} is deprecated for new API keys, which we confirmed with a live
+404. That is itself a reproducibility finding, since a quality guarantee whose instrument is a
+versionless third-party API cannot be re-run by its own vendor. The comparison therefore runs
+against the vendor's stored per-frame labels, which ship in the release.
+
+\paragraph{Human gold.} One rater labelled \vernierNPrimary{} frames against a written rubric of
+twelve numbered rules resolving what the vendor's prompt leaves open, such as gloves,
+reflections, motion blur, and an idle grip that is not manipulation. The labelling tool has no
+code path to judge output, so the rater cannot see the model's answer.
+
+\paragraph{Estimators.} Prevalence by PPI++ \citep{angelopoulos2023ppiplusplus}; agreement by
+Gwet's AC1 \citep{gwet2008ac1} with $\kappa$ beside it; intervals by cluster bootstrap over
+worker identifier, $B = 10{,}000$, wherever such an identifier exists, and by an iid bootstrap
+labelled as a lower bound on width where it does not.
+
+\paragraph{The full slate, before any result.} Table~\ref{tab:ledger} lists every pre-registered
+hypothesis with its threshold and outcome. We put it here, ahead of the results, so that the
+reader sees the failures at the same time as the findings.
+
+\begin{table}[t]
+\centering\small
+\input{generated/ledger}
+\caption{Every pre-registered hypothesis, its threshold, and its outcome. Four of the eight fail
+against their own criteria and one reverses direction. The exploratory row was not
+pre-registered and is reported as such.}
+\label{tab:ledger}
+\end{table}
+
+\section{Replication}
+
+Table~\ref{tab:replication} compares the independent judge against the published figures on both
+releases at $N = 10{,}000$ per release.
+
+\begin{table}[t]
+\centering\small
+\input{generated/replication}
+\caption{Independent replication on both releases. $\dagger$ marks a figure outside the
+pre-registered $\pm$2\,pp tolerance.}
+\label{tab:replication}
+\end{table}
+
+Hand visibility and active manipulation land within about a point of the published values on both
+releases, a year apart. The two-hands figure does not, and misses in the same direction both
+times.
+
+We do not know why, and the parsimonious explanation implicates our judge rather than the
+vendor's number: on the gold set our judge calls two hands more often than the rater does. What
+keeps the observation alive is that the same figure carries the largest design effect on both
+corpus draws (Section~\ref{sec:cluster}). Three measurements single out one column and none of
+them explains it. We report it and stop there.
+
+\section{Judge error against human gold}
+
+\begin{table}[t]
+\centering\small
+\input{generated/error_direction}
+\caption{Direction of judge error against the rater. ``At risk'' counts the frames on which the
+error was possible: a frame the rater scored as two hands cannot be over-counted, and one scored
+as zero cannot be under-counted.}
+\label{tab:errdir}
+\end{table}
+
+Table~\ref{tab:errdir} is the paper's first result. Of 28 disagreements, 26 inflate the
+statistic. On hand counting the asymmetry is absolute at this sample size, 16 against zero, and
+the zero is across 129 frames where an under-report was possible. On manipulation it is 10
+against 2.
+
+Two checks on whether this is an artifact of our rubric or our judge.
+
+The rubric's most discretionary rule is the one excluding an idle grip from manipulation, and it
+would be the natural source of manufactured disagreement. None of the manipulation false
+positives carries the corresponding tag. They are tagged for blur, self-contact, another person
+in frame, or nothing at all.
+
+The vendor's own stored labels, from a different model family, disagree with the rater in the
+same direction on the same frames. Whatever produces the asymmetry is not specific to the model
+we chose.
+
+\section{Corrected prevalence, and the comparative claim}
+
+\begin{table}[t]
+\centering\small
+\input{generated/prevalence}
+\caption{Published figure, judge-only rate, and the gold-corrected PPI++ estimate with its 95\%
+interval. Intervals are iid and are lower bounds on their true width, because the evaluation
+frames carry no worker identifier to cluster over.}
+\label{tab:prev}
+\end{table}
+
+Correcting for the error in Table~\ref{tab:errdir} moves every prevalence estimate and, more to
+the point, attaches an interval to quantities that are published without one
+(Table~\ref{tab:prev}).
+
+The comparative claim is what the vendor actually sells, and it is a difference rather than a
+rate. Table~\ref{tab:margins} corrects both sides of it.
+
+\begin{table}[t]
+\centering\small
+\input{generated/margins}
+\caption{Published margin against the gold-corrected margin. Arms are disjoint frame sets and
+their variances are summed, which is conservative here: a shared rater or judge offset is
+positively correlated across arms and would shrink the variance of the difference.}
+\label{tab:margins}
+\end{table}
+
+The manipulation margin against EPIC-KITCHENS-100 changes sign under correction and is the only
+one of the four that does. At $-1.02$ percentage points it is close enough to zero that the sign
+carries little information, and the corrected interval covers the published value. We therefore
+cannot refute that margin. We can say that the data does not settle it, and the distinction is
+not cosmetic: a wide interval containing the null is an underpowered result, not a negative one,
+and treating the two as equivalent is the error this audit exists to object to.
+
+This estimand is not pre-registered and is reported as exploratory. The pre-registered version
+asked a narrower question, whether judge \emph{error rate} differs by domain, and it is reported
+unchanged in Section~\ref{sec:notheld}.
+
+\section{Clustering and the design effect}
+\label{sec:cluster}
+
+The result in this section depends on no human label.
+
+Frames from one camera wearer share scene, lighting, task and equipment, so a corpus statistic
+computed over frames is not computed over independent observations. The released evaluation
+frames cannot show this, so we went to the raw corpus: 19{,}495 WebDataset shards holding 192{,}903
+clips, roughly 16\,TB. A tar header is 512 bytes at a computable offset, so an index of every clip
+can be built from HTTP range requests alone, and one frame per clip can then be extracted from an
+h265 MP4 inside a tar over the same mechanism. Indexing every shard took 23 minutes and moved
+about 150\,MB.
+
+We drew 10{,}000 frames twice, once uniformly over frames and once stratified by factory
+worker-hours with at most one frame per clip, and compared a cluster bootstrap over worker
+identifier against its iid counterpart.
+
+\begin{table}[t]
+\centering\small
+\input{generated/design_effect}
+\caption{Design effect, defined as the squared ratio of clustered to iid interval width,
+$B = 10{,}000$, seed 777.}
+\label{tab:deff}
+\end{table}
+
+We pre-registered a design effect of at least 2 and Table~\ref{tab:deff} does not reach it, so
+that hypothesis fails. What the measurement does show is that the effect is real and smaller than
+we predicted: every one of the six figures exceeds 1, and an interval computed as if these frames
+were independent is 12 to 29\% too narrow.
+
+The licensed conclusion is narrow and we do not widen it. The corpus has this property. A
+frame-level interval drawn from it inherits some of it. Nothing here measures the vendor's own
+draw, and nothing can, because the release ships no grouping variable.
+
+\section{Results that did not hold}
+\label{sec:notheld}
+
+\paragraph{Prompt variants agree.} The vendor's dataset card and its shipped prompt file differ in
+four places, including a substantive rule about whose hands to ignore. We expected the two to
+produce different rates. They differ by 0.32 percentage points.
+
+\paragraph{Prompt sensitivity is real and small.} Across eight variants on 2{,}000 frames,
+manipulation rates spread 1.25 percentage points and hand-count rates 0.25, against a
+pre-registered bar of 5. The single strongest test, stating explicitly that a gloved hand counts,
+moved the hand figure by 0.05 points in a corpus of factory work where gloves are near-universal.
+
+\paragraph{Domain bias points the predicted way and misses the bar.} Judge error on manipulation
+is 4.76\% on Egocentric frames against 8.33\% on EPIC-KITCHENS, a gap of 3.57 points with EPIC
+higher, which is the direction we predicted and below the 5-point threshold we set. At
+\vernierNPrimary{} labels it points this way; at 93 it pointed the other way. A hypothesis whose
+sign reverses when the sample grows is reporting on the sample. Our own power analysis, run
+before any labelling, called this arm underpowered at the pre-registered size, and there is a
+confound we disclosed before collecting data and never probed: the judge has plausibly seen
+EPIC-KITCHENS and Ego4D in pretraining and cannot have seen the gated commercial corpus, which
+pushes accuracy in the opposite direction from the prediction.
+
+\paragraph{Distillation misses its target.} A linear probe on frozen DINOv2 features reaches
+0.6933 agreement with the teacher against a 0.90 target, and the abstention cascade cannot hold a
+0.80 agreement floor at any coverage above zero at 95\% confidence on a 46-frame calibration
+split. The probe is published as a negative result.
+
+\paragraph{Calibration is degenerate by construction.} Expected calibration error is 0.1043 on
+hand count and 0.0782 on manipulation, but almost every frame lands in one confidence bin under
+greedy decoding. The number describes the decoding strategy more than the judge.
+
+\section{What moved while we watched}
+\label{sec:moved}
+
+An audit that publishes only its findings misleads by omission, so this section reports the
+corrections we made to our own claims. All five were found by a person reading the prose against
+the data, none by an automated check, and the automated check that now exists was written in
+response to the first two.
+
+\paragraph{The blind re-label did not wait.} Our protocol specifies a re-label at least seven days
+after the first pass, so that the check measures whether the rubric is decidable rather than
+whether the rater remembers the frame. Measured from the labels' own timestamps, the median
+separation is 2.4 hours and no pair meets the rule. Our writeup had asserted the seven days as
+fact. The agreement figures do not change; what they license does, and they are now reported as
+within-session consistency.
+
+\paragraph{A control arm arrived after the labels it controlled.} We re-reviewed the frames where
+judge and rater disagreed, mixing in an equal number of frames where they agreed so that revision
+rates could be compared. The control arm was added in a later commit than the labels, which had
+been collected against a plan containing disagreement frames only, so the pass ran unblinded.
+
+\paragraph{A rubric rule nothing enforced.} Rule 12 states that zero visible hands implies no
+manipulation. Seven collected labels violated it and neither the data model nor either labelling
+tool rejected the combination. Correcting them moved judge-human agreement, moved two prevalence
+estimates, and removed a clean zero-errors result on one arm that an earlier draft had been built
+on.
+
+\paragraph{A coverage table claimed an experiment we never ran.} The document listing what the
+audit does \emph{not} cover reported the cross-domain accuracy experiment as tested. That
+experiment specifies a model with cluster-robust intervals. It was never fitted; what exists is a
+comparison of two raw error rates.
+
+\paragraph{Buying labels made the vendor's number look better.} Having priced the unresolved
+margin at roughly 42 gold frames per arm, we collected 60 more. The corrected margins moved
+toward the published figures rather than away, the estimate of what it would take to separate
+them rose to 59 per arm, and the asymmetric-error result weakened from absolute to 26 of 28. Two
+properties of that second batch belong in the record: it was collected after the first results
+were public, so the rater knew which direction would move the margin, and it was labelled at a
+median of three seconds a frame against ten for the first batch, with 24 of 60 at two seconds or
+less.
+
+\section{Limitations}
+
+One rater, \vernierNPrimary{} frames, and no inter-rater agreement statistic anywhere in this
+work, because there is one person. Every result that depends on human gold inherits that. The
+blind re-label is a weaker substitute and, as executed, weaker again for the reason given in
+Section~\ref{sec:moved}. The rater wrote the rubric after reading the vendor's prompt, which is
+anchoring and is not removable at $n=1$. Sixty of the labels were collected after results were
+public and at a third of the earlier pace.
+
+The two judge arms are not independent opinions: the open judge and the vendor's stored labels
+plausibly share pretraining data, so their agreement is an upper bound on reliability rather than
+a measure of it. The design effect is measured on our draws and never on the vendor's evaluation
+frames, and cannot be until a grouping variable ships. Every interval on the evaluation arms is
+iid and is a lower bound on its true width. The margin estimand is exploratory. Half of the
+advertised guarantee, a pose-accuracy claim, requires annotations no public release ships and is
+untouched here. Whether hand visibility predicts training value, which is the premise of the
+whole metric, is untested.
+
+\section{What a producer could publish}
+
+Four things, each cheap relative to building the corpus. An interval on the headline figure. A
+gold sample, with the \emph{direction} of judge error reported rather than only its magnitude,
+since a one-directional error makes the published figure an upper bound. A stable frame
+identifier that survives between releases, which costs nothing and is what makes an independent
+check possible at all. And the exact prompt, versioned, since the card and the shipped file
+already differ.
+
+The instrument that produces the range in this paper costs about \$9 per 10{,}000 frames on a
+self-hosted open-weights model and needs no API vendor.
+
+\section{Ethics and reproducibility}
+
+This work republishes no frame. The audit's public artifact ships identifiers, labels and
+statistics; a small set of downscaled stills appears only in an interactive viewer, chosen so
+that a judge-versus-rater disagreement can be inspected, and only from the corpus whose owner
+licensed redistribution. Frames showing any person other than the camera wearer are withheld
+after a manual review, and that review is by eye and cannot be automated. Adding labels during
+this work created 30 new candidate frames that no one had reviewed; they are excluded and the
+build refuses to include them.
+
+Worker identifiers are used only as statistical clusters and no per-worker result is reported. We
+make no claim about the consent instrument behind the corpus, which is not published, and we
+draw no inference about intent from the vendor's repository history; where we report a schema
+change between releases we report the fact and stop.
+
+The protocol, the decision log, every result file and the labels are public. The measurement card
+reports \texttt{\vernierVerdict} with \vernierNClaims{} claims because one pre-registered item
+could not be checked at all. This paper was built from commit \texttt{\vernierGitRev} against
+measurement card digest \texttt{\vernierCardDigest}, and every table in it is generated from
+those artifacts rather than transcribed.
+
+\section{Conclusion}
+
+A published corpus quality statistic produced by one model pass is an upper bound with an
+unstated width. On this corpus the width is at least 12 to 29\% wider than an independent-frames
+calculation would suggest, and the direction of the bias is knowable and consistent across two
+model families. The comparative claim that the corpus leads a well-known academic dataset does
+not survive correction cleanly and does not fail either, and settling it needs about 59 human
+labels per arm rather than a better model.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}
