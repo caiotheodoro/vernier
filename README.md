@@ -33,7 +33,7 @@ are actually buying.
 
 vernier measures the judge, then replaces it with something re-runnable.
 
-> **Status: results in, two items blocked on external access.** The protocol is specified in
+> **Status: results in, one item blocked.** The protocol is specified in
 > `docs/PRE-REGISTRATION.md` and froze before `src/` existed -- that ordering is the whole
 > point: a project auditing someone's unvalidated measurement does not get to improvise its
 > own. Since then: the live judge (Qwen3-VL, self-hosted, `docs/DECISIONS.md` D042) has made
@@ -46,9 +46,10 @@ vernier measures the judge, then replaces it with something re-runnable.
 > `Egocentric-100K-Evaluation`, not just the superseded `10K` release above — the same 2-hands
 > gap reproduces there too: observed 85.19% vs. their own published 79.05%, a 6.1pp miss, at a
 > real cost of $9.06 (`docs/DECISIONS.md` D066/D067). `MEASUREMENT_CARD.json` is real and
-> regenerable via `make card`; see `docs/HANDOFF.md` for exactly what remains (H2 and Result 2
-> — no longer blocked on access, which is granted, but on a real, unscoped video-frame-
-> extraction adapter for the raw corpus, `docs/DECISIONS.md` D065).
+> regenerable via `make card`. H2, the design effect, is now measured on both raw-corpus
+> draws at the pre-registered N and does not hold as stated: 1.25–1.66 against a threshold
+> of 2, real but smaller than predicted (`docs/DECISIONS.md` D071/D072). Result 2 alone
+> remains blocked; see `docs/HANDOFF.md` for why.
 >
 > What *has* happened is a close read of the published artifacts, which corrected several of
 > this repository's own earlier claims. Those corrections are in `docs/UPSTREAM-FINDINGS.md`,
@@ -126,6 +127,14 @@ is reported unchanged, on the original `Egocentric-10K-Evaluation` release):
 **2 of 3 within tolerance, 2-hands the outlier — the identical pattern found on their
 superseded release.** The two prompt variants don't disagree with each other (0.40pp, well
 under the 1pp threshold). Real cost: $9.06. `docs/DECISIONS.md` D066/D067.
+
+**The design effect, measured where a worker id exists.** 10,000 frames drawn from the raw
+corpus under each of the two pre-registered designs, judged, and bootstrapped by worker
+(B = 10,000). Pre-registered threshold: 2. Measured: 1.25–1.66 across both arms and all
+three figures, largest on 2-hands both times. Every figure exceeds 1, so an iid interval on
+this corpus is 12–29% too narrow in width; none reaches 2, so H2 fails as stated. The corpus
+also ships 2,144 workers against the published 2,153 (`docs/UPSTREAM-FINDINGS.md` F12).
+`docs/DECISIONS.md` D072.
 
 ## Who this is for
 

@@ -40,6 +40,19 @@ _STALE_PATTERNS = (
     "not authorized for the raw",
     "still-inaccessible gated raw corpus",
     "Nothing here is an engineering gap",
+    # D072 closed H2, leaving Result 2 as the only unmet item. Six public files (README,
+    # AGENTS, llms.txt, COVERAGE, HANDOFF, the card's own sample_definition in emit_card.py)
+    # kept saying two items were blocked, or that the corpus draws did not exist -- the fourth
+    # time this drift class has recurred. Every phrase below asserts a pre-D072 state.
+    "two items blocked",
+    "Two items remain",
+    "Two hypotheses remain",
+    "still not drawn",
+    "raw corpus is inaccessible",
+    "Not testable on the published protocol",
+    # AGENTS.md carried the pre-D042 three-judge framing under a capitalisation the
+    # "three judges" pattern (case-sensitive by design) could not see.
+    "Three judges are not three",
     # D073 replaced ETHICS.md section 4's flat promise with a split policy. The old
     # sentence was repeated in eight other files that would have gone stale silently --
     # exactly what this lint exists to catch. The Space now ships 24 frames; any document

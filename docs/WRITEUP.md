@@ -13,7 +13,7 @@ assumption the comparison rests on. The margin over EPIC-KITCHENS-100 is about s
 
 vernier measured the judge. The protocol was frozen before any frame was drawn
 (`docs/PRE-REGISTRATION.md`), every deviation is a dated entry in a decision log
-(`docs/DECISIONS.md`, D001–D072), and the result is a machine-checked card that exits nonzero
+(`docs/DECISIONS.md`, D001–D073), and the result is a machine-checked card that exits nonzero
 unless every claim is backed by a record.
 
 ## What was done

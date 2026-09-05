@@ -19,9 +19,10 @@ published once.
 
 Status: results in. The live judge has made thousands of real calls (full-N replication,
 prompt sweep, gold-set judging, and a real comparison against Build AI's CURRENT-PRODUCT
-release too, not just the one above). Human labels are real and collected. Two items remain
-blocked -- not on access, which is granted, but on a real, unscoped video-frame-extraction
-adapter for the raw corpus (see docs/HANDOFF.md).
+release too, not just the one above). Human labels are real and collected. The design effect
+is measured on two 10,000-frame draws from the raw corpus, clustered by worker: 1.25-1.66
+against a pre-registered 2, real but smaller than predicted. One item remains blocked, the
+transfer probe (see docs/HANDOFF.md).
 
 Start at README.md. Then docs/PRE-REGISTRATION.md (what is committed before any result
 is seen), docs/RUBRIC.md (the annotation rules Build AI's prompt leaves undefined), and

@@ -109,12 +109,13 @@ real live-judge run over all three `G200-*` sets (600 frames, `P0b`,
   loading it back still needs the backbone name, `_preprocess`, and the pooling choice, all
   named in `distill_rung1.py`'s own docstring, not packaged as a separate inference script.
 
-Two hypotheses remain in `what_could_not_be_checked` (H2, Result 2), both with a specific
-`"BLOCKER:"` reason -- since D065, the missing raw-corpus frame-extraction adapter rather than
-access, which is granted -- so `_derive_verdict` (D038) returns
-`NOT_VERIFIED` because real blockers remain, not vacuously. **This "2 unmet" count is a
-different bucket from "checked and negative"**: H1 (2-hands fails), H1b (null), H4/H5
-(reversed), H6 (does not hold), and H7 (weak calibration) are all real, checked claims in
+One item remains in `what_could_not_be_checked` (Result 2), with a specific `"BLOCKER:"`
+reason -- since D071 the raw-corpus adapter exists, so what remains is the institutional
+EPIC-KITCHENS-100 registration and the absence of downstream-task labels in the release -- so
+`_derive_verdict` (D038) returns `NOT_VERIFIED` because a real blocker remains, not vacuously.
+**This "1 unmet" count is a different bucket from "checked and negative"**: H1 (2-hands
+fails), H1b (null), H2 (design effect below 2, D072), H4/H5 (reversed), H6 (does not hold),
+and H7 (weak calibration) are all real, checked claims in
 `claims`, not blocked ones -- `what_could_not_be_checked` counts only items that could not run
 at all, never a tally of "everything that isn't wrong." `verify_and_exit` returns nonzero,
 for real, via `make card`. Not a placeholder, and not to be conflated with either the H8
@@ -234,7 +235,7 @@ finding.
 | Reproducibility contract | `REPRODUCTION.md` |
 | Survey | `SURVEY.md`, **complete**, verdict PROCEED-narrowed |
 | Upstream facts | `UPSTREAM-FINDINGS.md`, F1–F11, with pinned snapshots in `docs/upstream/` |
-| Decisions | `DECISIONS.md`, D001–D069 |
+| Decisions | `DECISIONS.md`, D001–D073 |
 | Private | `docs/private/`, gitignored: outreach, country brief, email draft, self-audit log |
 | Interface | `src/vernier/` — pydantic models (`models.py`) + all 18 Wave-1 units **implemented, reviewed, committed** |
 | Infra | CI (`.github/workflows/ci.yml`), `make install-hooks`, `scripts/check_eval_parquets.py`, `scripts/power_simulation.py`, `scripts/rubric_pilot_check.py`, `sampling/revisions.py`, `cloud/modal_qwen3vl.py` (deployed, smoke-tested live for text) |

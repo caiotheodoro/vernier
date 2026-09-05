@@ -111,3 +111,32 @@ def test_catches_the_pre_d065_gated_access_claims(tmp_path: Path) -> None:
             (4, "Nothing here is an engineering gap"),
         ]
     }
+
+
+def test_catches_the_pre_d072_two_items_blocked_claims(tmp_path: Path) -> None:
+    """D072 measured H2 and left Result 2 as the only unmet item; six public files kept saying
+    two were blocked or that the corpus draws did not exist. None of the pre-existing patterns
+    saw them (the third-judge phrase hid behind a capital letter). Regression test for that gap."""
+    (tmp_path / "README.md").write_text(
+        "Status: results in, two items blocked on external access.\n"
+        "Two items remain blocked -- see HANDOFF.\n"
+        "Two hypotheses remain in what_could_not_be_checked.\n"
+        "S10k-U/S10k-S are still not drawn.\n"
+        "the raw corpus is inaccessible, EPIC-KITCHENS-100 needs an email\n"
+        "Not testable on the published protocol.\n"
+        "Three judges are not three independent opinions.\n"
+    )
+
+    hits = find_stale_prose(tmp_path)
+
+    assert hits == {
+        "README.md": [
+            (1, "two items blocked"),
+            (2, "Two items remain"),
+            (3, "Two hypotheses remain"),
+            (4, "still not drawn"),
+            (5, "raw corpus is inaccessible"),
+            (6, "Not testable on the published protocol"),
+            (7, "Three judges are not three"),
+        ]
+    }

@@ -4,13 +4,14 @@
 instrument anyone can re-run.** `README.md` is the argument. This file is the operating
 rules.
 
-**Current state: results in, two items blocked on external access.** Real data drawn and
+**Current state: results in, one item blocked.** Real data drawn and
 persisted; the live judge has made thousands of real calls across full-N replication, the
 prompt sweep, and gold-set judging. Real human labels are collected and committed (93 primary
 + retest, D057/D058). A real rung-1 model (DINOv2 features + linear probe + abstention
 cascade) has been trained and evaluated (D061) -- a disclosed negative result, not a missing
-one. `docs/HANDOFF.md` is the resume point; H2 and Result 2 remain open -- not on corpus access,
-which is granted (D065), but on the raw-corpus frame-extraction adapter neither has yet.
+one. H2 is measured on both raw-corpus draws and does not hold as stated (design effect
+1.25–1.66 against 2, D071/D072). `docs/HANDOFF.md` is the resume point; Result 2 alone remains
+open, on two blockers the raw-corpus adapter did not touch.
 
 ## The claim
 
@@ -59,9 +60,10 @@ Written down now, before it can be softened by results:
   *intra*-rater agreement — a weaker instrument, and `docs/RED-TEAM.md` says how.
 - **The rater has read Build AI's prompt.** `docs/RUBRIC.md` was written knowing the
   definitions being audited. That is anchoring, and it is not removable at n=1.
-- **Three judges are not three independent opinions.** They share pretraining data and
-  architecture lineage. Panel agreement is therefore an upper bound on judge reliability,
-  not a measure of it.
+- **The two judge arms are not two independent opinions.** The live Qwen3-VL judge and Build
+  AI's stored `gemini-2.5-flash` labels (the panel since D042) plausibly share pretraining data
+  and architecture lineage. Agreement between them is therefore an upper bound on judge
+  reliability, not a measure of it.
 - **MPJPE is not checkable.** Half of Build AI's advertised SLA needs pose annotations the
   public release does not ship. `docs/COVERAGE.md` states the uncovered half.
 - **There is no public `builddotai/Egocentric-1M`.** The Hub returns 404 and the org hosts
