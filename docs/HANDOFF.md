@@ -3,29 +3,35 @@
 The resume point. A fresh session should be able to continue from this file without
 re-deriving anything.
 
-**Last updated: 2026-09-05 — delivery is current on every surface; what is left is
-publication.** Main is green (a `constraints.txt` lock pins CI's install; the Space's stats
-snapshot no longer fails on a test count or a float ulp). `MEASUREMENT_CARD.json`
-carries 18 claims and one unmet item (Result 2), verdict `NOT_VERIFIED`; the Hub dataset,
-the Hub model and the Space all serve that exact card (digest `3aacbe46…`), and the dataset's
-`results/` now ships both `h2_design_effect` files the H2 claim cites. D074 is the independent
-review of D071/D072 `WAVES.md` required: the verdict stands, every number reproduced from the
-response records, and the pre-registration turned out to state H2's threshold two ways (design
-effect ≥ 2, and "twice the width", which is 4 under its own definition; the result clears
-neither). D075 opened a third, salted, blind labelling pass over the 18 rater/judge
-disagreements plus an equal control arm; it is a separate `review` pass and **feeds no published
-number** — folding it needs its own entry with before and after. Two sessions wrote a D074
-within minutes of each other on 2026-09-05; the later one is now D075. That will recur while two
-sessions share one append-only file: check `grep -c '^## D0' docs/DECISIONS.md` against the
-last number before appending.
+**Last updated: 2026-09-05 — publication is blocked on 36 human labels, and two disclosures
+landed.** Planning the arXiv paper surfaced a claim in `docs/WRITEUP.md` that the public data
+contradicts: the blind re-label ran a **median of 2.4 hours** after the primary pass, not the
+">=7 days" the pre-registration specifies, with **0 of 34 pairs** meeting the rule. D076 records
+it; the separation is now measured by `scripts/wave4_analysis.py` into
+`data/wave4_analysis.json#retest_separation` and read into the card, so it cannot go stale again.
+AC1 is unchanged (0.8757 / 0.9037, both above the 0.70 gate); what it licenses is narrower, and
+`WRITEUP.md`, `RED-TEAM.md` A1, `AGENTS.md`, `METHOD.md` E3, `agreement/core.py` and the Space
+all say so now. Amendment 5 is appended to the frozen pre-registration.
 
-**Still open, in order:** publication (the section below); the D075 fold decision, once the
-review pass is complete and `scripts/review_labels_cli.py report` says whether the controls
-moved; a second rater on `G200-ego` (`RED-TEAM.md` A1, still the first weakness on the front
-page, ~35 minutes of someone else's time); `judge_weights_rev` recorded into the result JSON on
-the next real judge run (D074 finding 4); `REVIEW.md` R2, the pseudo-cluster proxy on Build AI's
-own frames, now calibratable against real `worker_id`s (`RED-TEAM.md` A13); Result 2, blocked
-on two reasons the adapter did not touch.
+D077 found the second one: **D075's control arm was added after its labels were written.**
+`git show 4a9444c:data/labels/caio/review_set.json` is 18 frames, all disagreement; `f086851`
+rewrote the plan underneath them. The pass ran as one block, which is the exact tell the
+interleaver exists to remove. `plan` gained `--salt` (its seed was three constants, so `--force`
+reproduced the same set), the pass is re-planned under salt `D077-rerun` at 36 frames, and the
+first attempt is archived to `review_first_unblinded.json` — a name that is not a `PassType`, so
+the store never reads it. **The re-run still leaves the arms one exposure apart** (disagreements
+read twice already, controls once) and D077 sets the bar for using it before the numbers exist.
+
+**The card digest moved `3aacbe46…` → `d77e591b…`.** The local card, `space/public/data/stats.json`
+and `hf/dataset/` all carry it; **the live Space and the Hub dataset still serve the old one and
+need republishing** (`hf upload`, not yet done — outward-facing).
+
+**The immediate blocker is 36 human labels**, which is Caio's own work:
+`make human-labels`-style, via `python3 scripts/review_labels_cli.py label --rater caio`, then
+`report --rater caio`. Until that lands, nothing downstream should be republished or written up,
+because folding or rejecting D077 moves intra-rater, H4, H5 and all six PPI estimates.
+
+Decisions now run **D001–D077**.
 
 ## Next session: publication
 
