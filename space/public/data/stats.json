@@ -216,6 +216,21 @@
   }
  },
  "confusion": {
+  "error_direction": {
+   "hand_count": {
+    "at_risk_over": 40,
+    "at_risk_under": 72,
+    "over": 14,
+    "under": 0
+   },
+   "manipulation": {
+    "at_risk_over": 27,
+    "at_risk_under": 66,
+    "over": 8,
+    "under": 0
+   },
+   "total_errors": 22
+  },
   "hands": [
    [
     16,
@@ -309,7 +324,7 @@
   "card_digest": "sha256:62d65220e39515209632b07aa852155a259a4da0dd9d9e4096aeb600dcb59217",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
-  "git_rev": "14f9f47cd586c9c2f7d69be3014ac3a247137a85",
+  "git_rev": "e57a0dda36ae5c96309f83cbd6e58d7ee3029d3b",
   "judge": "qwen3-vl",
   "judge_rev": "Qwen/Qwen3-VL-8B-Instruct-FP8",
   "n_gold_frames": 600,
@@ -1430,8 +1445,8 @@
   }
  },
  "repo": {
-  "n_decisions": 78,
-  "n_tests": 495
+  "n_decisions": 82,
+  "n_tests": 510
  },
  "rows_api": {
   "config": "default",

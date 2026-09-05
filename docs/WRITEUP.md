@@ -137,7 +137,7 @@ on Egocentric frames and 3.3% on EPIC-KITCHENS frames at n = 30–33 per arm —
 the prediction and underpowered by the project's own power analysis; not a finding either
 way. Prompt sensitivity (H3): 1.25 pp spread across manipulation prompts vs 0.25 pp across
 hand-count prompts — direction right, magnitude under the 5 pp bar
-(`data/e5_full_n2000.json#H3`). Calibration (H7): ECE 0.15 / 0.06, but 99% of frames land in
+(`data/e5_full_n2000.json#H3`). Calibration (H7): ECE 0.15 / 0.09, but 99% of frames land in
 one confidence bin under greedy decoding, so the curve is degenerate by construction.
 Distillation (H6): a DINOv2-small linear probe reaches 0.69 fidelity to the teacher against a
 0.90 target, and the abstention cascade cannot reach a 0.80 floor at 95% confidence on 46

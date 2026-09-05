@@ -553,7 +553,36 @@ def _confusion(frames: list[dict[str, Any]]) -> dict[str, Any]:
     for f in labelled:
         hands[f["q"]["h"]][f["r"]["h"]] += 1
         manipulation[int(f["q"]["m"])][int(f["r"]["m"])] += 1
-    return {"hands": hands, "manipulation": manipulation, "n": len(labelled)}
+    # D083: the direction of every judge error, derived here rather than in prose. A frame the
+    # rater scored 2 cannot be over-counted and one scored 0 cannot be under-counted, so the
+    # at-risk denominators are carried too; a bare count would overstate the asymmetry.
+    over_hands = sum(hands[j][r] for j in range(3) for r in range(3) if j > r)
+    under_hands = sum(hands[j][r] for j in range(3) for r in range(3) if j < r)
+    at_risk_over_hands = sum(hands[j][r] for j in range(3) for r in range(3) if r < 2)
+    at_risk_under_hands = sum(hands[j][r] for j in range(3) for r in range(3) if r > 0)
+    error_direction: dict[str, Any] = {
+        "hand_count": {
+            "over": over_hands,
+            "under": under_hands,
+            "at_risk_over": at_risk_over_hands,
+            "at_risk_under": at_risk_under_hands,
+        },
+        "manipulation": {
+            "over": manipulation[1][0],
+            "under": manipulation[0][1],
+            "at_risk_over": manipulation[0][0] + manipulation[1][0],
+            "at_risk_under": manipulation[0][1] + manipulation[1][1],
+        },
+    }
+    error_direction["total_errors"] = (
+        over_hands + under_hands + manipulation[1][0] + manipulation[0][1]
+    )
+    return {
+        "hands": hands,
+        "manipulation": manipulation,
+        "n": len(labelled),
+        "error_direction": error_direction,
+    }
 
 
 def _calibration(wave4: dict[str, Any]) -> dict[str, Any]:

@@ -50,6 +50,7 @@ _TRANSFORMS: dict[str, _Transform] = {
     "int_comma": lambda v: f"{int(v):,}",
     "usd2": lambda v: f"{float(v):.2f}",
     "raw_int": lambda v: str(int(v)),
+    "ratio4": lambda v: f"{float(v):.4f}",
 }
 
 
@@ -67,6 +68,7 @@ def _resolve(path: str, pointer: str, root: Path = _ROOT) -> Any:
 # has a bug -- which is the rule `docs/WRITEUP.md` states about itself.
 
 _W = "docs/WRITEUP.md"
+_B = "docs/blog-vernier.md"
 _E2 = "data/e2_full_n10000.json"
 _E100K = "data/e2_100k_eval.json"
 _E5 = "data/e5_full_n2000.json"
@@ -75,6 +77,8 @@ _H2U = "data/h2_design_effect.S10k-U.json"
 _H2S = "data/h2_design_effect.S10k-S.json"
 _RUNG1 = "data/rung1_distillation.json"
 _MARGIN = "data/margin_exploratory.json"
+_STATS = "space/public/data/stats.json"
+_ERRDIR = "confusion.error_direction"
 _EPIC_MANIP = "comparisons.egocentric-10k_minus_epic-kitchens-100.manipulation"
 _EPIC_HAND = "comparisons.egocentric-10k_minus_epic-kitchens-100.hand_count"
 
@@ -125,6 +129,8 @@ _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     (_W, "1.25", _E5, "H3.manipulation_spread_pp", "pp2"),
     (_W, "0.25", _E5, "H3.hand_count_spread_pp", "pp2"),
     (_W, "0.69", _RUNG1, "fidelity_vs_gemini_2_5_flash", "ratio2"),
+    (_W, "0.15", _W4, "H7_calibration.hand_count.ece", "ratio2"),
+    (_W, "0.09", _W4, "H7_calibration.manipulation.ece", "ratio2"),
     # the exploratory margin (D079)
     (_W, "6.62", _MARGIN, f"{_EPIC_MANIP}.published_margin_pp", "pp2"),
     (_W, "-4.69", _MARGIN, f"{_EPIC_MANIP}.corrected_margin_pp", "pp2"),
@@ -133,6 +139,39 @@ _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     (_W, "6.05", _MARGIN, f"{_EPIC_HAND}.published_margin_pp", "pp2"),
     (_W, "6.67", _MARGIN, f"{_EPIC_HAND}.corrected_margin_pp", "pp2"),
     (_W, "42", _MARGIN, f"{_EPIC_MANIP}.approx_gold_per_arm_to_exclude_published", "raw_int"),
+    # docs/blog-vernier.md -- the long-form. Prose figures; its cv-chart blocks are covered by
+    # the chart check below rather than pinned one value at a time.
+    (_B, "96.42", _E2, "H1.hand_ge1_rate.published", "pct2"),
+    (_B, "76.34", _E2, "H1.hand_eq2_rate.published", "pct2"),
+    (_B, "91.66", _E2, "H1.active_manipulation_rate.published", "pct2"),
+    (_B, "6.32", _E2, "H1.hand_eq2_rate.diff_pp", "pp2"),
+    (_B, "6.14", _E100K, "published_comparison.hand_eq2_rate.diff_pp", "pp2"),
+    (_B, "80.84", _W4, "ppi.G200-ego.manipulation.ppi.value", "pct2"),
+    (_B, "70.10", _W4, "ppi.G200-ego.manipulation.ppi.ci.lo", "pct2"),
+    (_B, "91.58", _W4, "ppi.G200-ego.manipulation.ppi.ci.hi", "pct2"),
+    (_B, "0.899", _W4, "intra_rater.manipulation.ac1", "ratio3"),
+    (_B, "0.863", _W4, "H4.manipulation.ac1", "ratio3"),
+    (_B, "9.09", _W4, "H5.egocentric.error_rate", "pct2"),
+    (_B, "3.33", _W4, "H5.epic_kitchens.error_rate", "pct2"),
+    (_B, "1.25", _E5, "H3.manipulation_spread_pp", "pp2"),
+    (_B, "0.25", _E5, "H3.hand_count_spread_pp", "pp2"),
+    (_B, "0.6933", _RUNG1, "fidelity_vs_gemini_2_5_flash", "ratio4"),
+    (_B, "0.1505", _W4, "H7_calibration.hand_count.ece", "ratio4"),
+    (_B, "0.0860", _W4, "H7_calibration.manipulation.ece", "ratio4"),
+    (_B, "-4.69", _MARGIN, f"{_EPIC_MANIP}.corrected_margin_pp", "pp2"),
+    (_B, "6.62", _MARGIN, f"{_EPIC_MANIP}.published_margin_pp", "pp2"),
+    (_B, "6.05", _MARGIN, f"{_EPIC_HAND}.published_margin_pp", "pp2"),
+    (_B, "6.67", _MARGIN, f"{_EPIC_HAND}.corrected_margin_pp", "pp2"),
+    (_B, "42", _MARGIN, f"{_EPIC_MANIP}.approx_gold_per_arm_to_exclude_published", "raw_int"),
+    # the error-direction table, produced by export_space_data rather than counted in prose
+    (_B, "14", _STATS, f"{_ERRDIR}.hand_count.over", "raw_int"),
+    (_B, "8", _STATS, f"{_ERRDIR}.manipulation.over", "raw_int"),
+    (_B, "0", _STATS, f"{_ERRDIR}.hand_count.under", "raw_int"),
+    (_B, "22", _STATS, f"{_ERRDIR}.total_errors", "raw_int"),
+    (_B, "40", _STATS, f"{_ERRDIR}.hand_count.at_risk_over", "raw_int"),
+    (_B, "72", _STATS, f"{_ERRDIR}.hand_count.at_risk_under", "raw_int"),
+    (_B, "27", _STATS, f"{_ERRDIR}.manipulation.at_risk_over", "raw_int"),
+    (_B, "66", _STATS, f"{_ERRDIR}.manipulation.at_risk_under", "raw_int"),
 )
 
 
