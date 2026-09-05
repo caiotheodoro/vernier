@@ -25,7 +25,11 @@
           "n_unlabelled": 140
         },
         "se_pp": 4.206218054899029,
-        "approx_gold_per_arm_to_exclude_published": 222
+        "gold_per_arm_to_exclude_published": {
+          "achievable_by_labelling_alone": false,
+          "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+          "floor_half_width_pp": 5.296311384221151
+        }
       },
       "manipulation": {
         "corrected_margin_pp": -1.015723615608377,
@@ -48,7 +52,11 @@
           "n_unlabelled": 140
         },
         "se_pp": 5.439257913047903,
-        "approx_gold_per_arm_to_exclude_published": 59
+        "gold_per_arm_to_exclude_published": {
+          "achievable_by_labelling_alone": true,
+          "gold_per_arm": 226,
+          "floor_half_width_pp": 6.142977322540821
+        }
       }
     },
     "egocentric-10k_minus_ego4d": {
@@ -73,7 +81,11 @@
           "n_unlabelled": 170
         },
         "se_pp": 6.263153481716778,
-        "approx_gold_per_arm_to_exclude_published": 989
+        "gold_per_arm_to_exclude_published": {
+          "achievable_by_labelling_alone": false,
+          "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+          "floor_half_width_pp": 7.195582006236177
+        }
       },
       "manipulation": {
         "corrected_margin_pp": 35.0557049558202,
@@ -96,7 +108,11 @@
           "n_unlabelled": 170
         },
         "se_pp": 7.727090388574033,
-        "approx_gold_per_arm_to_exclude_published": 162
+        "gold_per_arm_to_exclude_published": {
+          "achievable_by_labelling_alone": false,
+          "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+          "floor_half_width_pp": 7.6444086174223225
+        }
       }
     }
   }

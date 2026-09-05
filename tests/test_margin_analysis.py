@@ -9,7 +9,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from margin_analysis import _gold_needed_to_exclude, _se_from_block, margin  # noqa: E402
+from margin_analysis import (  # noqa: E402
+    _gold_needed_to_exclude,
+    _se_from_block,
+    _variance_components,
+    margin,
+)
 
 from vernier.models import PPIBlock, PPICI  # noqa: E402
 
@@ -58,13 +63,42 @@ def test_published_inside_ci_is_reported_separately_from_the_sign() -> None:
     assert m["published_inside_corrected_ci"] is True
 
 
-def test_gold_needed_scales_with_the_square_of_the_se_ratio() -> None:
-    z = 1.959963984540054
-    # gap of exactly z*se needs no more labels than it has
-    assert _gold_needed_to_exclude(0.0, 0.05, z * 0.05, n_now=30) == 30
-    # halving the required se costs four times the labels
-    assert _gold_needed_to_exclude(0.0, 0.05, z * 0.025, n_now=30) == 120
+def test_gold_sizing_accounts_for_the_unlabelled_floor(tmp_path: Path) -> None:
+    """D088: the old version scaled the whole standard error as 1/sqrt(n), which ignores that
+    the unlabelled term does not shrink with more labels. It returned a sample size smaller than
+    the one already collected."""
+    # gap of 0.05, so target SE is 0.05/1.96 = 0.02551, target variance 6.51e-4.
+    # floor 1e-4 leaves 5.51e-4 for the gold term; residual variance 0.05 needs n = 91.
+    out = _gold_needed_to_exclude(point=0.0, published=0.05, var_resid_sum=0.05, unl_floor=1e-4)
+    assert out["achievable_by_labelling_alone"] is True
+    assert out["gold_per_arm"] == 91
 
 
-def test_gold_needed_is_none_when_there_is_no_gap_to_close() -> None:
-    assert _gold_needed_to_exclude(0.1, 0.05, 0.1) is None
+def test_gold_sizing_reports_when_labelling_cannot_reach_the_target(tmp_path: Path) -> None:
+    """When the unlabelled pool alone exceeds the target variance, no number of labels helps."""
+    out = _gold_needed_to_exclude(point=0.0, published=0.01, var_resid_sum=0.05, unl_floor=1e-3)
+    assert out["achievable_by_labelling_alone"] is False
+    assert "floor_half_width_pp" in out
+    assert "gold_per_arm" not in out
+
+
+def test_variance_components_reproduce_the_committed_interval() -> None:
+    """The decomposition must add back up to the standard error the estimator reported."""
+    import json
+
+    from vernier.labels.store import HumanLabelStore
+    from vernier.models import JudgeResponse
+
+    gold = HumanLabelStore(Path("data/labels/caio")).read_pass("primary")
+    judged = [
+        JudgeResponse.model_validate(r)
+        for r in json.loads(Path("data/gold_judged/G200-ego.P0b.json").read_text())
+    ]
+    ids = {j.frame_id for j in judged}
+    arm_gold = [lab for lab in gold if lab.frame_id in ids]
+    var_resid, unl_term, n, big_n = _variance_components(arm_gold, judged, "manipulation")
+    committed = json.loads(Path("data/wave4_analysis.json").read_text())
+    block = committed["ppi"]["G200-ego"]["manipulation"]["ppi"]
+    se_committed = (block["ci"]["hi"] - block["ci"]["lo"]) / (2 * 1.959963984540054)
+    assert abs((var_resid / n + unl_term) ** 0.5 - se_committed) < 1e-9
+    assert (n, big_n) == (block["n_gold"], block["n_unlabelled"])

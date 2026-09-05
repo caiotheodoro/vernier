@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from scipy.stats import norm  # noqa: E402
 
+from vernier.agreement.core import _LABEL_FIELD, _RESPONSE_FIELD  # noqa: E402
 from vernier.estimation.ppi import estimate_prevalence  # noqa: E402
 from vernier.judges.prompts import PromptVariant  # noqa: E402
 from vernier.labels.store import HumanLabelStore  # noqa: E402
@@ -78,14 +79,23 @@ def _se_from_block(block: Any) -> float:
 
 
 def margin(
-    left: Any, right: Any, published_left: float, published_right: float
+    left: Any,
+    right: Any,
+    published_left: float,
+    published_right: float,
+    components: tuple[float, float] | None = None,
 ) -> dict[str, Any]:
-    """The corrected difference left - right, against the published difference."""
+    """The corrected difference left - right, against the published difference.
+
+    `components` is (summed gold residual variance, summed unlabelled floor variance) across the
+    two arms, which is what any sample-size question needs; without it the sizing is omitted
+    rather than guessed (D088).
+    """
     point = left.value - right.value
     se = math.sqrt(_se_from_block(left) ** 2 + _se_from_block(right) ** 2)
     lo, hi = point - _Z * se, point + _Z * se
     published = published_left - published_right
-    return {
+    out: dict[str, Any] = {
         "corrected_margin_pp": point * 100,
         "ci_pp": {"lo": lo * 100, "hi": hi * 100, "level": _CI_LEVEL},
         "published_margin_pp": published * 100,
@@ -94,24 +104,74 @@ def margin(
         "left": {"value": left.value, "n_gold": left.n_gold, "n_unlabelled": left.n_unlabelled},
         "right": {"value": right.value, "n_gold": right.n_gold, "n_unlabelled": right.n_unlabelled},
         "se_pp": se * 100,
-        # What it would take to separate the two. Approximate on purpose: it scales the gold
-        # term as 1/n and holds the residual variance and the unlabelled term fixed, so it is a
-        # floor on the labels required, not a power analysis. Reported because "the interval
-        # includes the published value" is only actionable with a price attached.
-        "approx_gold_per_arm_to_exclude_published": _gold_needed_to_exclude(point, se, published),
     }
+    if components is not None:
+        var_resid_sum, unl_floor = components
+        out["gold_per_arm_to_exclude_published"] = _gold_needed_to_exclude(
+            point, published, var_resid_sum, unl_floor
+        )
+    return out
 
 
-def _gold_needed_to_exclude(point: float, se: float, published: float, n_now: int = 30) -> int | None:
-    """Roughly how many gold labels per arm would put `published` outside the interval, if the
-    point estimate held. None when the point estimate is already on the published side."""
+def _variance_components(
+    gold: list[HumanLabel], judged: list[JudgeResponse], task: str
+) -> tuple[float, float, int, int]:
+    """The PPI++ variance split: (gold residual variance, lambda^2 * unlabelled variance, n, N).
+
+    `estimation/ppi.py` computes both and keeps neither, and the split is what any sample-size
+    question turns on: only the first term shrinks when more frames are labelled. The second is
+    a floor set by the size of the unlabelled pool (`docs/DECISIONS.md` D088).
+    """
+    label_value = _LABEL_FIELD[task]
+    response_value = _RESPONSE_FIELD[task]
+    gold_ids = {lab.frame_id for lab in gold}
+    ok = [j for j in judged if j.status == "ok"]
+    by_frame = {j.frame_id: j for j in ok}
+    y = [float(bool(label_value(lab))) for lab in gold]
+    f_gold = [float(bool(response_value(by_frame[lab.frame_id]))) for lab in gold]
+    f_unl = [float(bool(response_value(j))) for j in ok if j.frame_id not in gold_ids]
+    n, big_n = len(y), len(f_unl)
+    mean_fg, mean_y = sum(f_gold) / n, sum(y) / n
+
+    def var(xs: list[float], m: float) -> float:
+        return sum((x - m) ** 2 for x in xs) / (len(xs) - 1)
+
+    var_fg = var(f_gold, mean_fg)
+    cov = sum((a - mean_fg) * (b - mean_y) for a, b in zip(f_gold, y)) / (n - 1)
+    lam = min(1.0, max(0.0, cov / var_fg)) if var_fg > 0 else 0.0
+    resid = [b - lam * a for a, b in zip(f_gold, y)]
+    var_resid = var(resid, sum(resid) / n)
+    var_unl = var(f_unl, sum(f_unl) / big_n)
+    return var_resid, (lam**2) * var_unl / big_n, n, big_n
+
+
+def _gold_needed_to_exclude(
+    point: float, published: float, var_resid_sum: float, unl_floor: float
+) -> dict[str, Any]:
+    """How many gold frames per arm would put `published` outside the interval.
+
+    The previous version scaled the WHOLE standard error as 1/sqrt(n), which is wrong: the
+    unlabelled term does not shrink when more frames are labelled, so it is a floor. That bug
+    produced an answer smaller than the sample already collected (D088).
+    """
     gap = abs(published - point)
-    if gap == 0.0:
-        return None
-    se_needed = gap / _Z
-    if se_needed >= se:
-        return n_now
-    return int(math.ceil(n_now * (se / se_needed) ** 2))
+    target_se = gap / _Z
+    floor_se = math.sqrt(unl_floor)
+    if target_se <= floor_se:
+        return {
+            "achievable_by_labelling_alone": False,
+            "reason": (
+                "the unlabelled pool alone contributes more variance than the target allows; "
+                "no number of gold labels reaches it without a larger judged pool"
+            ),
+            "floor_half_width_pp": _Z * floor_se * 100,
+        }
+    needed = var_resid_sum / (target_se**2 - floor_se**2)
+    return {
+        "achievable_by_labelling_alone": True,
+        "gold_per_arm": int(math.ceil(needed)),
+        "floor_half_width_pp": _Z * floor_se * 100,
+    }
 
 
 def _load_labels() -> list[HumanLabel]:
@@ -129,9 +189,14 @@ def main() -> int:
     ids = {s: {f.frame_id for f in load_membership(s, _MEMBERSHIP_ROOT)} for s in _SAMPLES}
 
     blocks: dict[str, dict[str, Any]] = {}
+    comps: dict[str, dict[str, tuple[float, float, int, int]]] = {}
     for sample in _SAMPLES:
         gold = [lab for lab in primary if lab.frame_id in ids[sample]]
         blocks[sample] = {}
+        comps[sample] = {
+            task: _variance_components(gold, judged[sample], task)
+            for task in ("hand_count", "manipulation")
+        }
         for task in ("hand_count", "manipulation"):
             blocks[sample][task] = estimate_prevalence(
                 corpus=_CORPUS_NAME[sample],
@@ -167,6 +232,10 @@ def main() -> int:
                 blocks[right_s][task],
                 _PUBLISHED[left_s][task],
                 _PUBLISHED[right_s][task],
+                components=(
+                    comps[left_s][task][0] + comps[right_s][task][0],
+                    comps[left_s][task][1] + comps[right_s][task][1],
+                ),
             )
             for task in ("hand_count", "manipulation")
         }

@@ -251,8 +251,10 @@ Against human gold (one rater, n = {n_primary} primary labels, rubric v1.2.0):
   published {margin["published_margin_pp"]:+.2f}pp to {margin["corrected_margin_pp"]:+.2f}pp
   (95% CI [{margin["ci_pp"]["lo"]:.2f}, {margin["ci_pp"]["hi"]:.2f}]). The sign flips and the
   interval still covers the published value, so this fails to resolve the margin rather than
-  refuting it. About {margin["approx_gold_per_arm_to_exclude_published"]} gold frames per arm
-  would settle it, against the 33 and 30 that exist.
+  refuting it. About {margin["gold_per_arm_to_exclude_published"]["gold_per_arm"]} gold frames per
+  arm would settle it, against the {ppi_ego_m["ppi"]["n_gold"]} and 60 that exist; an earlier
+  revision of this card said 59, on a calculation that wrongly scaled the whole standard error
+  with the gold sample (`DECISIONS.md` D088).
 - Domain bias (H5): judge error on manipulation {_pct(h5["egocentric"]["error_rate"])}%
   (Egocentric, n = {h5["egocentric"]["n"]}) vs {_pct(h5["epic_kitchens"]["error_rate"])}%
   (EPIC-KITCHENS-100, n = {h5["epic_kitchens"]["n"]}). Underpowered by design at this n;

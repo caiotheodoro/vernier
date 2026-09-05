@@ -3136,3 +3136,64 @@ That is the highest-value remaining experiment and it is recorded rather than do
 
 **Reverses if:** the full-size unlabelled arms are judged, at which point the margin intervals
 narrow by roughly a third and the central "cannot be resolved" claim has to be re-tested.
+
+## D088 — An independent grade returned B-minus; the sample-size figure this project has quoted all week was computed wrong
+
+A fresh context with no history was asked to grade the paper from A+ to F. It returned **B-minus
+overall, major revision**, and three of its findings are correct against the artifacts.
+
+**1. "About 59 gold frames per arm would settle the margin" was wrong, and the error is in this
+project's own code.** `_gold_needed_to_exclude` scaled the whole standard error as
+$1/\sqrt{n}$. Only the gold-residual term shrinks when more frames are labelled; the unlabelled
+term is a floor set by the size of the judged pool. Because the two arms already hold 63 and 60
+labels, the broken calculation returned a number *smaller than the sample already collected*: at
+59 per arm the half-width is 10.79pp against the current 10.66pp, so acting on the advice would
+have widened the interval.
+
+Corrected, with the variance decomposed:
+
+| comparison | at n=59/arm | corrected requirement |
+|---|---|---|
+| manipulation | claimed to settle it | **226 gold per arm**, floor half-width 6.14pp |
+| hand count | claimed 222 | **not achievable by labelling at any budget**: the floor is 5.30pp, already above what separation needs |
+
+The figure appears in the paper, `docs/WRITEUP.md`, the live article, the Hub dataset card, D079
+and D085. All corrected. `margin_analysis.py` now computes the components rather than assuming
+a scaling law, reports whether the target is reachable at all, and states the floor.
+
+The consequence is worth stating plainly: **the binding constraint is not human labels.** It is
+that we judged 200 frames per arm when the vendor released 10,000. Judging the full arms costs
+about nine dollars and lowers the floor that currently makes the hand-visibility comparison
+unresolvable at any labelling budget. That is now the paper's closing recommendation.
+
+**2. The vendor's own judge is the stronger result and was buried.** On the $\geq$1-hand
+indicator the vendor's stored `gemini-2.5-flash` labels over-call **9 of 24** at-risk frames and
+under-call **0 of 129**, Fisher $p \approx 1.3\times10^{-8}$, against the open judge's 6 of 24 at
+$p = 8.3\times10^{-6}$. The paper led with the weaker proxy and described the vendor's labels as
+asymmetric "though less sharply" on the basis of a pooled *ternary* count, which is the exact
+estimand D087 had just argued was wrong for this claim. Corrected in the same session that
+introduced it. The vendor's judge is the one that produced the published number, so it is also
+the more relevant one.
+
+**3. Not one URL appeared in the paper or its bibliography.** The reproducibility section said
+"the protocol, the decision log, every result file and the labels are public" with no way to
+reach any of them, and a git commit hash with no repository named. Added: the repository, the
+dataset, the model, the Space and the article. The grader called this the change worth several
+letter grades, and it took five minutes.
+
+**Also fixed from the same grade.** Ego4D appears in every table in the paper and was never
+cited; it is now. The headline counts carried no intervals, in a paper whose thesis is that bare
+numbers are the problem; 6/24 is 25.0\% with a Wilson interval of [12.0, 44.9] and the other
+three counts likewise. The unverifiable item behind the `NOT_VERIFIED` verdict was mentioned
+twice and never named; it is the matched three-corpus transfer probe, blocked because
+EPIC-KITCHENS-100 registration needs an institutional email, which is itself an instance of the
+paper's argument.
+
+**Left open, and recorded rather than fixed.** No result is re-reported on the first 93 labels
+alone, which is the one analysis that would show whether the fast second batch changed the
+answer. The ICC back-out in Appendix E uses the equal-cluster approximation on clusters ranging
+from 1 to 90. There is still no inter-rater statistic. And the paper remains a stat.AP paper
+carrying a cs.CV label, with one figure and no images.
+
+**Reverses if:** the full evaluation arms are judged, which moves the floor and re-opens every
+sizing conclusion above.

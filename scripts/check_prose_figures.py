@@ -139,7 +139,7 @@ _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     (_W, "9.65", _MARGIN, f"{_EPIC_MANIP}.ci_pp.hi", "pp2"),
     (_W, "6.05", _MARGIN, f"{_EPIC_HAND}.published_margin_pp", "pp2"),
     (_W, "3.02", _MARGIN, f"{_EPIC_HAND}.corrected_margin_pp", "pp2"),
-    (_W, "59", _MARGIN, f"{_EPIC_MANIP}.approx_gold_per_arm_to_exclude_published", "raw_int"),
+    (_W, "226", _MARGIN, f"{_EPIC_MANIP}.gold_per_arm_to_exclude_published.gold_per_arm", "raw_int"),
     # docs/blog-vernier.md -- the long-form. Prose figures; its cv-chart blocks are covered by
     # the chart check below rather than pinned one value at a time.
     (_B, "96.42", _E2, "H1.hand_ge1_rate.published", "pct2"),
@@ -161,7 +161,6 @@ _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     (_B, "6.62", _MARGIN, f"{_EPIC_MANIP}.published_margin_pp", "pp2"),
     (_B, "6.05", _MARGIN, f"{_EPIC_HAND}.published_margin_pp", "pp2"),
     (_B, "3.02", _MARGIN, f"{_EPIC_HAND}.corrected_margin_pp", "pp2"),
-    (_B, "59", _MARGIN, f"{_EPIC_MANIP}.approx_gold_per_arm_to_exclude_published", "raw_int"),
     # the error-direction table, produced by export_space_data rather than counted in prose
     (_B, "16", _STATS, f"{_ERRDIR}.hand_count.over", "raw_int"),
     (_B, "10", _STATS, f"{_ERRDIR}.manipulation.over", "raw_int"),
@@ -185,7 +184,7 @@ _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     (_P, "-11.68", _MARGIN, f"{_EPIC_MANIP}.ci_pp.lo", "pp2"),
     (_P, "9.65", _MARGIN, f"{_EPIC_MANIP}.ci_pp.hi", "pp2"),
     (_P, "6.62", _MARGIN, f"{_EPIC_MANIP}.published_margin_pp", "pp2"),
-    (_P, "59", _MARGIN, f"{_EPIC_MANIP}.approx_gold_per_arm_to_exclude_published", "raw_int"),
+    (_P, "226", _MARGIN, f"{_EPIC_MANIP}.gold_per_arm_to_exclude_published.gold_per_arm", "raw_int"),
     (_P, "4.76", _W4, "H5.egocentric.error_rate", "pct2"),
     (_P, "8.33", _W4, "H5.epic_kitchens.error_rate", "pct2"),
     (_P, "0.6933", _RUNG1, "fidelity_vs_gemini_2_5_flash", "ratio4"),

@@ -143,7 +143,7 @@ The manipulation lead changes sign, from +6.62pp to -1.02pp. It is the only one 
 
 The hand-visibility margin holds its sign but loses about half its size: published +6.05pp, corrected +3.02pp, with an interval of [-5.23, +11.26] that also covers the published value. Neither comparative claim is refuted and neither is confirmed.
 
-The useful part is what happened when I acted on that. An earlier version of this post priced the gap at about 42 gold frames per arm, against the 33 and 30 that existed. I labelled 60 more. The margin moved toward the published value rather than away from it, the intervals narrowed, and the estimate of what it would take to separate them went up to 59 per arm. Buying more labels made the vendor's number look better, which is the outcome an audit has to be willing to publish.
+The useful part is what happened when I acted on that. An earlier version of this post priced the gap at about 42 gold frames per arm, against the 33 and 30 that existed. I labelled 60 more. The margin moved toward the published value rather than away from it, and then the price itself turned out to be wrong: it scaled the whole standard error as one over root n, when only the gold term shrinks with more labels and the unlabelled pool sets a floor underneath. Corrected, the manipulation margin needs about 226 gold frames per arm, and the hand-visibility margin cannot be separated by labelling at any budget at all. Buying more labels made the vendor's number look better and made the bill larger, which is the outcome an audit has to be willing to publish.
 
 ## The design effect
 

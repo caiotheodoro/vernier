@@ -85,9 +85,13 @@ comparative claim is refuted and neither is confirmed.
 This estimand is exploratory. The pre-registration asked a narrower question, whether the
 judge's error rate differs by domain, and that one is reported unchanged below. An earlier
 revision of this file priced the gap at roughly 42 gold frames per arm. Sixty more labels were
-then collected, and the corrected margins moved toward the published figures rather than away:
-the price of separating them is now about 59 per arm, against the 63 and 60 that exist. More
-labels made the vendor's number look better, and that is reported here rather than set aside.
+then collected, and the corrected margins moved toward the published figures rather than away.
+The price was then found to be wrong: it scaled the whole standard error as one over root n,
+when only the gold term shrinks with more labels and the unlabelled pool sets a floor.
+Corrected, the manipulation margin needs about 226 gold frames per arm, and the hand-visibility
+margin cannot be separated by labelling at any budget, because the floor already exceeds what
+separation would take (`docs/DECISIONS.md` D088). More labels made the vendor's number look
+better and the price of settling it went up, and both are reported here rather than set aside.
 
 **Their 10,000 frames are not 10,000 independent observations, and the gap is smaller than
 pre-registered.** (`data/h2_design_effect.S10k-U.json`, `data/h2_design_effect.S10k-S.json`)
