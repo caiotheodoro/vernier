@@ -27,6 +27,14 @@
       "n_pairs": 34
     }
   },
+  "retest_separation": {
+    "n_pairs": 34,
+    "min_days": 0.10130879141203705,
+    "median_days": 0.10187564228587963,
+    "max_days": 0.3324156685300926,
+    "required_days": 7.0,
+    "n_pairs_meeting_requirement": 0
+  },
   "H4": {
     "hand_count": {
       "ac1": 0.7951622418879056,

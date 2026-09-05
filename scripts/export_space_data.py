@@ -527,6 +527,9 @@ def _agreement(wave4: dict[str, Any]) -> dict[str, Any]:
     return {
         "h4": h4,
         "intra_rater": intra,
+        # D076: the separation the retest actually ran at, so the Space's "the rubric is
+        # decidable" line carries what that check does and does not cover.
+        "retest_separation": wave4["retest_separation"],
         "h5": {
             "egocentric-10k": {"n": h5["egocentric"]["n"], "error_rate": h5["egocentric"]["error_rate"]},
             "epic-kitchens-100": {"n": h5["epic_kitchens"]["n"], "error_rate": h5["epic_kitchens"]["error_rate"]},
@@ -712,6 +715,7 @@ def _provenance() -> dict[str, dict[str, str]]:
         "h4": {"claim_ref": "data/wave4_analysis.json#H4", "decision": "D059"},
         "h5": {"claim_ref": "data/wave4_analysis.json#H5", "decision": "D059"},
         "intra_rater": {"claim_ref": "data/wave4_analysis.json#intra_rater", "decision": "D058"},
+        "retest_separation": {"claim_ref": "data/wave4_analysis.json#retest_separation", "decision": "D076"},
         "calibration": {"claim_ref": "data/wave4_analysis.json#H7_calibration", "decision": "D060"},
         "coverage": {"claim_ref": "data/rung1_stored_labels.json", "decision": "D047"},
         "coverage_100k": {"claim_ref": "data/e2_100k_eval.json#per_variant", "decision": "D066"},

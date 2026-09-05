@@ -5,14 +5,21 @@ synthetic `HumanLabel`/`JudgeResponse` fixtures -- no real files, no live judge,
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from wave4_analysis import _calibration, _h4, _h5, _intra_rater_ac1, _ppi_per_domain  # noqa: E402
+from wave4_analysis import (  # noqa: E402
+    _calibration,
+    _h4,
+    _h5,
+    _intra_rater_ac1,
+    _ppi_per_domain,
+    _retest_separation,
+)
 
 from vernier.models import Confidence, HumanLabel, JudgeResponse
 
@@ -159,3 +166,45 @@ def test_calibration_reports_perfect_ece_when_confidence_matches_accuracy_exactl
 
     assert result["hand_count"]["ece"] == pytest.approx(0.0)
     assert result["manipulation"]["ece"] == pytest.approx(0.0)
+
+
+def _label_at(frame_id: str, pass_: str, when: datetime) -> HumanLabel:
+    return HumanLabel.model_validate(
+        {
+            "frame_id": frame_id,
+            "rater": "R1",
+            "pass": pass_,
+            "rubric_rev": "1.2.0",
+            "hands_visible": 2,
+            "manipulation": True,
+            "edge_case": [],
+            "difficulty": "easy",
+            "note": "",
+            "labelled_at": when.isoformat(),
+            "seconds_spent": 10,
+        }
+    )
+
+
+def test_retest_separation_measures_the_real_gap_and_counts_pairs_meeting_the_rule() -> None:
+    """D076: the pre-registration asks for >=7 days and the delivered data is hours apart, so
+    the gap is measured from the labels rather than asserted from the protocol."""
+    t0 = datetime(2026, 9, 3, 4, 15, tzinfo=timezone.utc)
+    primary = [_label_at("a", "primary", t0), _label_at("b", "primary", t0)]
+    retest = [
+        _label_at("a", "retest", t0 + timedelta(hours=2, minutes=24)),
+        _label_at("b", "retest", t0 + timedelta(days=8)),
+    ]
+    sep = _retest_separation(primary, retest)
+    assert sep["n_pairs"] == 2
+    assert sep["min_days"] == pytest.approx(0.1, abs=1e-3)
+    assert sep["max_days"] == pytest.approx(8.0)
+    assert sep["required_days"] == 7.0
+    assert sep["n_pairs_meeting_requirement"] == 1
+
+
+def test_retest_separation_says_why_it_is_absent_rather_than_reporting_a_zero_gap() -> None:
+    t0 = datetime(2026, 9, 3, 4, 15, tzinfo=timezone.utc)
+    sep = _retest_separation([_label_at("a", "primary", t0)], [_label_at("z", "retest", t0)])
+    assert sep["n_pairs"] == 0
+    assert "why_absent" in sep

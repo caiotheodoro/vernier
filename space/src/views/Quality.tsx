@@ -14,6 +14,7 @@ const YESNO: Answer[] = ["no", "yes"];
 export function Quality({ stats, frames, state, onFilter }: Props): JSX.Element {
   const h4 = stats.agreement.h4;
   const intra = stats.agreement.intra_rater;
+  const sep = stats.agreement.retest_separation;
   const tr = stats.test_retest;
   const effort = useMemo(() => {
     const seconds = frames.filter((f) => f.r).map((f) => (f.r as NonNullable<Frame["r"]>).s).sort((a, b) => a - b);
@@ -103,8 +104,11 @@ export function Quality({ stats, frames, state, onFilter }: Props): JSX.Element 
             AC1 {fixed(stat.ac1, 3)} (95% {stat.ci_method} CI {fixed(stat.lo, 3)}–{fixed(stat.hi, 3)}), κ{" "}
             {fixed(stat.kappa, 3)}, raw {pct(stat.raw)}%, n {int(stat.n)}. Intra-rater on the blind re-label: AC1{" "}
             {fixed(isHands ? intra.hand_count.ac1 : intra.manipulation.ac1, 3)} over{" "}
-            {int(isHands ? intra.hand_count.n_pairs : intra.manipulation.n_pairs)} pairs — the rubric is decidable.
-            The rater is the ground truth here; the judge is what is being measured.
+            {int(isHands ? intra.hand_count.n_pairs : intra.manipulation.n_pairs)} pairs — the rubric is decidable
+            within a session. That re-label ran a median of {fixed(sep.median_days * 24, 1)} hours after the first
+            pass, not the {int(sep.required_days)} days the protocol asked for ({int(sep.n_pairs_meeting_requirement)}{" "}
+            of {int(sep.n_pairs)} pairs met it), so it cannot separate a decidable rubric from a remembered frame
+            (D076). The rater is the ground truth here; the judge is what is being measured.
           </p>
         </div>
 
@@ -136,7 +140,9 @@ export function Quality({ stats, frames, state, onFilter }: Props): JSX.Element 
           <dt>repeatability, human</dt>
           <dd>
             <strong>{fixed(intra.manipulation.ac1, 3)}</strong>
-            <span className="verdict-detail">AC1 over {int(intra.manipulation.n_pairs)} blind re-label pairs</span>
+            <span className="verdict-detail">
+              AC1 over {int(intra.manipulation.n_pairs)} blind re-label pairs, {fixed(sep.median_days * 24, 1)} h apart
+            </span>
           </dd>
         </div>
         <div className="verdict">

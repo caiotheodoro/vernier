@@ -94,7 +94,9 @@ drawn from Build AI's own judged frames.
 Random order, blind to judge output, both tasks per frame, tags and difficulty recorded at
 label time.
 
-Then, **at least seven days later**, the blind `R100` re-label. Intra-rater κ is computed
+Then, **at least seven days later**, the blind `R100` re-label. (As run, neither held: the
+retest was redrawn from the primary pool, D058, and came a median of 2.4 hours later rather
+than seven days, `docs/DECISIONS.md` D076.) Intra-rater κ is computed
 first, before any judge–human comparison. If it is below 0.70 the rubric is not decidable,
 the audit is deferred, and the rubric becomes the deliverable — that stopping rule is in the
 pre-registration and is not negotiable after the fact.

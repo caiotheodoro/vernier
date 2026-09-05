@@ -317,6 +317,14 @@ def _write_wave4_fixture(
             {
                 "n_primary": 93,
                 "n_retest": 60,
+                "retest_separation": {
+                    "n_pairs": 34,
+                    "min_days": 0.101,
+                    "median_days": 0.102,
+                    "max_days": 0.332,
+                    "required_days": 7.0,
+                    "n_pairs_meeting_requirement": 0,
+                },
                 "intra_rater": {
                     "hand_count": {
                         "ac1": intra_rater_ac1,

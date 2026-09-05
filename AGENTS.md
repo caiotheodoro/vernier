@@ -56,8 +56,10 @@ project.
 Written down now, before it can be softened by results:
 
 - **One human rater.** There is no inter-rater agreement statistic, because there is one
-  person. The substitute is a blind re-label of `R100` at least seven days later, giving
-  *intra*-rater agreement — a weaker instrument, and `docs/RED-TEAM.md` says how.
+  person. The substitute is a blind re-label giving *intra*-rater agreement — a weaker
+  instrument, and `docs/RED-TEAM.md` says how. Weaker again as it actually ran: the protocol
+  asked for seven days between the passes and got a median of 2.4 hours, so the check covers
+  consistency within a session rather than agreement free of recall (`docs/DECISIONS.md` D076).
 - **The rater has read Build AI's prompt.** `docs/RUBRIC.md` was written knowing the
   definitions being audited. That is anchoring, and it is not removable at n=1.
 - **The two judge arms are not two independent opinions.** The live Qwen3-VL judge and Build

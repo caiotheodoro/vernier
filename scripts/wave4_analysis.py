@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from statistics import median
 from typing import Any
 
 from vernier.agreement.core import (
@@ -65,6 +66,10 @@ _RATER = "caio"
 _JUDGE = "qwen3-vl"
 _VARIANT: PromptVariant = "P0b"
 _H5_TOLERANCE_PP = 5.0
+# `PRE-REGISTRATION.md`'s samples table: the blind re-label is specified ">=7 days later".
+# Kept here as the requirement so the measured separation is reported against it rather than
+# compared by eye (`docs/DECISIONS.md` D076).
+_RETEST_SEPARATION_REQUIRED_DAYS = 7.0
 
 _SAMPLES: tuple[SampleName, ...] = ("G200-ego", "G200-ego4d", "G200-epic")
 
@@ -117,6 +122,34 @@ def _intra_rater_ac1(
         if match is not None:
             pairs.append((label_value(label), label_value(match)))
     return _gwet_ac1_from_pairs(pairs, categories), len(pairs)
+
+
+def _retest_separation(primary: list[HumanLabel], retest: list[HumanLabel]) -> dict[str, Any]:
+    """How long the rater actually waited between labelling a frame and re-labelling it.
+
+    `PRE-REGISTRATION.md`'s samples table requires ">=7 days later" for the blind re-label,
+    because the gate is supposed to measure whether the rubric is decidable and not whether the
+    rater remembers the frame. Nothing measured the gap until `docs/DECISIONS.md` D076, so this
+    reports it from the labels themselves rather than restating the protocol. It is a property
+    of the collected data, not a parameter -- if a future retest is collected at a real
+    separation these numbers move on their own.
+    """
+    retest_by_frame = {label.frame_id: label for label in retest}
+    gaps_days = sorted(
+        (retest_by_frame[label.frame_id].labelled_at - label.labelled_at).total_seconds() / 86_400.0
+        for label in primary
+        if label.frame_id in retest_by_frame
+    )
+    if not gaps_days:
+        return {"n_pairs": 0, "why_absent": "no frame_id appears in both passes"}
+    return {
+        "n_pairs": len(gaps_days),
+        "min_days": gaps_days[0],
+        "median_days": median(gaps_days),
+        "max_days": gaps_days[-1],
+        "required_days": _RETEST_SEPARATION_REQUIRED_DAYS,
+        "n_pairs_meeting_requirement": sum(g >= _RETEST_SEPARATION_REQUIRED_DAYS for g in gaps_days),
+    }
 
 
 def _intra_rater(primary: list[HumanLabel], retest: list[HumanLabel]) -> dict[str, Any]:
@@ -239,6 +272,7 @@ def main() -> int:
         "n_primary": len(primary),
         "n_retest": len(retest),
         "intra_rater": _intra_rater(primary, retest),
+        "retest_separation": _retest_separation(primary, retest),
         "H4": _h4(primary, judged_by_sample),
         "H5": _h5(primary, judged_by_sample, frame_ids_by_sample),
         "ppi": _ppi_per_domain(primary, judged_by_sample, frame_ids_by_sample),

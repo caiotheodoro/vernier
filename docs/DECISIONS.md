@@ -2540,3 +2540,48 @@ gap the result is about.
 
 **Reverses if:** the control arm moves as much as the disagreement arm, in which case the pass
 measured relabelling noise and is reported as such and used for nothing else.
+
+## D076 — The blind re-label ran the same day, not seven days later
+
+`PRE-REGISTRATION.md`'s samples table specifies the `R100` re-label as ">=7 days later", and
+`METHOD.md` E3, `RUBRIC.md`, `RED-TEAM.md` A1 and `AGENTS.md` all repeat it. It did not happen.
+Measured from the committed labels' own `labelled_at` fields, the 34 overlapping primary/retest
+pairs are separated by a median of **0.102 days, which is 2.4 hours**, with a minimum of 0.101
+and a maximum of 0.332. **Zero of the 34 pairs meet the rule.** The primary pass ran
+2026-09-03T04:15Z to 18:41Z and the retest 20:23Z to 21:03Z: the same day, about 100 minutes of
+work, starting an hour and 42 minutes after the primary pass ended.
+
+**Cause: D058's fix, and nobody checked the other half of the same sentence.** D058 found that
+the retest overlapped primary on only 4 frames and added `--retest-from-primary`, drawing the
+retest pool from the rater's own already-labelled frames. That fixed the overlap, correctly. It
+also made running the retest immediately the natural thing to do, since the pool was sitting
+right there, and the temporal separation the pre-registration requires in the same breath went
+unmeasured. Nothing in the codebase measured the gap, so nothing failed.
+
+**What changes, and what does not.** AC1 is unchanged: 0.8757 on hand_count, 0.9037 on
+manipulation, n=34, both still above the 0.70 gate. What they license is narrower. At a
+2.4-hour separation the gate measures whether the rubric is applied consistently inside one
+session. It does not exclude the rater recalling the frame, which is the specific thing seven
+days was there to defeat. It is a weaker falsification check than the one designed, and it is
+now reported as one everywhere the figure appears.
+
+**Fixed in the instrument, not in prose.** `scripts/wave4_analysis.py` computes the real
+separation from the labels and writes it to `data/wave4_analysis.json` as `retest_separation`
+(pair count, min, median, max, the required threshold, and how many pairs meet it);
+`scripts/emit_card.py` reads it into the intra-rater claim. The figure is produced rather than
+transcribed, so a retest collected at a real separation moves it without anyone editing a
+sentence. The card digest changes as a result, from `3aacbe46...` to `d77e591b...`.
+
+**`docs/WRITEUP.md` said "at least a week later", and that was wrong.** Corrected. This is the
+sharpest available instance of the failure this project audits in its subject: a prose claim
+about how a measurement was collected, restating the protocol instead of the data, with nothing
+checking it. The timestamps have been public in the Hub dataset release since it was uploaded,
+so a reader could always have checked. Nobody here did.
+
+**Not fixable by re-labelling.** The rater has seen the results. A retest collected now is not
+blind, and a pass run after the fact to satisfy a rule would be worth less than saying this
+plainly.
+
+**Reverses if:** a rater who has not seen the results labels `G200-ego` at a real separation.
+In practice that is the second rater `RED-TEAM.md` A1 has wanted since before any result
+existed, which would supply inter-rater agreement and a valid intra-rater interval at once.

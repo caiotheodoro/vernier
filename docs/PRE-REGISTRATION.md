@@ -286,3 +286,11 @@ Every entry here is a pointer to the real `DECISIONS.md` record, not a restateme
   numbers were sized for; H5 was already found underpowered at the *full* size (D035), so this
   widens an already-wide interval rather than crossing into invalid territory. `docs/DECISIONS.md`
   D057.
+- **The blind re-label did not wait seven days.** The samples table above specifies `R100`,
+  re-labelled ">=7 days later". Two departures happened and only one was recorded at the time:
+  D058 redrew the retest from the rater's own primary-labelled pool rather than `R100`'s fixed
+  membership (recorded), and the pass then ran the same evening, a median of 2.4 hours after the
+  primary pass, 0 of 34 pairs meeting the stated separation (not recorded until now). The
+  intra-rater AC1 figures are unchanged and still clear the 0.70 gate; what they license is
+  narrower, because seven days was there to rule out the rater recalling the frame and 2.4 hours
+  does not. `docs/DECISIONS.md` D076.

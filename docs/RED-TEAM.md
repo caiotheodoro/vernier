@@ -16,11 +16,17 @@ is no inter-rater agreement, so there is no evidence that a second competent per
 `RUBRIC.md` would produce the same labels. κ(judge, human) may be measuring the rater's
 idiosyncrasies as much as the judge's errors.
 
-**Partial answer.** `R100`, re-labelled blind after ≥7 days, gives intra-rater agreement (AC1,
-with κ beside it). **This is
+**Partial answer.** A blind re-label gives intra-rater agreement (AC1, with κ beside it).
+**This is
 strictly weaker**: consistency is not correctness, and a rater who is reliably wrong scores
 well on it. A stopping rule (intra-rater κ < 0.70 defers the audit) bounds the damage but
 does not remove it.
+
+**And weaker still than that, as executed.** The design said `R100` re-labelled blind after ≥7
+days. The re-label that exists ran a median of 2.4 hours after the primary pass, 0 of 34 pairs
+meeting the rule (`docs/DECISIONS.md` D076). Seven days was in the protocol to stop the rater
+recalling the frame, so what the gate now shows is within-session consistency. The attack above
+lands harder, not softer.
 
 **Status: unmitigated.** It is a real limitation and stays on the front page of any writeup.
 

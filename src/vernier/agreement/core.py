@@ -207,7 +207,13 @@ def fleiss_kappa(responses_by_judge: dict[str, list[JudgeResponse]], task: str) 
 
 
 def intra_rater_kappa(primary: list[HumanLabel], retest: list[HumanLabel], task: str) -> float:
-    """`R100`: primary pass vs. the blind re-label at least seven days later.
+    """Primary pass vs. the blind re-label, matched by `frame_id`.
+
+    The pre-registration specifies that re-label as `R100`, at least seven days later. Neither
+    held in the data this ships against: D058 redrew the retest from the primary pool, and the
+    separation came in at a median of 2.4 hours (`docs/DECISIONS.md` D076). The statistic is the
+    same either way; what it licenses is not, and `scripts/wave4_analysis.py` reports the
+    measured separation beside it so a reader is not left with the protocol's version.
 
     Implements Cohen's kappa (the standard two-rater formula), treating the primary pass as one
     rater and the retest pass as the other, matched by `frame_id`. AC1 is also pre-registered for

@@ -252,6 +252,14 @@ export type Stats = {
       "hand_count" | "manipulation",
       { ac1: number; lo: number; hi: number; ci_method: string; kappa: number; n_pairs: number }
     >;
+    retest_separation: {
+      n_pairs: number;
+      min_days: number;
+      median_days: number;
+      max_days: number;
+      required_days: number;
+      n_pairs_meeting_requirement: number;
+    };
     h5: {
       "egocentric-10k": { n: number; error_rate: number };
       "epic-kitchens-100": { n: number; error_rate: number };

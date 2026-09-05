@@ -49,6 +49,14 @@
     "lo": 0.7433962264150943,
     "n_pairs": 34
    }
+  },
+  "retest_separation": {
+   "max_days": 0.3324156685300926,
+   "median_days": 0.10187564228587963,
+   "min_days": 0.10130879141203705,
+   "n_pairs": 34,
+   "n_pairs_meeting_requirement": 0,
+   "required_days": 7.0
   }
  },
  "calibration": {
@@ -298,7 +306,7 @@
   }
  },
  "generated_from": {
-  "card_digest": "sha256:3aacbe46237ebba411038ea7ed5d4cfb8405b7fd5c7e9100bc041ed05b228622",
+  "card_digest": "sha256:d77e591bbe384eb5af217bcb85fbe4da7688d24b24cff97351db1f99bec5b333",
   "dataset": "builddotai/Egocentric-10K-Evaluation",
   "dataset_rev": "d74b7883c998dd360e3f051830fcc792a83985e6",
   "git_rev": "ef9709740a573ba4c959e918f6e5f8c5844efcd1",
@@ -1386,6 +1394,10 @@
    "claim_ref": "docs/PRE-REGISTRATION.md#headline-table",
    "decision": "D001"
   },
+  "retest_separation": {
+   "claim_ref": "data/wave4_analysis.json#retest_separation",
+   "decision": "D076"
+  },
   "test_retest": {
    "claim_ref": "data/judge_test_retest.json",
    "decision": "D059"
@@ -1418,7 +1430,7 @@
   }
  },
  "repo": {
-  "n_decisions": 75,
+  "n_decisions": 76,
   "n_tests": 486
  },
  "rows_api": {

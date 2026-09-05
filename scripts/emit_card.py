@@ -237,9 +237,15 @@ def _intra_rater_claim() -> Claim:
     """Real intra-rater AC1/kappa (`PRE-REGISTRATION.md`'s first-listed falsification check:
     "Human gold disagrees with itself... AC1 on R100 below 0.70... the audit is deferred").
     D058's reduced retest (n=34 real overlapping pairs, not the pre-registered 100) -- reported
-    with that real n, not silently as if full precision had been achieved."""
+    with that real n, not silently as if full precision had been achieved.
+
+    D076: the separation between the two passes is also reported, measured from the labels
+    rather than restated from the protocol. It came in at a median of ~2.4 hours against a
+    pre-registered >=7 days, which changes what this gate measures -- consistency within one
+    session, with recall not excluded -- without changing either AC1."""
     wave4 = json.loads(_WAVE4_RESULTS_PATH.read_text())
     intra = wave4["intra_rater"]
+    sep = wave4["retest_separation"]
     below_gate = {task: v["ac1"] < 0.70 for task, v in intra.items()}
     statement = (
         f"Intra-rater reliability (R100 falsification gate, n={intra['hand_count']['n_pairs']} "
@@ -252,7 +258,15 @@ def _intra_rater_claim() -> Claim:
         )
         + ". Both clear the pre-registered 0.70 gate: the rubric is decidable, the audit is not "
         "deferred. Real n is small (34, not 100) so this reads as a real positive result at "
-        "reduced precision, not the full-precision one the pre-registration specified. Not "
+        "reduced precision, not the full-precision one the pre-registration specified. "
+        f"DEVIATION (docs/DECISIONS.md D076): the two passes are separated by a median of "
+        f"{sep['median_days']:.3f} days (min {sep['min_days']:.3f}, max {sep['max_days']:.3f}), "
+        f"and {sep['n_pairs_meeting_requirement']} of {sep['n_pairs']} pairs meet the "
+        f"pre-registered >={sep['required_days']:.0f}-day separation. At that interval this "
+        "measures whether the rubric is applied consistently within one session; it does not "
+        "exclude the rater recalling the frame, so it is a weaker falsification gate than the "
+        "pre-registration intended. The point estimates are unaffected; what they license is "
+        "narrower. Not "
         "clustered: HumanLabel carries no shared participant/cluster id with FrameRef "
         "(docs/DECISIONS.md D039, unfixed) -- each interval is a lower bound on true width, not "
         "the full cluster-aware one."

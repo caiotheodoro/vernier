@@ -23,7 +23,10 @@ unless every claim is backed by a record.
   retired for new API keys; their per-frame labels ship in the evaluation parquet, so the
   comparison runs against those.
 - **Human gold**: 93 frames labelled by one rater against a written rubric, balanced across
-  the three corpora, plus a blind re-label of 34 of them at least a week later.
+  the three corpora, plus a blind re-label of 34 of them. The protocol asked for seven days
+  between the two passes; the re-label actually ran a median of 2.4 hours after the first, so it
+  measures whether the rubric is applied consistently within a session and does not rule out the
+  rater remembering the frame (`docs/DECISIONS.md` D076).
 - **The raw corpus, drawn twice**: 10,000 frames uniform over frames (`S10k-U`) and 10,000
   stratified by factory worker-hours, at most one per clip (`S10k-S`), from 19,495 video shards
   (~16 TB) without downloading them: a tar index built from 512-byte headers, then one frame per
@@ -101,8 +104,12 @@ with 85 factories, 10,000 hours and 192,903 clips reconciling essentially exactl
 (`docs/UPSTREAM-FINDINGS.md` F12). Nine workers, 0.42%, too few to move anything above;
 recorded so a reader comparing counts knows why they differ.
 
-**The rubric is decidable.** Intra-rater AC1 0.876 (hand count) and 0.904 (manipulation) on
-34 blind re-labels, against a pre-registered gate of 0.70. The audit is not deferred.
+**The rubric is decidable within a session.** Intra-rater AC1 0.876 (hand count) and 0.904
+(manipulation) on 34 blind re-labels, against a pre-registered gate of 0.70. The audit is not
+deferred. The re-label came a median of 2.4 hours after the first pass rather than the
+pre-registered seven days, which makes this a weaker check than intended: it shows the rubric
+is applied consistently, and it cannot separate that from the rater recalling the frame
+(`docs/DECISIONS.md` D076).
 
 **Judge–human agreement is high, and higher on the harder task.** AC1 0.795 [0.687, 0.894]
 on hand count, 0.899 [0.807, 0.969] on manipulation. The pre-registered prediction was the
