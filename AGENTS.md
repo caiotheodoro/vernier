@@ -7,8 +7,8 @@ rules.
 
 **Current state: results in, one item blocked.** Real data drawn and
 persisted; the live judge has made thousands of real calls across full-N replication, the
-prompt sweep, and gold-set judging. Real human labels are collected and committed (93 primary
-+ retest, D057/D058). A real rung-1 model (DINOv2 features + linear probe + abstention
+prompt sweep, and gold-set judging. Real human labels are collected and committed (153 primary,
+93 from the first batch and 60 added under D085, plus a retest; D057/D058). A real rung-1 model (DINOv2 features + linear probe + abstention
 cascade) has been trained and evaluated (D061) -- a disclosed negative result, not a missing
 one. H2 is measured on both raw-corpus draws and does not hold as stated (design effect
 1.25–1.66 against 2, D071/D072). `docs/HANDOFF.md` is the resume point; Result 2 alone remains

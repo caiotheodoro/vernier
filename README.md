@@ -39,8 +39,8 @@ vernier measures the judge, then replaces it with something re-runnable.
 > point: a project auditing someone's unvalidated measurement does not get to improvise its
 > own. Since then: the live judge (Qwen3-VL, self-hosted, `docs/DECISIONS.md` D042) has made
 > thousands of real calls across the full-N replication, the prompt sweep, and gold-set
-> judging. Human labels are real and collected (93 primary + retest, reduced from the
-> pre-registered 600/100 per D057/D058) and committed as data. A rung-1 instrument (DINOv2
+> judging. Human labels are real and collected (153 primary, 93 from the first batch and
+> 60 added under D085, plus a retest; reduced from the pre-registered 600/100 per D057/D058) and committed as data. A rung-1 instrument (DINOv2
 > features + linear probe + abstention cascade) has been trained and evaluated for real
 > (D061) -- it does not clear its pre-registered target, and that negative result is reported,
 > not hidden. The comparison has also been run against Build AI's **current** product,
