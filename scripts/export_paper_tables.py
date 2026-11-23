@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import math
 import subprocess
+from decimal import ROUND_HALF_EVEN, Decimal
 from pathlib import Path
 from typing import Any
 
@@ -360,6 +361,17 @@ def _provenance(d: dict[str, Any]) -> str:
 # ── appendices ──────────────────────────────────────────────────────────────────────────────
 
 
+def _fmt_fixed(x: float, places: int) -> str:
+    """Fixed-point rounding that does not depend on sub-ulp float noise.
+
+    Rounds to 12 significant digits first so a value that is an exact tie in
+    decimal (e.g. 13/16 = 0.8125) rounds the same way on every platform, then
+    applies round-half-even.
+    """
+    q = Decimal(1).scaleb(-places)
+    return str(Decimal(repr(round(x, 12))).quantize(q, rounding=ROUND_HALF_EVEN))
+
+
 def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs)
 
@@ -446,7 +458,7 @@ def _ppi_variance(d: dict[str, Any]) -> str:
                 share = 100 * gold_term / (gold_term + unl_term)
                 rows.append(
                     f"{arm_label} & {_CORPUS_LABEL[corpus]} & {_TASK_LABEL[task]} & {n} & {big_n:,} & "
-                    f"{lam:.3f} & {gold_term:.2e} & {unl_term:.2e} & {share:.1f} \\\\"
+                    f"{_fmt_fixed(lam, 3)} & {gold_term:.2e} & {unl_term:.2e} & {share:.1f} \\\\"
                 )
     body = "\n".join(rows)
     return (
