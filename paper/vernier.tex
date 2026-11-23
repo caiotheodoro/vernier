@@ -34,7 +34,7 @@
 
 \title{When a Model Judge Certifies a Dataset:\\
 Asymmetric Over-Calling, Worker Clustering, and Unresolved Margins in Egocentric-10K}
-\author{Caio Theodoro\\\small Independent}
+\author{Caio Theodoro\\\small Avenza Labs (\texttt{avenza.cloud}) \and Jo\~{a}o Vitor Basso Sberse\\\small Avenza Labs (\texttt{avenza.cloud}) \and Matheus Theodoro\\\small Avenza Labs (\texttt{avenza.cloud})}
 \date{First version 5 September 2026; this version 23 November 2026}
 
 \begin{document}
@@ -208,7 +208,7 @@ temperature 0 and seed 777 pinned on every request and the vendor's prompts used
 Comparing against Build AI's published numbers therefore uses two arms: the vendor's own stored
 \texttt{gemini-2.5-flash} labels and live \texttt{Qwen3-VL} outputs on the identical frames.
 
-Ground-truth labels were collected by one rater (the author) on \vernierNPrimary{} frames drawn
+Ground-truth labels were collected by one rater (the first author) on \vernierNPrimary{} frames drawn
 from the 200-frame gold pools (63 Egocentric-10K, 60 EPIC-KITCHENS-100, 30 Ego4D) using a written
 rubric of 22 numbered rules resolving ambiguities left open by the vendor's prompt (gloves,
 reflections, motion blur, edge cropping, self-contact, third-party hands, and idle grip). The
@@ -517,7 +517,7 @@ together:
 
 \begin{itemize}
 \item \textbf{Single human rater and lack of inter-rater reliability.} All \vernierNPrimary{} gold
-      labels come from one person (the author), who also wrote the rubric after reading Build AI's
+      labels come from one person (the first author), who also wrote the rubric after reading Build AI's
       prompt (introducing unremovable anchoring at $n=1$). There is no inter-rater AC1 or
       $\kappa$. The 34-pair blind retest ran at a median separation of 2.4 hours rather than the
       pre-registered seven days (0 of 34 pairs met the rule), measuring within-session consistency
@@ -585,9 +585,9 @@ rung-1 probe at \url{https://huggingface.co/caiotheodoro/vernier-rung1-probe}; t
 disagreement viewer at \url{https://huggingface.co/spaces/caiotheodoro/vernier}; and an earlier
 informal writeup (5 September 2026) at
 \url{https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way}. The code, analysis scripts,
-and manuscript text were written with an AI coding assistant under the author's direction and
-review; all human gold labels are the author's own. The author works on a commercial AI gateway;
-nothing from that product is used here. The author has an interest in the audited vendor being
+and manuscript text were written with an AI coding assistant under the authors' direction and
+review; all human gold labels are the first author's own. The first author works on a commercial AI gateway;
+nothing from that product is used here. The authors have an interest in the audited vendor being
 aware of this work, structurally bounded by pre-registration before data collection. Code and data
 are licensed Apache-2.0; this paper is CC BY 4.0. Built from commit \texttt{\vernierGitRev}
 against measurement card digest \texttt{\vernierCardDigest} (\vernierNClaims{} claims; card
