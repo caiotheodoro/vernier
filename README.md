@@ -170,6 +170,7 @@ also ships 2,144 workers against the published 2,153 (`docs/UPSTREAM-FINDINGS.md
 | What is inherited, and from where | `docs/LINEAGE.md` |
 | Decisions and what would reverse them | `docs/DECISIONS.md` |
 | Where the work currently stands | `docs/HANDOFF.md` |
+| The paper, deposited on Zenodo (CC BY 4.0; D090) | [10.5281/zenodo.24453957](https://doi.org/10.5281/zenodo.24453957); source `paper/vernier.tex`, `make paper` |
 | The data, on the Hub (labels, membership, judge output, results; no images) | [`caiotheodoro/vernier`](https://huggingface.co/datasets/caiotheodoro/vernier) |
 | The rung-1 probe, a published negative result | [`caiotheodoro/vernier-rung1-probe`](https://huggingface.co/caiotheodoro/vernier-rung1-probe) |
 | The writeup, with the argument and the charts | [caio.theodoro.dev](https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way) |
