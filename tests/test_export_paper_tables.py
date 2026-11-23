@@ -101,3 +101,20 @@ def test_the_ledger_carries_every_pre_registered_hypothesis(data: dict[str, Any]
     for h in ("H1", "H1b", "H2", "H3", "H4", "H5", "H6", "H7", "H8"):
         assert f"{h} &" in ledger, f"{h} missing from the hypothesis ledger"
     assert "exploratory" in ledger
+
+
+def test_the_paper_source_has_no_doubled_backslashes() -> None:
+    """A `\\\\` ahead of `%` or a command name is a typesetting bug, not a line break.
+
+    `\\\\%` ends the line and comments out the rest of it, and `\\\\citep` prints as text.
+    Both were in the committed paper (the abstract and the first result) and no gate saw them.
+    """
+    import re
+
+    tex = (_ROOT / "paper" / "vernier.tex").read_text()
+    bad = [
+        f"line {i}: {line.strip()[:60]}"
+        for i, line in enumerate(tex.splitlines(), 1)
+        if re.search(r"(?<!\\)\\\\(?=[%a-zA-Z])", line)
+    ]
+    assert not bad, bad

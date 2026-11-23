@@ -83,7 +83,7 @@ paper-tables:  ## Regenerate the paper's LaTeX tables from the committed result 
 	python3 scripts/export_paper_tables.py
 
 paper: paper-tables  ## Build paper/vernier.pdf with tectonic (not part of validate; needs tectonic)
-	cd paper && tectonic -X compile vernier.tex
+	cd paper && SOURCE_DATE_EPOCH=1795392000 tectonic -X compile vernier.tex  # fixed epoch (2026-11-23 00:00 UTC, the \date): the PDF is byte-reproducible from a given source
 
 check-prose-figures: ## Every figure in prose still equals the file that produces it (AGENTS.md rule 2)
 	python3 scripts/check_prose_figures.py
