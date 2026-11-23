@@ -174,7 +174,7 @@ $\hat{\rho}_w = 0.039\text{--}0.106$. Reviewed independently, numbers reproduced
 | Decisions and what would reverse them | `docs/DECISIONS.md` |
 | Follow-up v2 study design (second rater, registered margin, vendor reply) | `docs/DESIGN-V2.md` |
 | Where the work currently stands | `docs/HANDOFF.md` |
-| The paper, deposited on Zenodo (CC BY 4.0; v1.0 D090, v2.0 D093/D094) | [10.5281/zenodo.24453957](https://doi.org/10.5281/zenodo.24453957); source `paper/vernier.tex`, `make paper` |
+| The paper, deposited on Zenodo (CC BY 4.0; v2.0 D093/D094, deposit D096) | [10.5281/zenodo.24481860](https://doi.org/10.5281/zenodo.24481860) (v2.0; all versions [10.5281/zenodo.24453956](https://doi.org/10.5281/zenodo.24453956)); source `paper/vernier.tex`, `make paper` |
 | The data, on the Hub (labels, membership, judge output, results; no images) | [`caiotheodoro/vernier`](https://huggingface.co/datasets/caiotheodoro/vernier) |
 | The rung-1 probe, a published negative result | [`caiotheodoro/vernier-rung1-probe`](https://huggingface.co/caiotheodoro/vernier-rung1-probe) |
 | The writeup, with the argument and the charts | [caio.theodoro.dev](https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way) |

@@ -3355,3 +3355,15 @@ On the owner's instruction across repositories (recorded in `lacuna` D114): the 
 
 - **Why it stops at a design.** Recruiting a second rater, freezing owner predictions, and sending external vendor correspondence are the owner's acts.
 - **Reversal.** The file is a draft; a later entry freezes or replaces it.
+
+## D096 — Paper v2.0 deposited on Zenodo as a new version of record 24453957 (2026-11-23 UTC)
+
+**The deposit.** `paper-v2.0` is Zenodo record 24481860, version DOI 10.5281/zenodo.24481860; the concept DOI for all versions is 10.5281/zenodo.24453956. The draft was created from the v1 record and published on 2026-11-23 at about 20:45 UTC. The publication date on the record is 2026-09-05, as set in `.zenodo.json`, because the first public version of the source is that date. The file is `vernier.pdf`, built from `paper/vernier.tex` with `SOURCE_DATE_EPOCH` fixed, md5 `249c42549d68c13e5ccd6ce9f0b37f05`; the Zenodo file checksum matches it. Version string `paper-v2.0`.
+
+**What can and cannot change.** Zenodo does not let the file be changed after publication: the PDF is fixed at the md5 above. The metadata (title, creators, description, keywords, related works, references) can still be edited on the record, and any such edit is recorded by Zenodo, not here.
+
+**The deposit is not the registration clock.** Publishing on Zenodo gives a DOI and a timestamp for the file; it does not register the pre-registration, the analysis plan, or the claims. Those rest on the committed history and on D091 (the post-hoc analyses specified before they were run).
+
+**Known gap.** The additional description of type Other carrying the first-publication note did not persist through the draft form. The note is in `.zenodo.json` (`notes`) and in this entry; the record page may lack it until someone adds it by hand.
+
+**Reversal.** If the record is found to carry a wrong file, the fix is a new version (`paper-v2.1`), not an edit of this one. If the DOI in `README.md` and `CITATION.cff` is withdrawn, this entry is superseded by a later one that names the replacement.
