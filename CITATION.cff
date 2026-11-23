@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite the paper."
+title: "Asymmetric Judge Error and Clustered Frames: A Pre-Registered Audit of a Commercial Dataset Quality Claim"
+type: article
+authors:
+  - family-names: Theodoro
+    given-names: Caio
+    orcid: "https://orcid.org/0009-0005-7343-981X"
+date-released: 2026-11-23
+repository-code: "https://github.com/caiotheodoro/vernier"
+license: Apache-2.0
+keywords:
+  - dataset auditing
+  - LLM-as-judge
+  - prediction-powered inference
+  - pre-registration
+  - negative results
+abstract: >-
+  A pre-registered audit of a vendor's dataset quality claim: the judge's errors
+  against one rater's labels, the design effect of the corpus, and the
+  gold-corrected comparison against EPIC-KITCHENS-100. The code and data are
+  Apache-2.0, the paper CC BY 4.0.

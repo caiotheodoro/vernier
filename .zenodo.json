@@ -1,0 +1,129 @@
+{
+  "title": "Asymmetric Judge Error and Clustered Frames: A Pre-Registered Audit of a Commercial Dataset Quality Claim",
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "creators": [
+    {
+      "name": "Theodoro, Caio",
+      "orcid": "0009-0005-7343-981X"
+    }
+  ],
+  "publication_date": "2026-11-23",
+  "license": "cc-by-4.0",
+  "description": "Commercial dataset vendors advertise corpus quality with statistics produced by a vision-language model applied once to a sample of frames. We audit one such claim. Build AI publishes, for its Egocentric-10K corpus, that 96.42% of frames show at least one hand and 91.66% show active manipulation, both ahead of Ego4D and EPIC-KITCHENS-100, from 10,000 frames labelled once with no human label, no interval, and no test that the labeller scores the compared corpora on the same scale. We pre-registered a protocol, replicated the figures with an independent open-weights judge on two releases a year apart, collected 153 human labels from one rater against a written rubric, and re-estimated the published quantities with prediction-powered inference. Three findings. First, judge error is strongly asymmetric: on the hand-visibility indicator the published figure reports, the judge over-calls 6 of the 24 frames where over-calling was possible and under-calls 0 of 129, and on manipulation 10 of 33 against 2 of 120, both significant at p < 10^-5. Second, the corpus is clustered by camera wearer, with a design effect of 1.25 to 1.66 on two independent 10,000-frame draws, so an independent-frames interval understates its width by 11 to 22%; no interval is published, and the released frames carry no identifier that would let anyone else compute one. Third, the comparative claims cannot be resolved at this gold size: correcting both sides of the manipulation margin against EPIC-KITCHENS-100 moves it from a published +6.62 to -1.02 percentage points, 95% interval [-11.68, +9.65], which covers the published value. None of the pre-registered hypotheses was confirmed, and we report what moved when we collected more labels. Artifacts and protocol are public; the measurement card reports NOT_VERIFIED. Not peer reviewed. Code and protocol: https://github.com/caiotheodoro/vernier",
+  "keywords": [
+    "dataset auditing",
+    "LLM-as-judge",
+    "prediction-powered inference",
+    "pre-registration",
+    "negative results"
+  ],
+  "language": "eng",
+  "related_identifiers": [
+    {
+      "relation": "isSupplementedBy",
+      "identifier": "https://github.com/caiotheodoro/vernier",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "relation": "isSupplementedBy",
+      "identifier": "https://huggingface.co/datasets/caiotheodoro/vernier",
+      "resource_type": "dataset",
+      "scheme": "url"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2301.09633",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2311.01453",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2408.15204",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2606.00093",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2411.00640",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2407.18370",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2110.01052",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2604.16413",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2606.05308",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2601.20913",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2502.04144",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2006.07159",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    }
+  ],
+  "references": [
+    "Angelopoulos, A. N., Bates, S., Fannjiang, C., Jordan, M. I., & Zrnic, T. (2023). Prediction-Powered Inference. arXiv preprint arXiv:2301.09633.",
+    "Angelopoulos, A. N., Duchi, J. C., & Zrnic, T. (2023). PPI++: Efficient Prediction-Powered Inference. arXiv preprint arXiv:2311.01453.",
+    "Gligorić, K., Zrnic, T., Lee, C., Candès, E. J., & Jurafsky, D. (2025). Can Unconfident LLM Annotations Be Used for Confident Conclusions? arXiv preprint arXiv:2408.15204.",
+    "Gwet, K. L. (2008). Computing inter-rater reliability and its variance in the presence of high agreement. British Journal of Mathematical and Statistical Psychology, 61(1), 29-48.",
+    "Rao, D., & Callison-Burch, C. (2026). Agreement Metrics for LLM-as-Judge Evaluation: What to Report and Why. arXiv preprint arXiv:2606.00093.",
+    "Miller, E. (2024). Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations. arXiv preprint arXiv:2411.00640.",
+    "Jung, J., Brahman, F., & Choi, Y. (2024). Trust or Escalate: LLM Judges with Provable Guarantees for Human Agreement. arXiv preprint arXiv:2407.18370.",
+    "Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan, M. I., & Lei, L. (2021). Learn then Test: Calibrating Predictive Algorithms to Achieve Risk Control. arXiv preprint arXiv:2110.01052.",
+    "Liu, J. (2026). What Is Actually Being Annotated? Inter-Prompt Reliability as a Measurement Problem in LLM-Based Social Science Labeling. arXiv preprint arXiv:2604.16413.",
+    "Divekar, A. (2026). Statistically Reliable LLM-Based Ranking Evaluation via Prediction-Powered Inference. arXiv preprint arXiv:2606.05308.",
+    "Feng, C., Shen, M., Balashankar, A., Gerner-Beuerle, C., & Rodrigues, M. R. D. (2026). Noisy but Valid: Robust Statistical Evaluation of LLMs with Imperfect Judges. arXiv preprint arXiv:2601.20913.",
+    "Damen, D., Doughty, H., Farinella, G. M., Furnari, A., Kazakos, E., Ma, J., Moltisanti, D., Munro, J., Perrett, T., Price, W., & Wray, M. (2022). Rescaling Egocentric Vision: Collection, Pipeline and Challenges for EPIC-KITCHENS-100. International Journal of Computer Vision, 130, 33-55.",
+    "Perrett, T., Darkhalil, A., Sinha, S., Emara, O., Pollard, S., Parida, K., Liu, K., Gatti, P., Bansal, S., Flanagan, K., Chalk, J., Zhu, Z., Guerrier, R., Abdelazim, F., Zhu, B., Moltisanti, D., Wray, M., Doughty, H., & Damen, D. (2025). HD-EPIC: A Highly-Detailed Egocentric Video Dataset. arXiv preprint arXiv:2502.04144.",
+    "Grauman, K., Westbury, A., Byrne, E., Chavis, Z., Furnari, A., Girdhar, R., Hamburger, J., Jiang, H., Liu, M., Liu, X., Martin, M., Nagarajan, T., Radosavovic, I., Ramakrishnan, S. K., Ryan, F., et al. (2022). Ego4D: Around the World in 3,000 Hours of Egocentric Video. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).",
+    "Beyer, L., Hénaff, O. J., Kolesnikov, A., Zhai, X., & van den Oord, A. (2020). Are we done with ImageNet? arXiv preprint arXiv:2006.07159.",
+    "Northcutt, C. G., Athalye, A., & Mueller, J. (2021). Pervasive Label Errors in Test Sets Destabilize Machine Learning Benchmarks. Advances in Neural Information Processing Systems, Datasets and Benchmarks Track.",
+    "Raji, I. D., & Buolamwini, J. (2019). Actionable Auditing: Investigating the Impact of Publicly Naming Biased Performance Results of Commercial AI Products. AAAI/ACM Conference on AI, Ethics, and Society (AIES).",
+    "Kish, L. (1965). Survey Sampling. John Wiley and Sons."
+  ],
+  "version": "paper-v1.0"
+}
