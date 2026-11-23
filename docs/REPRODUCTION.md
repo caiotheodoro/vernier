@@ -72,13 +72,14 @@ own HF access to the gated corpora.
 
 ## What cannot be reproduced, and why
 
-- **The human labels.** 93 primary labels from one rater (reduced from the pre-registered 600
-  per `docs/DECISIONS.md` D057, balanced 33/30/30 across `G200-ego`/`G200-ego4d`/`G200-epic`)
-  plus a 60-label retest set (D058) are published as data under `data/labels/`, but a
-  reproducer cannot regenerate them; they can only re-label and compare. That comparison is
-  more valuable than a match, because it supplies the inter-rater agreement this project
-  cannot produce. **A reproducer who re-labels `G200-ego` should be treated as a collaborator,
-  and their κ against `R1` belongs in the record.**
+- **The human labels.** 153 primary labels from one rater (93 from the first batch, reduced
+  from the pre-registered 600 per `docs/DECISIONS.md` D057 and balanced 33/30/30 across
+  `G200-ego`/`G200-ego4d`/`G200-epic`, plus 60 added under D085 taking the arms to 63/30/60)
+  plus a 60-label retest set (34 valid overlapping pairs; D058, D085) are published as data
+  under `data/labels/`, but a reproducer cannot regenerate them; they can only re-label and
+  compare. That comparison is more valuable than a match, because it supplies the inter-rater
+  agreement this project cannot produce. **A reproducer who re-labels `G200-ego` should be
+  treated as a collaborator, and their κ against `R1` belongs in the record.**
 - **Closed-judge responses at a past revision.** Recorded verbatim in `raw` so the parse is
   checkable, but not re-callable once the endpoint moves.
 - **The corpus itself.** 16.4 TB for the smallest release, obtained from the vendor under

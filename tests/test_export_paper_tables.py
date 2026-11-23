@@ -1,4 +1,4 @@
-"""The paper's tables are generated, not typed (docs/DECISIONS.md D086).
+"""The paper's tables are generated, not typed (docs/DECISIONS.md D086, D093).
 
 The committed files under `paper/generated/` must equal a fresh build, the same rule
 `tests/test_export_space_data.py` applies to the Space payload and for the same reason: a
@@ -19,19 +19,21 @@ sys.path.insert(0, str(_ROOT / "scripts"))
 
 from export_paper_tables import (  # noqa: E402
     _cluster_detail,
-    _fig_forest,
+    _cluster_sensitivity,
     _confusion_per_corpus,
     _design_effect,
+    _disagreement_tags,
     _error_direction,
+    _fig_forest,
     _ledger,
     _load,
     _margins,
     _ppi_variance,
     _prevalence,
-    _provenance,
-    _run_ledger,
     _replication,
+    _sensitivity,
     _tex_escape,
+    _vendor_prevalence,
 )
 
 _GENERATED = _ROOT / "paper" / "generated"
@@ -48,13 +50,16 @@ def data() -> dict[str, Any]:
         ("fig_forest", _fig_forest),
         ("confusion_per_corpus", _confusion_per_corpus),
         ("ppi_variance", _ppi_variance),
-        ("run_ledger", _run_ledger),
         ("cluster_detail", _cluster_detail),
+        ("cluster_sensitivity", _cluster_sensitivity),
+        ("disagreement_tags", _disagreement_tags),
         ("replication", _replication),
         ("error_direction", _error_direction),
         ("prevalence", _prevalence),
+        ("vendor_prevalence", _vendor_prevalence),
         ("margins", _margins),
         ("design_effect", _design_effect),
+        ("sensitivity", _sensitivity),
         ("ledger", _ledger),
     ],
 )
@@ -62,6 +67,14 @@ def test_committed_table_equals_a_fresh_build(
     name: str, builder: Callable[[dict[str, Any]], str], data: dict[str, Any]
 ) -> None:
     assert (_GENERATED / f"{name}.tex").read_text() == builder(data)
+
+
+def test_error_direction_table_carries_both_vendor_and_open_judge(data: dict[str, Any]) -> None:
+    tex = _error_direction(data)
+    assert "gemini-2.5-flash" in tex
+    assert "Qwen3-VL" in tex
+    assert "9/24" in tex
+    assert "0/129" in tex
 
 
 def test_provenance_digest_is_the_committed_card(data: dict[str, Any]) -> None:
@@ -92,8 +105,6 @@ def test_every_table_is_a_complete_booktabs_tabular(data: dict[str, Any]) -> Non
         assert tex.startswith("\\begin{tabular}"), path.name
         assert tex.rstrip().endswith("\\end{tabular}"), path.name
         assert tex.count("\\toprule") == tex.count("\\bottomrule") == 1, path.name
-        # appendix tables use \\midrule inside the body to separate estimands (D087),
-        # so the count is not pinned to 1.
 
 
 def test_the_ledger_carries_every_pre_registered_hypothesis(data: dict[str, Any]) -> None:

@@ -1,5 +1,5 @@
 {
-  "title": "Asymmetric Judge Error and Clustered Frames: A Pre-Registered Audit of a Commercial Dataset Quality Claim",
+  "title": "When a Model Judge Certifies a Dataset: Asymmetric Over-Calling, Worker Clustering, and Unresolved Margins in Egocentric-10K",
   "upload_type": "publication",
   "publication_type": "preprint",
   "creators": [
@@ -8,15 +8,17 @@
       "orcid": "0009-0005-7343-981X"
     }
   ],
-  "publication_date": "2026-11-23",
+  "publication_date": "2026-09-05",
   "license": "cc-by-4.0",
-  "description": "Commercial dataset vendors advertise corpus quality with statistics produced by a vision-language model applied once to a sample of frames. We audit one such claim. Build AI publishes, for its Egocentric-10K corpus, that 96.42% of frames show at least one hand and 91.66% show active manipulation, both ahead of Ego4D and EPIC-KITCHENS-100, from 10,000 frames labelled once with no human label, no interval, and no test that the labeller scores the compared corpora on the same scale. We pre-registered a protocol, replicated the figures with an independent open-weights judge on two releases a year apart, collected 153 human labels from one rater against a written rubric, and re-estimated the published quantities with prediction-powered inference. Three findings. First, judge error is strongly asymmetric: on the hand-visibility indicator the published figure reports, the judge over-calls 6 of the 24 frames where over-calling was possible and under-calls 0 of 129, and on manipulation 10 of 33 against 2 of 120, both significant at p < 10^-5. Second, the corpus is clustered by camera wearer, with a design effect of 1.25 to 1.66 on two independent 10,000-frame draws, so an independent-frames interval understates its width by 11 to 22%; no interval is published, and the released frames carry no identifier that would let anyone else compute one. Third, the comparative claims cannot be resolved at this gold size: correcting both sides of the manipulation margin against EPIC-KITCHENS-100 moves it from a published +6.62 to -1.02 percentage points, 95% interval [-11.68, +9.65], which covers the published value. None of the pre-registered hypotheses was confirmed, and we report what moved when we collected more labels. Artifacts and protocol are public; the measurement card reports NOT_VERIFIED. Not peer reviewed. Code and protocol: https://github.com/caiotheodoro/vernier",
+  "description": "Commercial dataset vendors increasingly certify corpus quality with single-pass vision-language model statistics. Build AI reports that its Egocentric-10K corpus shows >=1 hand in 96.42% of frames and active manipulation in 91.66%, leading Ego4D and EPIC-KITCHENS-100, from 10,000 frames labelled once by gemini-2.5-flash with no human gold, no confidence interval, and no cross-domain check. Against 153 single-rater gold frames scored under a written rubric, the vendor's stored labels over-call >=1 hand on 9 of 24 at-risk frames (37.5%, 95% Wilson [21.2, 57.3]) and under-call 0 of 129 ([0.0, 2.9], p = 1.3e-8), and over-call active manipulation on 10 of 33 (30.3%) against 4 of 120 (3.3%, p = 3.4e-5). An independent open judge (Qwen3-VL-8B-Instruct-FP8) shows the same asymmetry (6/24 vs. 0/129; 10/33 vs. 2/120). Second, on two 10,000-frame raw-corpus draws, camera-wearer clustering yields design effects of 1.25 to 1.66, widening intervals by 12 to 29% over iid (post-hoc factory clustering reaches 2.18 to 5.65); because evaluation releases omit grouping IDs, direct cluster-robust inference cannot run on the published sample. Third, PPI++ gold-correction over the vendor's 9,800-frame stored arms moves the active-manipulation lead over EPIC-KITCHENS-100 from +6.62 to -1.32 pp (iid 95% CI [-10.78, +8.14]; post-hoc cluster sensitivity [-11.28, +8.64] to [-12.07, +9.43]), leaving the lead unresolved. Resolving it takes roughly 89 gold frames per arm under iid (55 more than exist) and 93 to 115 under clustering. Because all 153 labels are single-rater and the vendor's judge reverses on EPIC-KITCHENS-100 manipulation, an independent second rater is needed before generalising this asymmetry into an upper-bound claim. Not peer reviewed.",
+  "notes": "First published on 5 September 2026 (https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way; first paper source committed the same day). This version, paper-v2.0, is of 23 November 2026.",
   "keywords": [
     "dataset auditing",
     "LLM-as-judge",
     "prediction-powered inference",
-    "pre-registration",
-    "negative results"
+    "cluster-robust inference",
+    "egocentric video",
+    "pre-registration"
   ],
   "language": "eng",
   "related_identifiers": [
@@ -33,6 +35,18 @@
       "scheme": "url"
     },
     {
+      "relation": "isSupplementedBy",
+      "identifier": "https://huggingface.co/spaces/caiotheodoro/vernier",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "relation": "isSupplementedBy",
+      "identifier": "https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way",
+      "resource_type": "other",
+      "scheme": "url"
+    },
+    {
       "relation": "cites",
       "identifier": "arXiv:2301.09633",
       "resource_type": "publication-preprint",
@@ -41,6 +55,12 @@
     {
       "relation": "cites",
       "identifier": "arXiv:2311.01453",
+      "resource_type": "publication-preprint",
+      "scheme": "arxiv"
+    },
+    {
+      "relation": "cites",
+      "identifier": "arXiv:2610.09601",
       "resource_type": "publication-preprint",
       "scheme": "arxiv"
     },
@@ -108,6 +128,7 @@
   "references": [
     "Angelopoulos, A. N., Bates, S., Fannjiang, C., Jordan, M. I., & Zrnic, T. (2023). Prediction-Powered Inference. arXiv preprint arXiv:2301.09633.",
     "Angelopoulos, A. N., Duchi, J. C., & Zrnic, T. (2023). PPI++: Efficient Prediction-Powered Inference. arXiv preprint arXiv:2311.01453.",
+    "Broska, D., & Howes, M. (2026). Cluster-Robust Prediction-Powered Inference. arXiv preprint arXiv:2610.09601.",
     "Gligorić, K., Zrnic, T., Lee, C., Candès, E. J., & Jurafsky, D. (2025). Can Unconfident LLM Annotations Be Used for Confident Conclusions? arXiv preprint arXiv:2408.15204.",
     "Gwet, K. L. (2008). Computing inter-rater reliability and its variance in the presence of high agreement. British Journal of Mathematical and Statistical Psychology, 61(1), 29-48.",
     "Rao, D., & Callison-Burch, C. (2026). Agreement Metrics for LLM-as-Judge Evaluation: What to Report and Why. arXiv preprint arXiv:2606.00093.",
@@ -125,5 +146,5 @@
     "Raji, I. D., & Buolamwini, J. (2019). Actionable Auditing: Investigating the Impact of Publicly Naming Biased Performance Results of Commercial AI Products. AAAI/ACM Conference on AI, Ethics, and Society (AIES).",
     "Kish, L. (1965). Survey Sampling. John Wiley and Sons."
   ],
-  "version": "paper-v1.0"
+  "version": "paper-v2.0"
 }

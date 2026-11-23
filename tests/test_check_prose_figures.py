@@ -90,6 +90,12 @@ def test_resolve_walks_lists_by_integer_segment(tmp_path: Path) -> None:
     assert _resolve("data/x.json", "bins.1.n", tmp_path) == 92
 
 
+def test_resolve_supports_keys_with_literal_dots(tmp_path: Path) -> None:
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "x.json").write_text(json.dumps({"judges": {"gemini-2.5-flash": {"over": 9}}}))
+    assert _resolve("data/x.json", "judges.gemini-2.5-flash.over", tmp_path) == 9
+
+
 def test_the_real_pins_all_pass() -> None:
     """The production configuration, against the real committed artifacts."""
     assert main() == 0

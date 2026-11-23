@@ -1,10 +1,15 @@
-\begin{tabular}{@{}llrrlc@{}}
+\begin{tabular}{@{}lllrrlcr@{}}
 \toprule
-vs. & task & published & corrected & 95\% CI & published inside \\
+model arm & vs. & task & pub. & corr. & 95\% iid CI & in CI & $n$/arm \\
 \midrule
-EPIC-KITCHENS-100 & $\geq$1 hand & +6.05 & +3.02 & [-5.23, +11.26] & yes \\
-EPIC-KITCHENS-100 & active manipulation & +6.62 & -1.02 & [-11.68, +9.65] & yes \\
-Ego4D & $\geq$1 hand & +29.09 & +31.23 & [+18.95, +43.50] & yes \\
-Ego4D & active manipulation & +41.59 & +35.06 & [+19.91, +50.20] & yes \\
+vendor ($N{=}9{,}800$) & EPIC-KITCHENS-100 & $\geq$1 hand & +6.05 & +4.71 & [-2.31, +11.74] & yes & 2246 \\
+vendor ($N{=}9{,}800$) & EPIC-KITCHENS-100 & manipulation & +6.62 & -1.32 & [-10.78, +8.14] & yes & 89 \\
+vendor ($N{=}9{,}800$) & Ego4D & $\geq$1 hand & +29.09 & +36.13 & [+22.92, +49.35] & yes & 126 \\
+vendor ($N{=}9{,}800$) & Ego4D & manipulation & +41.59 & +37.85 & [+23.26, +52.44] & yes & 628 \\
+\midrule
+open ($N{\approx}140$) & EPIC-KITCHENS-100 & $\geq$1 hand & +6.05 & +3.02 & [-5.23, +11.26] & yes & floor \\
+open ($N{\approx}140$) & EPIC-KITCHENS-100 & manipulation & +6.62 & -1.02 & [-11.68, +9.65] & yes & 226 \\
+open ($N{\approx}140$) & Ego4D & $\geq$1 hand & +29.09 & +31.23 & [+18.95, +43.50] & yes & floor \\
+open ($N{\approx}140$) & Ego4D & manipulation & +41.59 & +35.06 & [+19.91, +50.20] & yes & floor \\
 \bottomrule
 \end{tabular}

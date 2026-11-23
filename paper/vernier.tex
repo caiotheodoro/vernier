@@ -1,736 +1,711 @@
-% Asymmetric Judge Error and Clustered Frames.
+% When a Model Judge Certifies a Dataset (paper-v2.0).
 %
-% Numeric tables are NOT written here. They are generated from the committed result files by
-% scripts/export_paper_tables.py into paper/generated/ and pulled in with \input, so a table
-% cannot drift from the artifact it reports. Figures quoted in prose are pinned by
-% scripts/check_prose_figures.py, the same way the two markdown writeups are (D081, D086).
+% Numeric tables and the forest figure are NOT hand-typed here. They are generated from the
+% committed result files by scripts/export_paper_tables.py into paper/generated/ and pulled
+% in with \input. Prose figures are pinned by scripts/check_prose_figures.py.
 %
-% arXiv categories: primary stat.AP, cross-list cs.CV (D089). This is a measurement
-% paper about a corpus statistic, not a vision-method paper; the only vision artefact is a
-% linear probe reported as a negative result.
+% arXiv categories: primary stat.AP, cross-list cs.CV.
 \documentclass[11pt]{article}
 
-\usepackage[margin=1.1in]{geometry}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{booktabs}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
-\usepackage{amsmath}
+\usepackage{amsmath,amssymb}
 \usepackage{microtype}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
 \usepackage[numbers,sort&compress]{natbib}
+\usepackage[font=footnotesize,skip=4pt]{caption}
 
 \setlength{\tabcolsep}{4pt}
 \sloppy
 
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {1.5ex \@plus .4ex \@minus .2ex}{-1em}{\normalfont\normalsize\bfseries}}
+\makeatother
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+
 \input{generated/provenance}
 
-\title{Asymmetric Judge Error and Clustered Frames:\\
-A Pre-Registered Audit of a Commercial Dataset Quality Claim}
+\title{When a Model Judge Certifies a Dataset:\\
+Asymmetric Over-Calling, Worker Clustering, and Unresolved Margins in Egocentric-10K}
 \author{Caio Theodoro\\\small Independent}
-\date{23 November 2026}
+\date{First version 5 September 2026; this version 23 November 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
 \noindent
-Commercial dataset vendors advertise corpus quality with statistics produced by a
-vision-language model applied once to a sample of frames. We audit one such claim. Build AI
-publishes, for its Egocentric-10K corpus, that 96.42\% of frames show at least one hand and
-91.66\% show active manipulation, both ahead of Ego4D \citep{grauman2022ego4d} and EPIC-KITCHENS-100
-\citep{damen2022epic100}, from 10{,}000
-frames labelled once with no human label, no interval, and no test that the labeller scores the
-compared corpora on the same scale. We pre-registered a protocol, replicated the figures with an
-independent open-weights judge on two releases a year apart, collected \vernierNPrimary{} human
-labels from one rater against a written rubric, and re-estimated the published quantities with
-prediction-powered inference. Three findings. First, judge error is strongly asymmetric: on the
-hand-visibility indicator the published figure reports, the judge over-calls 6 of the 24 frames
-where over-calling was possible and under-calls 0 of 129, and on manipulation 10 of 33 against
-2 of 120, both significant at $p < 10^{-5}$. Second, the corpus is clustered by camera wearer,
-with a design effect of 1.25 to 1.66 on two independent 10{,}000-frame draws, so an
-independent-frames interval understates its width by 11 to 22\%; no interval is published, and
-the released frames carry no identifier that would let anyone else compute one. Third, the
-comparative claims cannot be resolved at this gold size: correcting both sides of the
-manipulation margin against EPIC-KITCHENS-100 moves it from a published $+6.62$ to $-1.02$
-percentage points, 95\% interval $[-11.68, +9.65]$, which covers the published value. None of
-the pre-registered hypotheses was confirmed, and we report what moved when we collected
-more labels. Artifacts and protocol are public; the measurement card reports
-\texttt{\vernierVerdict}.
+Commercial dataset vendors increasingly certify corpus quality with single-pass vision-language
+model statistics. Build AI reports that its Egocentric-10K corpus shows $\geq$1 hand in 96.42\%
+of frames and active manipulation in 91.66\%, leading Ego4D \citep{grauman2022ego4d} and
+EPIC-KITCHENS-100 \citep{damen2022epic100}, from 10{,}000 frames labelled once by
+\texttt{gemini-2.5-flash} with no human gold, no confidence interval, and no cross-domain check.
+Against \vernierNPrimary{} single-rater gold frames scored under a written rubric, the vendor's
+stored labels over-call $\geq$1 hand on 9 of 24 at-risk frames (37.5\%, 95\% Wilson
+$[21.2, 57.3]$) and under-call 0 of 129 ($[0.0, 2.9]$, $p = 1.3\times 10^{-8}$), and over-call
+active manipulation on 10 of 33 (30.3\%) against 4 of 120 (3.3\%, $p = 3.4\times 10^{-5}$). An
+independent open judge (\texttt{Qwen3-VL-8B-Instruct-FP8}) shows the same asymmetry (6/24 vs.\
+0/129; 10/33 vs.\ 2/120). Second, on two 10{,}000-frame raw-corpus draws, camera-wearer
+clustering yields design effects of 1.25 to 1.66, widening intervals by 12 to 29\% over iid
+(post-hoc factory clustering reaches 2.18 to 5.65); because evaluation releases omit grouping
+IDs, direct cluster-robust inference cannot run on the published sample. Third, PPI++
+gold-correction over the vendor's 9{,}800-frame stored arms moves the active-manipulation lead
+over EPIC-KITCHENS-100 from $+6.62$ to $-1.32$\,pp (iid 95\% CI $[-10.78, +8.14]$; post-hoc
+cluster sensitivity $[-11.28, +8.64]$ to $[-12.07, +9.43]$), leaving the lead unresolved.
+Resolving it takes roughly 89 gold frames per arm under iid (55 more than exist) and 93 to 115
+under clustering. Because all \vernierNPrimary{} labels are single-rater and the vendor's judge
+reverses on EPIC-KITCHENS-100 manipulation, an independent second rater is needed before
+generalising this asymmetry into an upper-bound claim.
 \end{abstract}
 
 \section{Introduction}
+\label{sec:intro}
 
-A dataset vendor sells a corpus and a number attached to it. Build AI sells egocentric video
-recorded in factories, and its evaluation release publishes the quality figures that justify the
-sale: 96.42\% of frames contain at least one hand, 76.34\% contain two, 91.66\% show active
-manipulation, each ahead of the two most-used academic egocentric corpora. The corpus is
-substantial and the release is unusually open by the standards of commercial data: 10{,}000 hours
-from 2{,}153 workers across 85 factories, per-clip metadata, camera intrinsics, and the
-evaluation frames themselves.
+Commercial video dataset vendors publish quality metrics alongside their corpora to justify
+training value and differentiate against academic benchmarks. Build AI's evaluation release for
+Egocentric-10K reports that 96.42\% of frames contain at least one hand, 76.34\% contain two
+hands, and 91.66\% show active manipulation, placing the corpus ahead of both Ego4D
+\citep{grauman2022ego4d} and EPIC-KITCHENS-100 \citep{damen2022epic100}. The underlying corpus is
+substantial and unusually transparent by commercial standards: roughly 10{,}000 hours of factory
+video from 2{,}153 workers across 85 factories, per-clip metadata, camera intrinsics, and an
+ungated evaluation release shipping the judged frames and per-frame labels.
 
-The number attached to it is a point estimate produced by applying \texttt{gemini-2.5-flash} once
-to 10{,}000 frames. It carries no human label, no confidence interval, and no evidence that the
-model scores a factory floor and a domestic kitchen on the same scale. The last of these is what
-the comparative claim rests on, and the margin over EPIC-KITCHENS-100 is about six percentage
-points on both headline tasks. A buyer has no way to check any of it.
+The advertised quality numbers themselves are bare point estimates produced by a single pass of
+\texttt{gemini-2.5-flash} over 10{,}000 frames per corpus. They carry no human validation, no
+uncertainty interval, and no check that the judge maintains equal accuracy on factory floors and
+domestic kitchens. The comparative claim against EPIC-KITCHENS-100 rests on margins of 6.05
+percentage points on $\geq$1 hand and 6.62 percentage points on active manipulation---small enough
+that asymmetric or domain-varying judge error could account for most of the gap.
 
-We built the check. This paper reports what it found and, equally, what it could not settle.
+We conducted a pre-registered measurement audit of this quality claim using Build AI's released
+evaluation frames, its stored per-frame \texttt{gemini-2.5-flash} labels, a self-hosted
+open-weights judge (\texttt{Qwen3-VL-8B-Instruct-FP8}), \vernierNPrimary{} human gold labels from
+one rater applying a 22-rule written rubric, and two 10{,}000-frame draws from the raw video
+corpus carrying real worker and factory identifiers. Our contributions are fourfold:
 
-\paragraph{Contributions.}
 \begin{enumerate}
-\item \textbf{An asymmetric-error result.} On the hand-visibility indicator the published
-      figure reports, the judge over-calls 6 of 24 at-risk frames and under-calls none of 129;
-      on manipulation, 10 of 33 against 2 of 120. Both are significant at $p < 10^{-5}$. A
-      judge-derived prevalence of this kind is better read as an upper bound than as a point
-      estimate. We report the full confusion matrix rather than a summary count, because the
-      ternary hand count and the indicator are different estimands and only the latter bears on
-      the published figure.
-\item \textbf{A design effect for a corpus quality statistic.} Frames from one camera wearer
-      share scene, lighting, task and equipment. Measured on two independent 10{,}000-frame
-      draws from the raw corpus with real worker identifiers, the design effect is 1.25 to 1.66,
-      so an interval that treats frames as independent understates its width by 11 to 22\%,
-      equivalently the cluster-aware interval is 12 to 29\% wider. We are not
-      aware of an egocentric dataset that reports this, and the released evaluation frames carry
-      a bare UUID with no worker linkage, so it cannot be computed on the sample the published
-      figures describe.
-\item \textbf{A negative result on the comparative claim, with a price.} Correcting both sides
-      of the margin leaves the published value inside the corrected interval. We report the
-      gold-set size that would separate them, and that this figure rose after we collected more
-      labels.
-\item \textbf{An audit that reports its own failures.} Five corrections to our own published
-      claims are recorded in Section~\ref{sec:moved}, including a protocol violation we found
-      only by measuring it, a rubric rule nothing enforced, and a coverage table that claimed an
-      experiment we never ran.
+\item \textbf{Strongly asymmetric judge over-calling in both the vendor's stored labels and an
+      open judge.} On the audited $\geq$1-hand indicator, the vendor's own stored labels over-call
+      9 of 24 at-risk frames and under-call 0 of 129 ($p = 1.3\times 10^{-8}$); on active
+      manipulation, 10 of 33 against 4 of 120 ($p = 3.4\times 10^{-5}$). An independent
+      open-weights model shows the same pattern (6/24 vs.\ 0/129; 10/33 vs.\ 2/120). Separating
+      the binary indicator from the ternary hand count isolates the one-against-two confusions
+      that drive the two-hands discrepancy, and a rubric edge-case breakdown shows zero
+      manipulation false positives on idle grip (\S\ref{sec:errdir}).
+\item \textbf{Gold-corrected prevalences, unresolved comparative margins, and their labelling
+      cost.} Applying prediction-powered inference (PPI++) \citep{angelopoulos2023ppiplusplus}
+      over the vendor's full 9{,}800-frame unlabelled arms shifts the Egocentric-10K
+      active-manipulation lead over EPIC-KITCHENS-100 from $+6.62$ to $-1.32$ percentage points
+      (iid 95\% CI $[-10.78, +8.14]$), covering both zero and the published margin. Resolving
+      whether the published margin is excluded requires roughly 89 gold frames per arm under iid
+      (about 55 more than exist) and 93 to 115 under post-hoc cluster sensitivity
+      (\S\ref{sec:prevalence}).
+\item \textbf{Measured worker and factory clustering in an egocentric corpus, with cluster-robust
+      sensitivity bounds.} Across two 10{,}000-frame raw-corpus draws, worker clustering yields
+      design effects of 1.25 to 1.66 (widening intervals by 12 to 29\%, exact unequal-cluster
+      ANOVA $\hat{\rho}_w = 0.039$ to $0.106$), and post-hoc factory clustering reaches 2.18 to
+      5.65 (widening intervals by 48 to 138\%). Because evaluation frames omit grouping
+      identifiers, direct Cluster-Robust PPI++ \citep{broska2026crppi} cannot be computed on the
+      published sample; post-hoc sensitivity analysis shows how EPIC-KITCHENS-100's 37-participant
+      cap induces an irreducible unlabelled variance floor (\S\ref{sec:cluster}).
+\item \textbf{A repeatable, open evaluation pipeline and complete public record.} Running the
+      self-hosted open judge costs roughly \$9 per 10{,}000 frames with no proprietary API; across
+      both the 10K and 100K releases it lands within 1 percentage point on $\geq$1 hand and active
+      manipulation while missing 2 hands by over 6 points (\S\ref{sec:secondary}). Every
+      pre-registered hypothesis outcome and methodological deviation is recorded in
+      Appendix~\ref{app:prereg}.
 \end{enumerate}
 
 \section{Related work}
+\label{sec:related}
 
-\paragraph{Gold-corrected estimation with model labels.}
-Prediction-powered inference \citep{angelopoulos2023ppi} and its efficient variant
-\citep{angelopoulos2023ppiplusplus} produce valid intervals from a small human-labelled sample
-plus a large model-labelled one, with no assumption that the model is unbiased. Confidence-driven
-inference \citep{gligoric2025cdi} refines the same idea by spending human effort where the model
-is least confident. A 2026 line applies this machinery to language-model evaluation:
+\paragraph{Gold-corrected estimation and clustered inference with model labels.}
+Prediction-powered inference (PPI) \citep{angelopoulos2023ppi} and PPI++
+\citep{angelopoulos2023ppiplusplus} combine a small human-labelled calibration set with a large
+model-labelled pool to construct valid confidence intervals without assuming an unbiased model.
+Confidence-driven inference \citep{gligoric2025cdi} concentrates human annotation where model
+uncertainty is highest. Recent work adapts these tools to LLM evaluation:
 \citet{divekar2026ranking} extends PPI to ranking metrics such as Precision@$K$, and
-\citet{feng2026noisybutvalid} estimates a judge's true- and false-positive rates from a small
-calibration set in order to certify that a model's failure rate sits below a threshold.
+\citet{feng2026noisybutvalid} estimates judge true- and false-positive rates from a calibration
+set to certify failure-rate bounds. Most closely related methodologically,
+\citet{broska2026crppi} introduce Cluster-Robust PPI++, deriving closed-form standard errors and
+cluster-aware power tuning for clustered and partially labelled data where standard iid PPI++
+suffers severe undercoverage.
 
-Our estimand differs from all of these in a way that matters. Each of them estimates a property
-of \emph{a model, a ranking, or a system}, on an evaluation the authors themselves constructed.
-We estimate a property of \emph{a corpus}, published by \emph{a third party}, using that party's
-own released frames and their own stored labels, and we ask whether their published number
-survives the correction. We are not aware of prior work that combines those three properties, and the positioning above says which established lines each of them comes from.
+Our setting differs from prior model-evaluation studies in estimating a \emph{third-party
+commercial corpus statistic} directly on that vendor's released frames and stored labels. In our
+data, one judge error rate sits at or near zero---the special case of
+\citet{feng2026noisybutvalid} in which naive judge estimates shift predominantly in one
+direction---while the absence of cluster identifiers in the vendor's evaluation release blocks
+direct application of \citet{broska2026crppi}, motivating our raw-corpus design-effect
+measurement and post-hoc sensitivity analysis.
 
-The connection to \citet{feng2026noisybutvalid} is worth stating precisely, because it frames our
-first result. Their method requires both error rates, since a judge that misses and a judge that
-over-calls distort an estimate differently. In our data one of the two rates is at or near zero.
-That is a special case of their setting rather than a challenge to it, and it is the case in
-which a naive judge-only estimate is biased in a knowable direction.
+\paragraph{Dataset auditing and commercial claims.}
+Re-annotating benchmark data to test published claims has a strong precedent:
+\citet{beyer2020imagenet} re-label ImageNet validation images and find smaller real gains,
+\citet{northcutt2021labelerrors} quantify label errors across ten benchmarks and show ranking
+instability, and \citet{raji2019actionable} audit commercial vendors' accuracy claims directly.
+Whereas \citet{beyer2020imagenet} and \citet{northcutt2021labelerrors} target label accuracy
+against a fixed taxonomy, we audit vendor-authored summary statistics published without error bars
+as a comparative selling point.
 
-\paragraph{Auditing a dataset someone else published.}
-Re-examining a released corpus with a better human protocol is an established move.
-\citet{beyer2020imagenet} re-label the ImageNet validation set and find that reported gains are
-``substantially smaller than those reported on the original labels''.
-\citet{northcutt2021labelerrors} estimate label-error rates across ten third-party benchmarks
-using each benchmark's own released data plus human validation, and show that model rankings
-change once the errors are corrected. \citet{raji2019actionable} audit commercial vendors'
-published accuracy claims directly and study what the vendors did afterwards.
+\paragraph{Judge agreement, prompt sensitivity, clustering, and egocentric benchmarks.}
+\citet{rao2026agreement} show that agreement-reporting choices move judge--human metrics
+substantially; we follow their reporting checklist and report Gwet's AC1 \citep{gwet2008ac1}
+alongside Cohen's $\kappa$ because $\kappa$ becomes unstable above 90\% prevalence.
+\citet{liu2026ipr} formalises inter-prompt reliability across prompt wordings, which our prompt
+sweep adopts. \citet{miller2024errorbars} emphasises clustered standard errors in model
+evaluation, building on classical survey design effects \citep{kish1965survey}; we apply this
+to frame-level dataset statistics clustered by camera wearer and factory. For selective
+distillation, \citet{jung2024trustorescalate} target human-agreement guarantees via Learn-then-Test
+\citep{angelopoulos2021ltt}. Among egocentric benchmarks, HD-EPIC \citep{perrett2025hdepic}
+operates a rigorous multi-annotator pipeline for temporal narrations, while EPIC-KITCHENS-100
+\citep{damen2022epic100} and Ego4D \citep{grauman2022ego4d} do not attach confidence intervals or
+judge-validation metrics to headline quality summaries. Across the egocentric dataset papers we
+read in full, none reports a confidence interval on a headline corpus-quality statistic.
 
-Our estimand differs from the first two in a way that matters for what an audit can conclude.
-Their target is label correctness against a fixed taxonomy, where a wrong label is wrong by
-construction and the corrected number is simply better. Ours is a vendor-authored statistic
-published as a selling point, with no interval attached and a comparative claim resting on it,
-where the question is not whether individual labels are right but how wide the published number
-should have been and whether the comparison survives. From \citet{raji2019actionable} we take the
-framing that an audit of a commercial claim is a different object from an audit of a benchmark,
-and differ in that our subject is a measurement rather than a disparity.
+\section{Data, release structure, and protocol}
+\label{sec:protocol}
 
-\paragraph{Judge validation and its limits.}
-Agreement between a model judge and a human is routine to report and easy to report badly.
-\citet{rao2026agreement} shows that protocol choices alone move a reported agreement figure
-substantially and proposes a reporting checklist; we follow it, and we report Gwet's AC1
-\citep{gwet2008ac1} alongside Cohen's $\kappa$ because $\kappa$ is uninformative at the base
-rates involved here, where one class exceeds 90\%.
+\paragraph{Audited releases and metadata structure.}
+Build AI's \texttt{Egocentric-10K-Evaluation} release ships three parquet files of 10{,}000 frames
+each---Egocentric-10K, Ego4D, and EPIC-KITCHENS-100---containing image bytes alongside the
+vendor's stored \texttt{gemini-2.5-flash} per-frame \texttt{hand\_count} and
+\texttt{active\_labor} labels. Shipping both frames and stored labels allows human gold to audit
+the exact observations behind the published headline table without sampling mismatch. The
+subsequent \texttt{Egocentric-100K-Evaluation} release also evaluates 10{,}000 frames for
+Egocentric-100K while reusing identical Ego4D and EPIC-KITCHENS-100 baseline numbers.
 
-\paragraph{Clustered inference in evaluation.}
-\citet{miller2024errorbars} argues that evaluation results deserve error bars and that
-dependence between evaluation items inflates the standard errors that flat-rate reporting
-ignores. The design effect itself is standard survey sampling \citep{kish1965survey}; our
-measurement is that argument applied to a dataset statistic rather than a model score, with the clustering variable being the person wearing the camera.
+Three structural facts bound external verification:
+\begin{enumerate}
+\item \emph{No cluster linkage in evaluation frames.} Every \texttt{frame\_id} in the 10K
+      evaluation parquets is a bare UUID4 with no factory, worker, clip, or timestamp metadata.
+      Neither an external auditor nor a buyer can verify the vendor's sampling frame or compute
+      direct cluster-robust intervals on the evaluation parquets.
+\item \emph{Removed identifier in the 100K release.} The \texttt{Egocentric-100K-Evaluation}
+      parquet drops the \texttt{frame\_id} column altogether; we record this strictly as a
+      reproducibility fact without inferring intent.
+\item \emph{Raw-corpus worker reconciliation.} Indexing all 19{,}495 WebDataset shards of raw
+      Egocentric-10K (192{,}903 clips, $\approx 16$\,TB) yields 2{,}144 distinct workers across 85
+      factories against the card's 2{,}153 workers ($-0.42\%$), consistent with minor release-time
+      filtering while factories, hours, and clip counts reconcile closely.
+\end{enumerate}
 
-\paragraph{Prompt sensitivity.}
-\citet{liu2026ipr} formalises inter-prompt reliability and its pairwise agreement rate for
-model-based labelling. Our prompt sweep reports the same quantities.
+\paragraph{Frozen protocol, judges, and human rubric.}
+All hypotheses, sample definitions, prompt variants, and stopping rules were frozen in
+\texttt{docs/PRE-REGISTRATION.md} before any frame was fetched (seed 777 throughout). Every
+subsequent deviation is recorded in Appendix~\ref{app:prereg} and the public decision log.
+Because \texttt{gemini-2.5-flash} is deprecated for new API keys (confirmed via live HTTP 404),
+live calls use a self-hosted open-weights model, \texttt{Qwen/Qwen3-VL-8B-Instruct-FP8}, with
+temperature 0 and seed 777 pinned on every request and the vendor's prompts used verbatim.
+Comparing against Build AI's published numbers therefore uses two arms: the vendor's own stored
+\texttt{gemini-2.5-flash} labels and live \texttt{Qwen3-VL} outputs on the identical frames.
 
-\paragraph{Selective prediction.}
-\citet{jung2024trustorescalate} guarantees a user-specified level of human agreement by
-abstaining, with thresholds selected under distribution-free risk control
-\citep{angelopoulos2021ltt}. Our distillation arm targets that guarantee and does not reach it.
+Ground-truth labels were collected by one rater (the author) on \vernierNPrimary{} frames drawn
+from the 200-frame gold pools (63 Egocentric-10K, 60 EPIC-KITCHENS-100, 30 Ego4D) using a written
+rubric of 22 numbered rules resolving ambiguities left open by the vendor's prompt (gloves,
+reflections, motion blur, edge cropping, self-contact, third-party hands, and idle grip). The
+labelling interface has no code path to judge outputs, enforcing judge blinding in software. A
+34-pair blind intra-rater retest cleared the pre-registered 0.70 AC1 decidability gate (hand count
+AC1 $= 0.876$, manipulation AC1 $= 0.899$), though its realised median separation was 2.4 hours
+rather than the specified seven days (Limitations, \S\ref{sec:limitations}).
 
-\paragraph{Agreement practice in egocentric datasets.}
-HD-EPIC \citep{perrett2025hdepic} is the most rigorous annotation-agreement pipeline we found in
-this area, with multiple annotators per narration and a minimum agreement threshold, but it
-governs the timing of action segments rather than the density of a model-produced attribute, and
-it reports no interval on a dataset-level number. EPIC-KITCHENS-100 \citep{damen2022epic100}
-reports annotation-density improvements and no inter-annotator agreement statistic. Across the
-egocentric datasets whose full text we read, none reports a confidence interval or an agreement
-statistic on a headline quality claim. We did not exhaust the field, and we record that as a
-best-effort absence rather than a proof.
+\paragraph{Estimators.}
+Gold-corrected prevalences use PPI++ \citep{angelopoulos2023ppiplusplus} with the control-variate
+coefficient $\lambda$ estimated on the gold sample and clipped to $[0,1]$. Agreement uses Gwet's
+AC1 \citep{gwet2008ac1} alongside Cohen's $\kappa$. Where cluster identifiers exist (the raw
+corpus draws \texttt{S10k-U} and \texttt{S10k-S}), intervals use a cluster bootstrap
+($B = 10{,}000$, seed 777) and design effect $(\text{cluster CI width} / \text{iid CI width})^2$;
+where no cluster identifier ships (the evaluation arms), registered intervals are iid lower bounds
+on width, supplemented by post-hoc cluster-sensitivity analyses (\S\ref{sec:cluster}).
 
-\section{The audited claim, and what the release ships}
-
-The evaluation release contains three parquet files, one per corpus, 10{,}000 frames each, with
-the image bytes and the vendor's own per-frame labels. That is a genuinely useful release: the
-comparison can be run on the vendor's own frames, so no sampling difference can explain a
-disagreement.
-
-Three properties of it bound what any audit can do.
-
-\paragraph{The frames cannot be traced to the corpus.} \texttt{frame\_id} is a bare UUID4 with no
-factory, worker, clip or timestamp component. The published sample therefore cannot be checked
-against the corpus it was drawn from by anyone outside the vendor, and no clustered interval can
-be computed on it. Our design effect is measured on our own draws for this reason.
-
-\paragraph{The identifier was present and is no longer.} The 10K evaluation release and the 100K
-release that supersedes it differ in schema: the later one does not carry the \texttt{frame\_id}
-column the earlier one shipped. We state this as a fact about reproducibility and draw no
-inference about why.
-
-\paragraph{The corpus count differs slightly from the published one.} Indexing all 19{,}495
-shards of the raw corpus yields 2{,}144 distinct workers against a published 2{,}153, with
-factories, hours and clip count reconciling almost exactly. Nine workers, 0.42\%, consistent with
-ordinary release-time filtering and too few to affect any figure here.
-
-\section{Protocol}
-
-The protocol was frozen before any frame was fetched and every departure from it is a dated entry
-in a public decision log.
-
-\paragraph{Judge.} \texttt{Qwen/Qwen3-VL-8B-Instruct-FP8}, self-hosted, temperature 0 and seed
-777 pinned on every call, with the vendor's prompts used verbatim. The original judge could not
-be used: \texttt{gemini-2.5-flash} is deprecated for new API keys, which we confirmed with a live
-404. That is itself a reproducibility finding, since a quality guarantee whose instrument is a
-versionless third-party API cannot be re-run by its own vendor. The comparison therefore runs
-against the vendor's stored per-frame labels, which ship in the release.
-
-\paragraph{Human gold.} One rater labelled \vernierNPrimary{} frames against a written rubric of
-twenty-two numbered rules across the two tasks, resolving what the vendor's prompt leaves
-open, such as gloves,
-reflections, motion blur, and an idle grip that is not manipulation. The labelling tool has no
-code path to judge output, so the rater cannot see the model's answer.
-
-\paragraph{Estimators.} Prevalence by PPI++ \citep{angelopoulos2023ppiplusplus}; agreement by
-Gwet's AC1 \citep{gwet2008ac1} with $\kappa$ beside it; intervals by cluster bootstrap over
-worker identifier, $B = 10{,}000$, wherever such an identifier exists, and by an iid bootstrap
-labelled as a lower bound on width where it does not.
-
-\paragraph{The full slate, before any result.} Table~\ref{tab:ledger} lists every pre-registered
-hypothesis with its threshold and outcome. We put it here, ahead of the results, so that the
-reader sees the failures at the same time as the findings.
+\section{Asymmetric judge error against human gold}
+\label{sec:errdir}
 
 \begin{table}[t]
-\centering\small
-\input{generated/ledger}
-\caption{Every pre-registered hypothesis, its threshold, and its outcome. Five fail against
-their own criteria, one is null, one reverses direction, and H7 was measured after the
-pre-registration predicted it could not be. \textbf{None was confirmed.} H8 and H7 carry no
-falsifiable threshold, so the falsifiable slate is seven, of which five failed. The exploratory
-row was not pre-registered and is reported as such.}
-\label{tab:ledger}
-\end{table}
-
-\section{Replication}
-\label{sec:repl}
-
-Table~\ref{tab:replication} compares the independent judge against the published figures on both
-releases at $N = 10{,}000$ per release.
-
-\begin{table}[t]
-\centering\small
-\input{generated/replication}
-\caption{Independent replication on both releases. $\dagger$ marks a figure outside the
-pre-registered $\pm$2\,pp tolerance.}
-\label{tab:replication}
-\end{table}
-
-Hand visibility and active manipulation land within about a point of the published values on both
-releases, a year apart. The two-hands figure does not, and misses in the same direction both
-times.
-
-We do not know why, and the parsimonious explanation implicates our judge rather than the
-vendor's number: on the gold set our judge calls two hands more often than the rater does. What
-keeps the observation alive is that the same figure carries the largest design effect on both
-corpus draws (Section~\ref{sec:cluster}). Three measurements single out one column and none of
-them explains it. We report it and stop there.
-
-\section{Judge error against human gold}
-
-\begin{table}[t]
-\centering\small
+\centering\footnotesize
 \input{generated/error_direction}
-\caption{Direction of judge error against the rater. ``At risk'' counts the frames on which the
-error was possible: a frame the rater scored as two hands cannot be over-counted, and one scored
-as zero cannot be under-counted.}
+\caption{Direction of judge error against single-rater human gold ($n = \vernierNPrimary{}$), with
+the vendor's own stored labels listed first. ``Over'' counts judge false positives over frames
+where over-calling was possible (rater scored 0 on $\geq$1 hand, \texttt{false} on manipulation,
+or $<2$ on ternary hand count); ``under'' counts judge false negatives over frames where
+under-calling was possible. Rates carry 95\% Wilson intervals and two-sided Fisher's exact
+$p$-values.}
 \label{tab:errdir}
 \end{table}
 
-Table~\ref{tab:errdir} is the paper's first result, and the estimand matters. The published
-figure is the proportion of frames showing \emph{at least one} hand, so the quantity bearing on
-it is the binary indicator, not the ternary count. On that indicator the judge over-calls 6 of
-the 24 frames where the rater saw no hand, and under-calls none of the 129 where it saw at least
-one, which is 25.0\% with a Wilson 95\% interval of $[12.0, 44.9]$ against 0.0\%,
-$[0.0, 2.9]$. On manipulation it is 10 of 33 against 2 of 120, 30.3\% $[17.4, 47.3]$ against
-1.7\% $[0.5, 5.9]$. Fisher's exact test gives $p < 10^{-5}$ on both. We give intervals on these
-counts because a paper objecting to a bare number should not report one.
+Table~\ref{tab:errdir} presents the audit's primary finding, starting with the vendor's own stored
+\texttt{gemini-2.5-flash} labels that generated the published headline numbers. Separating the
+binary $\geq$1-hand indicator from the ternary hand count is essential because the advertised
+96.42\% figure reports the binary indicator; a one-against-two confusion does not affect it.
 
-A further 10 disagreements are one-hand-against-two confusions. Those are errors on the ternary
-count and no error at all on the published indicator, and they bear instead on the two-hands
-figure, which Section~\ref{sec:repl} attributes to our own judge rather than to the vendor.
-A single summary count would fold those 10 into the headline; the full matrix keeps them
-separate.
+On the audited $\geq$1-hand indicator, the vendor's own stored labels over-call \textbf{9 of 24}
+at-risk frames (37.5\%, 95\% Wilson CI $[21.2, 57.3]$) and under-call \textbf{0 of 129} (0.0\%,
+$[0.0, 2.9]$; Fisher's exact $p = 1.3\times 10^{-8}$). On active manipulation, the vendor's labels
+over-call \textbf{10 of 33} at-risk frames (30.3\%, $[17.4, 47.3]$) and under-call \textbf{4 of
+120} (3.3\%, $[1.3, 8.3]$; $p = 3.4\times 10^{-5}$). Our independent open-weights judge
+(\texttt{Qwen3-VL-8B-Instruct-FP8}) exhibits the same directional asymmetry---slightly weaker on
+$\geq$1 hand at \textbf{6 of 24} (25.0\%, $[12.0, 44.9]$) vs.\ \textbf{0 of 129} ($p =
+8.3\times 10^{-6}$), and \textbf{10 of 33} (30.3\%) vs.\ \textbf{2 of 120} (1.7\%, $[0.5, 5.9]$;
+$p = 3.1\times 10^{-6}$) on manipulation. A further 10 \texttt{Qwen3-VL} disagreements (and 6
+vendor over-calls vs.\ 3 under-calls) are one-against-two hand confusions that bear on the
+two-hands statistic rather than on $\geq$1 hand.
 
-Two checks on whether this is an artifact of our rubric or our judge.
+The directional skew is not uniform across every corpus cell (full per-corpus confusion matrices
+appear in Appendix~\ref{app:confusion}). On Egocentric-10K ($n=63$), the vendor's judge over-calls
+6 of 9 non-manipulation frames and under-calls 1 of 54, whereas on the EPIC-KITCHENS-100
+manipulation cell ($n=60$) the vendor reverses direction (1 over-call vs.\ 2 under-calls).
+Because all \vernierNPrimary{} labels come from a single rater and one corpus cell reverses
+direction, we report this as strong empirical asymmetry in the gold sample rather than claiming
+that VLM-derived prevalences universally form an upper bound; establishing an upper-bound
+generalisation requires a second independent rater (\S\ref{sec:limitations}).
 
-The rubric's most discretionary rule is the one excluding an idle grip from manipulation, and it
-would be the natural source of manufactured disagreement. None of the manipulation false
-positives carries the corresponding tag. They are tagged for blur, self-contact, another person
-in frame, or nothing at all.
-
-The vendor's own stored labels show the same asymmetry more strongly, and on the estimand
-that matters most, since those labels are what the published figure was computed from. On the
-$\geq$1-hand indicator the vendor's judge over-calls \textbf{9 of 24} at-risk frames, 37.5\%
-with a Wilson 95\% interval of $[21.2, 57.3]$, and under-calls \textbf{0 of 129},
-$[0.0, 2.9]$; Fisher's exact test gives $p \approx 1.3\times10^{-8}$. The open judge we
-substituted is the weaker of the two. So the asymmetry is not an artifact of the model we chose,
-and the audited figure is the one it bites hardest. It is not uniform across cells: pooled over
-the ternary hand count and manipulation the vendor is 25 over-reports against 7, where the open
-judge is 26 against 2, and on the EPIC-KITCHENS manipulation cell the vendor reverses.
-
-\section{Corrected prevalence, and the comparative claim}
+\paragraph{What kinds of frames trigger disagreements.}
+Table~\ref{tab:tags} breaks down all binary-indicator disagreements by the rubric's closed
+edge-case tag list. A natural objection is that a strict rubric rule excluding idle grips from
+active manipulation might manufacture judge false positives. That does not occur: \textbf{zero}
+manipulation over-calls in either judge carry the \texttt{idle-grip} tag. Instead, over-calls
+concentrate on frames showing another person's hands (\texttt{other-person}: 2 of 9 vendor
+$\geq$1-hand over-calls and 3 of 10 vendor manipulation over-calls), motion blur (\texttt{blur}:
+3 of 10 \texttt{Qwen3-VL} manipulation over-calls), frame-edge cropping, self-contact, or
+untagged scenes where the model hallucinates a hand or active task.
 
 \begin{table}[t]
-\centering\small
-\input{generated/prevalence}
-\caption{Published figure, judge-only rate, and the gold-corrected PPI++ estimate with its 95\%
-interval. Intervals are iid and are lower bounds on their true width, because the evaluation
-frames carry no worker identifier to cluster over.}
-\label{tab:prev}
+\centering\footnotesize
+\input{generated/disagreement_tags}
+\caption{Rubric edge-case tags on judge--rater disagreements ($n = \vernierNPrimary{}$). Tags are
+not mutually exclusive; ``none'' counts untagged disagreements. Zero manipulation false positives
+in either judge carry the discretionary \texttt{idle-grip} tag.}
+\label{tab:tags}
+\end{table}
+
+\paragraph{Sensitivity to batch order and labelling pace.}
+Sixty of the \vernierNPrimary{} primary labels (30 Egocentric-10K, 30 EPIC-KITCHENS-100) were
+added after initial results were public and were labelled at a median of 3\,s per frame versus
+10\,s for the first 93 labels, with 24 frames at $\leq 2$\,s. Table~\ref{tab:sens} checks both
+judges across the first 93 labels, all \vernierNPrimary{}, and excluding all $\leq 2$\,s labels
+($n=129$). In both models, the $\geq$1-hand over-call rate is essentially unchanged across all
+three subsets (33.3--37.5\% for the vendor; 23.8--25.0\% for \texttt{Qwen3-VL}, with zero
+under-calls throughout), and the manipulation over-call rate stays near 30\%. Dropping the
+fastest labels removes one manipulation under-call in each model, so the reported asymmetry is
+not an artifact of the second batch.
+
+\begin{table}[t]
+\centering\footnotesize
+\input{generated/sensitivity}
+\caption{Error-direction sensitivity across the first 93 labels (10\,s/frame median), all
+\vernierNPrimary{} labels, and excluding labels recorded in $\leq 2$\,s ($n=129$), for both the
+vendor's stored labels and the open judge.}
+\label{tab:sens}
+\end{table}
+
+\section{Gold-corrected prevalence and comparative margins}
+\label{sec:prevalence}
+
+Because the evaluation release ships Build AI's stored \texttt{gemini-2.5-flash} labels for all
+9{,}800 non-gold frames per corpus (disjoint from the 200-frame gold pools by construction),
+using those stored labels as the PPI++ model arm corrects the vendor's published figures directly
+for their own judge's error while collapsing the iid unlabelled variance term to under 1\% of
+total variance (Appendix~\ref{app:ppivar}). Table~\ref{tab:vendorprev} reports these primary
+gold-corrected prevalences, and Figure~\ref{fig:forest} compares the published active-manipulation
+marks against both the vendor full-arm ($N = 9{,}800$) and open-judge ($N \approx 140$) PPI++
+estimates (the open-judge prevalence table appears in Appendix~\ref{app:ppivar}).
+
+\begin{table}[t]
+\centering\footnotesize
+\input{generated/vendor_prevalence}
+\caption{Gold-corrected prevalence via PPI++ using the vendor's own stored
+\texttt{gemini-2.5-flash} labels over the full $N = 9{,}800$ unlabelled evaluation arms per
+corpus. Intervals are iid lower bounds on width because evaluation frames carry no cluster
+identifier.}
+\label{tab:vendorprev}
 \end{table}
 
 \begin{figure}[t]
 \centering
 \input{generated/fig_forest}
-\caption{Active-manipulation prevalence per corpus. The vendor's published figure is a bar with
-no width, because none is published. The judge-only rate is what a single labelling pass
-produces. The gold-corrected estimate carries a 95\% interval, which on the Egocentric arm spans
-roughly fourteen percentage points. The argument of this paper is the difference between the
-first mark and the third.}
+\caption{Active-manipulation prevalence across the three compared corpora. Published figures are
+bare point estimates with no interval; PPI++ attaches 95\% iid intervals using either the vendor's
+9{,}800-frame stored arms (filled circles) or the open-judge 200-frame gold pools (open circles).
+On Egocentric-10K, the vendor-arm interval spans roughly 15.6 percentage points.}
 \label{fig:forest}
 \end{figure}
 
-Correcting for the error in Table~\ref{tab:errdir} moves every prevalence estimate and, more to
-the point, attaches an interval to quantities that are published without one
-(Table~\ref{tab:prev}, and Figure~\ref{fig:forest}).
+Correcting for judge error lowers the Egocentric-10K active-manipulation estimate from a published
+91.66\% to 84.43\% (95\% iid CI $[76.65, 92.21]$) and $\geq$1 hand from 96.42\% to 91.72\%
+($[86.41, 97.02]$), placing the published values near the upper end of the corrected intervals.
 
-The comparative claim is what the vendor actually sells, and it is a difference rather than a
-rate. Table~\ref{tab:margins} corrects both sides of it.
+What the vendor's marketing table sells, however, is a comparative lead. Table~\ref{tab:margins}
+corrects both sides of every published margin against EPIC-KITCHENS-100 and Ego4D. Arms are
+disjoint frame sets, so variances are summed---conservative with respect to any positively
+correlated rater or judge offset across corpora.
 
 \begin{table}[t]
-\centering\small
+\centering\footnotesize
 \input{generated/margins}
-\caption{Published margin against the gold-corrected margin. Arms are disjoint frame sets and
-their variances are summed, which is conservative here: a shared rater or judge offset is
-positively correlated across arms and would shrink the variance of the difference.}
+\caption{Published margins (Egocentric-10K minus comparator, in percentage points) against
+gold-corrected PPI++ margins for both the vendor full arm ($N=9{,}800$) and the open-judge pool
+($N\approx 140$). ``$n$/arm'' is the iid gold sample size per arm needed to exclude the published
+margin at 95\% confidence holding the point estimate fixed; ``floor'' marks comparisons where
+the 200-frame unlabelled pool variance alone exceeds the target.}
 \label{tab:margins}
 \end{table}
 
-The manipulation margin against EPIC-KITCHENS-100 changes sign under correction and is the only
-one of the four that does. At $-1.02$ percentage points it is close enough to zero that the sign
-carries little information, and the corrected interval covers the published value. We therefore
-cannot refute that margin. We can say that the data does not settle it, and the distinction is
-not cosmetic: a wide interval containing the null is an underpowered result, not a negative one,
-and treating the two as equivalent is the error this audit exists to object to.
+Two conclusions follow cleanly. First, Egocentric-10K's lead over Ego4D is large enough (+29.09
+and +41.59\,pp published; +36.13 and +37.85\,pp corrected) that judge error does not threaten it.
+Second, the comparative claim against EPIC-KITCHENS-100 is \textbf{unresolved}: on active
+manipulation, correcting both sides over the vendor's 9{,}800-frame arms moves the lead from
+$+6.62$\,pp to $-1.32$\,pp with a 95\% iid interval of $[-10.78, +8.14]$ (open judge: $-1.02$\,pp,
+$[-11.68, +9.65]$). Although the point estimate flips sign, the interval comfortably covers both
+zero and the published $+6.62$\,pp. An underpowered interval containing the null neither confirms
+nor refutes the published margin. On $\geq$1 hand, the vendor-arm margin moves from $+6.05$\,pp to
+$+4.71$\,pp ($[-2.31, +11.74]$), likewise unresolved.
 
-This estimand is not pre-registered and is reported as exploratory. The pre-registered version
-asked a narrower question, whether judge \emph{error rate} differs by domain, and it is reported
-unchanged in Section~\ref{sec:notheld}.
+Using the exact PPI++ variance decomposition (which holds the unlabelled pool's variance as a
+non-shrinking floor), excluding the published $+6.62$\,pp active-manipulation margin at the
+current point estimate requires about \textbf{89} gold frames per arm under iid over the vendor's
+9{,}800-frame arms---roughly \textbf{55} more labelled frames than the 63 and 60 currently
+collected (compared with 226 per arm when using only the 200-frame open-judge pool). As the next
+section shows, accounting for clustering raises that requirement further. This margin estimand was
+not pre-registered and is reported as exploratory.
 
-
-\subsection{The same correction with the vendor's own judge}
-\label{sec:vendorarm}
-
-The estimates above use our open judge as the model arm, over the frames left in a 200-frame
-gold pool. The release also ships the vendor's own labels for 9{,}800 frames per corpus, and
-those are disjoint from our gold frames, which is what prediction-powered inference requires.
-Using them makes the model arm the judge that produced the published figure, and the estimand
-becomes the published number corrected for its own error rather than a substitute's.
-
-\begin{table}[h]
-\centering\small
-\input{generated/vendor_prevalence}
-\caption{Gold-corrected prevalence with the vendor's own stored labels as the model arm over the
-full evaluation arms. The unlabelled sample rises from about 140 frames to 9{,}800, which
-collapses the unlabelled variance term to almost nothing and leaves the gold sample as the only
-material constraint.}
-\label{tab:vendorprev}
-\end{table}
-
-The manipulation margin against EPIC-KITCHENS-100 becomes $-1.32$ percentage points with a 95\%
-interval of $[-10.78, +8.14]$, so the sign and the conclusion are unchanged and the interval is
-about 11\% narrower. What changes materially is the price of resolving it. With the unlabelled
-term almost gone, separating the corrected margin from the published value needs about 89 gold
-frames per arm, against the 63 and 60 that exist. The earlier figure of 226 was an artifact of
-having drawn a 200-frame judged pool when the vendor had already labelled 9{,}800.
-
-
-\subsection{Does the second batch of labels change the answer?}
-\label{sec:sensitivity}
-
-Section~\ref{sec:moved} reports that 60 of the \vernierNPrimary{} labels were collected after
-the first results were public, at a median of three seconds a frame against ten for the first
-batch. Disclosing that without testing it would leave the reader to guess, so we report the
-headline counts on three subsets.
-
-\begin{table}[h]
-\centering\small
-\input{generated/sensitivity}
-\caption{Judge error against the rater on the first 93 labels, on all \vernierNPrimary{}, and on
-the \vernierNPrimary{} minus every label recorded in two seconds or less.}
-\label{tab:sens}
-\end{table}
-
-The over-report rate is stable: 5 of 21 at-risk frames on the first batch, 6 of 24 on the full
-set, and 6 of 24 with the fastest labels removed. What moves is the pair of manipulation
-under-reports, and they move in an informative direction. The first batch contains none, the
-full set contains two, and removing labels recorded in two seconds or less removes one of them.
-The asymmetry we report is therefore not created by the second batch; the two exceptions to it
-are, and they sit among the fastest labels in the study. We report the asymmetry as strong
-rather than absolute for that reason, and a reader who discounts the fast labels entirely gets a
-stronger version of our claim, not a weaker one.
-
-\section{Clustering and the design effect}
+\section{Worker and factory clustering}
 \label{sec:cluster}
 
-The result in this section depends on no human label.
-
-Frames from one camera wearer share scene, lighting, task and equipment, so a corpus statistic
-computed over frames is not computed over independent observations. The released evaluation
-frames cannot show this, so we went to the raw corpus: 19{,}495 WebDataset shards holding 192{,}903
-clips, roughly 16\,TB. A tar header is 512 bytes at a computable offset, so an index of every clip
-can be built from HTTP range requests alone, and one frame per clip can then be extracted from an
-h265 MP4 inside a tar over the same mechanism. Indexing every shard took 23 minutes and moved
-about 150\,MB.
-
-We drew 10{,}000 frames twice, once uniformly over frames and once stratified by factory
-worker-hours with at most one frame per clip, and compared a cluster bootstrap over worker
-identifier against its iid counterpart.
+The clustering measurements in this section depend on no human labels. Frames recorded by the same
+worker share task, tools, gloves, lighting, and camera geometry; workers inside the same factory
+further share workflows and environments. Because the evaluation parquets omit worker and factory
+identifiers, we indexed all 19{,}495 raw Egocentric-10K tar shards via HTTP range requests
+($\approx 150$\,MB read over a 16\,TB corpus) and drew two independent 10{,}000-frame samples:
+\texttt{S10k-U} (uniform over frames; 9{,}989 valid frames across 1{,}966 workers and 85
+factories) and \texttt{S10k-S} (stratified by factory worker-hours, $\leq 1$ frame per clip;
+9{,}983 valid frames across 1{,}999 workers and 85 factories). Every frame was judged with
+\texttt{Qwen3-VL} under \texttt{P0a}, and clustered intervals were computed via cluster bootstrap
+($B = 10{,}000$, seed 777).
 
 \begin{table}[t]
-\centering\small
+\centering\footnotesize
 \input{generated/design_effect}
-\caption{Design effect, defined as the squared ratio of clustered to iid interval width,
-$B = 10{,}000$, seed 777.}
+\caption{Raw-corpus clustering on \texttt{S10k-U} (1{,}966 workers, 85 factories) and
+\texttt{S10k-S} (1{,}999 workers, 85 factories), $B = 10{,}000$, seed 777. Worker design effect
+($\text{deff}_w$) is pre-registered (H2); exact unequal-cluster one-way ANOVA
+$\hat{\rho}_w$ and factory-level design effect ($\text{deff}_f$, 85 clusters) are post hoc.}
 \label{tab:deff}
 \end{table}
 
-We pre-registered a design effect of at least 2 and Table~\ref{tab:deff} does not reach it, so
-that hypothesis fails. What the measurement does show is that the effect is real and smaller than
-we predicted: every one of the six figures exceeds 1, and an interval computed as if these frames
-were independent understates its width by 11 to 22\%, equivalently the cluster-aware interval
-is 12 to 29\% wider.
+Table~\ref{tab:deff} reports the iid intervals, worker-clustered intervals, worker design effects,
+exact unequal-cluster ANOVA intra-cluster correlations $\hat{\rho}_w$, and post-hoc factory-level
+design effects. All six worker design effects exceed 1 (1.25 to 1.66), so worker-aware intervals
+are \textbf{12 to 29\% wider} than iid intervals (equivalently, iid intervals understate width by
+11 to 22\%). None reaches the pre-registered H2 threshold of 2, so H2 fails as stated while
+confirming real within-worker dependence. Two post-hoc findings sharpen the picture
+(Appendix~\ref{app:clusters}):
+\begin{enumerate}
+\item \emph{Unequal worker-hour skew drives roughly half of the worker design effect.} Worker
+      cluster sizes range from 1 to 112 frames ($\bar{m} \approx 5.0$, $\text{CV} \approx
+      0.91\text{--}0.97$), so Kish's unequal-cluster factor is $\tilde{m} = \sum m_i^2 / N = 9.27$
+      on \texttt{S10k-U} and $9.69$ on \texttt{S10k-S}. Exact one-way random-effects ANOVA yields
+      $\hat{\rho}_w = 0.039$ to $0.106$---substantially lower than an equal-cluster back-out would
+      imply.
+\item \emph{Factory-level clustering is much larger.} Clustering over the 85 factories yields
+      design effects of \textbf{2.18 to 5.65} across all six cells, widening intervals by 48 to
+      138\% over iid (e.g., on \texttt{S10k-U} active manipulation, iid $[89.21, 90.42]$ widens to
+      $[88.73, 90.77]$ at $\text{deff}_f = 2.85$, and 2 hands reaches $\text{deff}_f = 5.65$).
+\end{enumerate}
 
-The licensed conclusion is narrow and we do not widen it. The corpus has this property. A
-frame-level interval drawn from it inherits some of it. Nothing here measures the vendor's own
-draw, and nothing can, because the release ships no grouping variable.
+\paragraph{Post-hoc cluster sensitivity for the evaluation-arm PPI++ intervals.}
+A natural criticism of Table~\ref{tab:vendorprev} and Table~\ref{tab:margins} is that our own
+evaluation-arm PPI++ intervals are iid while the paper criticises iid intervals on clustered
+frames. Direct Cluster-Robust PPI++ \citep{broska2026crppi} requires cluster IDs on both labelled
+and unlabelled units, which Build AI's evaluation parquets do not ship (all 30{,}000 evaluation
+frames have null worker, factory, and clip IDs). To quantify how much clustering could widen our
+own intervals, Table~\ref{tab:csens} reports two transparent post-hoc sensitivity models beside
+the registered iid interval for the primary vendor-arm active-manipulation margin:
+\begin{itemize}
+\item \textbf{Model 1 (empirical worker-share scaling + EPIC $K=37$ cluster floor).} On
+      Egocentric-10K, multinomial sampling of $n_{\text{gold}}=63$ frames from \texttt{S10k-U}'s
+      empirical worker-share distribution ($\sum p_w^2 = 9.28\times 10^{-4}$) barely clusters
+      ($\text{deff}_{\text{gold}} = 1.004$), whereas the $N=9{,}800$ unlabelled arm scales by
+      $\text{deff}_{\text{unl}} = 1.64$. On EPIC-KITCHENS-100, however, only \textbf{37
+      participants} exist (a 58.2$\times$ disparity against Egocentric-10K's 2{,}153 workers,
+      pre-registered as H8). Even under equal participant weights, $N=9{,}800$ frames yield
+      $\tilde{m} = 265.8$ frames per participant, so at $\rho_{\text{epic}} \in \{0.02,
+      \hat{\rho}_{\text{ego}}=0.070, 0.10\}$ the unlabelled variance floor rises from 0.67\,pp
+      (iid) to \textbf{1.51--3.04\,pp}, widening the margin CI to $[-11.28, +8.64]$ at matched
+      $\rho$ and raising the required gold count to \textbf{93--109} frames per arm. On $\geq$1
+      hand, this $K=37$ cluster floor exceeds the gap at all three $\rho$ values, rendering
+      separation unachievable by labelling alone.
+\item \textbf{Model 2 (conservative direct $\sqrt{\text{deff}_{\max}}$ inflation).} Scaling the
+      entire iid standard error on both arms by $\sqrt{1.291} = 1.136$ widens the manipulation
+      margin CI to $[-12.07, +9.43]$ and raises the required gold count from 89 to \textbf{115}
+      frames per arm.
+\end{itemize}
 
-\section{Results that did not hold}
-\label{sec:notheld}
+\begin{table}[t]
+\centering\footnotesize
+\input{generated/cluster_sensitivity}
+\caption{Post-hoc cluster-sensitivity analysis for the vendor full-arm ($N=9{,}800$)
+active-manipulation margin against EPIC-KITCHENS-100 (point $-1.32$\,pp vs.\ published
+$+6.62$\,pp). ``Floor'' is the 95\% half-width contributed by the unlabelled pools alone;
+``$n$/arm'' is the gold sample per arm needed to exclude $+6.62$\,pp. Model~1 ignores partially
+labelled cluster covariance \citep{broska2026crppi} and is reported as a post-hoc sensitivity
+bound rather than a direct cluster-robust estimator.}
+\label{tab:csens}
+\end{table}
 
-\paragraph{Prompt variants agree.} The vendor's dataset card and its shipped prompt file differ in
-four places, including a substantive rule about whose hands to ignore. We expected the two to
-produce different rates. They differ by 0.32 percentage points.
+\section{Cross-model comparison, prompt stability, and secondary checks}
+\label{sec:secondary}
 
-\paragraph{Prompt sensitivity is real and small.} Across eight variants on 2{,}000 frames,
-manipulation rates spread 1.25 percentage points and hand-count rates 0.25, against a
-pre-registered bar of 5. The single strongest test, stating explicitly that a gloved hand counts,
-moved the hand figure by 0.05 points in a corpus of factory work where gloves are near-universal.
+\paragraph{Cross-model check on the 10K and 100K evaluation releases.}
+Table~\ref{tab:replication} compares our self-hosted \texttt{Qwen3-VL-8B-Instruct-FP8} judge
+against Build AI's published \texttt{gemini-2.5-flash} figures at $N = 10{,}000$ on both the 10K
+release (pre-registered as H1) and the subsequent 100K release (non-pre-registered extension).
+On both releases a year apart, \texttt{Qwen3-VL} lands within 1 percentage point of the published
+$\geq$1-hand and active-manipulation rates, while exceeding the published two-hands rate by
+6.32\,pp (10K) and 6.14\,pp (100K). Because H1 required all three figures within $\pm 2$\,pp, H1
+fails its pre-registered criterion. On the gold set, \texttt{Qwen3-VL} over-calls two hands more
+often than the rater (10 one-against-two errors vs.\ 0 in reverse), so the two-hands offset most
+parsimoniously implicates our open judge rather than the vendor's number, though two hands also
+carries the largest worker and factory design effects on both corpus draws.
 
-\paragraph{Domain bias points the predicted way and misses the bar.} Judge error on manipulation
-is 4.76\% on Egocentric frames against 8.33\% on EPIC-KITCHENS, a gap of 3.57 points with EPIC
-higher, which is the direction we predicted and below the 5-point threshold we set. At
-\vernierNPrimary{} labels it points this way; at 93 it pointed the other way. A hypothesis whose
-sign reverses when the sample grows is reporting on the sample. Our own power analysis, run
-before any labelling, called this arm underpowered at the pre-registered size, and there is a
-confound we disclosed before collecting data and never probed: the judge has plausibly seen
-EPIC-KITCHENS and Ego4D in pretraining and cannot have seen the gated commercial corpus, which
-pushes accuracy in the opposite direction from the prediction.
+\begin{table}[t]
+\centering\footnotesize
+\input{generated/replication}
+\caption{Cross-model comparison of self-hosted \texttt{Qwen3-VL-8B-Instruct-FP8} (\texttt{P0a},
+$N = 10{,}000$) against Build AI's published figures on two releases. $\dagger$ marks figures
+outside the pre-registered $\pm 2$\,pp tolerance (H1 fails its all-three criterion).}
+\label{tab:replication}
+\end{table}
 
-\paragraph{Distillation misses its target.} A linear probe on frozen DINOv2 features reaches
-0.6933 agreement with the teacher against a 0.90 target, and the abstention cascade cannot hold a
-0.80 agreement floor at any coverage above zero at 95\% confidence on a 46-frame calibration
-split. The probe is published as a negative result.
+\paragraph{Prompt divergence and sensitivity.}
+Build AI's dataset card (\texttt{P0a}) and shipped prompt file (\texttt{P0b}) differ in four
+places, including ``ignore objects held by other people'' versus ``ignore actions performed by
+other people.'' At $N = 10{,}000$, the two wordings differ by only 0.32\,pp on Egocentric-10K
+active manipulation (0.40\,pp on 100K), well under H1b's 1\,pp threshold. Across eight prompt
+variants on 2{,}000 frames (H3), manipulation rates spread 1.25\,pp and hand-count rates 0.25\,pp
+against a pre-registered 5\,pp bar; explicitly instructing that gloved hands count (\texttt{P3})
+moves the $\geq$1-hand figure by 0.05\,pp. Both judges are thus largely insensitive to surface
+prompt wording on these tasks.
 
-\paragraph{Calibration is degenerate by construction.} Expected calibration error is 0.1043 on
-hand count and 0.0782 on manipulation, but almost every frame lands in one confidence bin under
-greedy decoding. The number describes the decoding strategy more than the judge.
-
-\section{What moved while we watched}
-\label{sec:moved}
-
-An audit that publishes only its findings misleads by omission, so this section reports the
-corrections we made to our own claims. All five were found by a person reading the prose against
-the data, none by an automated check, and the automated check that now exists was written in
-response to the first two.
-
-\paragraph{The blind re-label did not wait.} Our protocol specifies a re-label at least seven days
-after the first pass, so that the check measures whether the rubric is decidable rather than
-whether the rater remembers the frame. Measured from the labels' own timestamps, the median
-separation is 2.4 hours and no pair meets the rule. Our writeup had asserted the seven days as
-fact. The agreement figures do not change; what they license does, and they are now reported as
-within-session consistency.
-
-\paragraph{A control arm arrived after the labels it controlled.} We re-reviewed the frames where
-judge and rater disagreed, mixing in an equal number of frames where they agreed so that revision
-rates could be compared. The control arm was added in a later commit than the labels, which had
-been collected against a plan containing disagreement frames only, so the pass ran unblinded.
-
-\paragraph{A rubric rule nothing enforced.} Rule 12 states that zero visible hands implies no
-manipulation. Seven collected labels violated it and neither the data model nor either labelling
-tool rejected the combination. Correcting them moved judge-human agreement, moved two prevalence
-estimates, and removed a clean zero-errors result on one arm that an earlier draft had been built
-on.
-
-\paragraph{A coverage table claimed an experiment we never ran.} The document listing what the
-audit does \emph{not} cover reported the cross-domain accuracy experiment as tested. That
-experiment specifies a model with cluster-robust intervals. It was never fitted; what exists is a
-comparison of two raw error rates.
-
-\paragraph{Buying labels made the vendor's number look better, and the price we quoted was
-wrong twice.} Having priced the unresolved margin at roughly 42 gold frames per arm, we collected 60
-more. The corrected margins moved toward the published figures rather than away and the
-asymmetric-error result weakened from absolute to 26 of 28. The price itself was then found to
-be wrong: it scaled the whole standard error as $1/\sqrt{n}$, when only the gold term shrinks
-with more labels and the unlabelled term is a floor. Corrected, the manipulation margin needs
-about 226 gold frames per arm rather than 59. That figure was then itself superseded: it
-assumed the 200-frame judged pool we had drawn, and using the vendor's full 9{,}800-frame arms
-(Section~\ref{sec:vendorarm}) brings it to about 89. Two
-properties of that second batch belong in the record: it was collected after the first results
-were public, so the rater knew which direction would move the margin, and it was labelled at a
-median of three seconds a frame against ten for the first batch, with 24 of 60 at two seconds or
-less.
+\paragraph{Judge--human agreement, domain error rates, distillation, and calibration.}
+Across all \vernierNPrimary{} primary labels, \texttt{Qwen3-VL} achieves Gwet's AC1 $= 0.860$
+(95\% iid CI $[0.791, 0.921]$, $\kappa = 0.795$) on ternary hand count and $0.887$
+($[0.815, 0.945]$, $\kappa = 0.746$) on active manipulation---reversing H4's prediction that hand
+count would exceed manipulation. On H5 (pre-registered domain error-rate difference on
+manipulation), \texttt{Qwen3-VL} error is 4.76\% on Egocentric-10K ($n=63$) vs.\ 8.33\% on
+EPIC-KITCHENS-100 ($n=60$), a $+3.57$\,pp gap in the predicted direction that misses the 5\,pp bar
+and is underpowered. A rung-1 linear probe trained on frozen \texttt{facebook/dinov2-small}
+features against 29{,}400 stored vendor labels reaches 0.6933 fidelity (against a 0.90 diagnostic
+target), and its abstention cascade cannot hold a 0.80 human-agreement floor at any positive
+coverage at 95\% confidence on a 46-frame calibration split (H6 fails; the probe is published as a
+negative result). Finally, expected calibration error from \texttt{Qwen3-VL} answer-token
+logprobs is 0.1043 on hand count and 0.0782 on manipulation, but 99\% of frames fall in the single
+$[0.9, 1.0]$ bin under greedy decoding, making calibration degenerate by construction (H7).
 
 \section{Limitations}
+\label{sec:limitations}
 
-One rater, \vernierNPrimary{} frames, and no inter-rater agreement statistic anywhere in this
-work, because there is one person. Every result that depends on human gold inherits that. The
-blind re-label is a weaker substitute and, as executed, weaker again for the reason given in
-Section~\ref{sec:moved}. The rater wrote the rubric after reading the vendor's prompt, which is
-anchoring and is not removable at $n=1$. Sixty of the labels were collected after results were
-public and at a third of the earlier pace.
+Every limitation of this audit is collected here once so the reader can weigh all findings
+together:
 
-The two judge arms are not independent opinions: the open judge and the vendor's stored labels
-plausibly share pretraining data, so their agreement is an upper bound on reliability rather than
-a measure of it. The design effect is measured on our draws and never on the vendor's evaluation
-frames, and cannot be until a grouping variable ships. Every interval on the evaluation arms is
-iid and is a lower bound on its true width. The margin estimand is exploratory. Half of the
-advertised guarantee, a pose-accuracy claim, requires annotations no public release ships and is
-untouched here. Whether hand visibility predicts training value, which is the premise of the
-whole metric, is untested.
+\begin{itemize}
+\item \textbf{Single human rater and lack of inter-rater reliability.} All \vernierNPrimary{} gold
+      labels come from one person (the author), who also wrote the rubric after reading Build AI's
+      prompt (introducing unremovable anchoring at $n=1$). There is no inter-rater AC1 or
+      $\kappa$. The 34-pair blind retest ran at a median separation of 2.4 hours rather than the
+      pre-registered seven days (0 of 34 pairs met the rule), measuring within-session consistency
+      rather than recall-free reliability. Sixty labels were collected after initial results were
+      public at 3\,s/frame median (versus 10\,s/frame on the first 93), though batch sensitivity
+      shows the error asymmetry persists without the fast labels (Table~\ref{tab:sens}).
+\item \textbf{No upper-bound generalisation before a second rater.} Because the gold set is
+      single-rater and the vendor's stored labels reverse direction on the EPIC-KITCHENS-100
+      manipulation cell (1 over-call vs.\ 2 under-calls), we do not claim that VLM-derived corpus
+      prevalences universally serve as upper bounds.
+\item \textbf{Missing evaluation cluster identifiers.} Evaluation parquets ship bare UUID4 frame
+      IDs with no worker, factory, or participant linkage. All evaluation-arm PPI++ intervals are
+      therefore iid lower bounds on width; our cluster-sensitivity intervals
+      (Table~\ref{tab:csens}) rely on raw-corpus worker distributions and assumed EPIC-KITCHENS-100
+      participant ICCs rather than direct Cluster-Robust PPI++ \citep{broska2026crppi}, and H2's
+      design effects are measured on our raw-corpus draws rather than on Build AI's evaluation
+      sample.
+\item \textbf{Judge lineage and pretraining exposure.} \texttt{Qwen3-VL} and
+      \texttt{gemini-2.5-flash} may share pretraining data and architectural inductive biases, so
+      their agreement is an upper bound on judge reliability. Moreover, Ego4D and EPIC-KITCHENS-100
+      are public datasets plausibly seen during VLM pretraining, whereas gated Egocentric-10K is
+      not---a confound on cross-domain error comparisons that we did not probe.
+\item \textbf{Exploratory margin estimand and uncovered SLA axes.} The comparative margin
+      estimand (\S\ref{sec:prevalence}) was not pre-registered. Build AI's advertised 3D-pose
+      MPJPE guarantee cannot be audited because public releases ship no pose annotations, and a
+      planned matched three-corpus downstream transfer probe was blocked by institutional email
+      requirements for EPIC-KITCHENS-100 and absent downstream labels in the evaluation release.
+      Whether hand visibility predicts downstream training value remains untested.
+\end{itemize}
 
-\section{What a producer could publish}
+\section{Recommendations, ethics, and reproducibility}
+\label{sec:ethics}
 
-Four things, each cheap relative to building the corpus. An interval on the headline figure. A
-gold sample, with the \emph{direction} of judge error reported rather than only its magnitude,
-since a one-directional error makes the published figure an upper bound. A stable frame
-identifier that survives between releases, which costs nothing and is what makes an independent
-check possible at all. And the exact prompt, versioned, since the card and the shipped file
-already differ.
+\paragraph{Four low-cost upgrades for dataset producers.}
+Turning a single-pass VLM marketing statistic into an auditable quality guarantee requires four
+inexpensive steps: (1) publish a cluster-aware confidence interval alongside every headline rate;
+(2) validate against a small, multi-rater human gold set and report the \emph{direction} of judge
+error (over-calling vs.\ under-calling) rather than only aggregate accuracy; (3) ship stable
+frame-to-worker and frame-to-site identifiers in evaluation releases so external auditors can
+verify sampling frames and run Cluster-Robust PPI++ \citep{broska2026crppi}; and (4) version the
+exact prompt and model snapshot used to produce the published table. Re-running an independent
+open-weights judge costs roughly \$9 per 10{,}000 frames on commodity GPU capacity and requires no
+proprietary API.
 
-The instrument that produces the range in this paper costs about \$9 per 10{,}000 frames on a
-self-hosted open-weights model and needs no API vendor.
+\paragraph{Ethics, frame withdrawal, and vendor notice.}
+This PDF embeds no raw video frames. Under our provenance policy (\texttt{docs/ETHICS.md}~\S4),
+frames are redistributed only in one withdrawable thumbnail atlas inside the interactive Space
+(24 manually likeness-reviewed Egocentric-10K frames showing no person other than the camera
+wearer, licensed Apache-2.0 by Build AI; Ego4D and EPIC-KITCHENS-100 frames are never
+redistributed, and 30 later-labelled Egocentric-10K frames remain excluded pending manual likeness
+review). Because an archival PDF cannot honour per-frame withdrawal requests, we report the
+structured disagreement-tag breakdown in Table~\ref{tab:tags} and link the Space for interactive
+inspection. Worker and factory identifiers are used exclusively as statistical clustering units;
+no per-worker result is reported, and no claim is made regarding the undisclosed consent
+instruments behind the corpus. Publishing without prior vendor contact was a pre-registered
+independence choice (no security or privacy exposure was found); a follow-up design
+(\texttt{docs/DESIGN-V2.md}) specifies independent second-rater validation, confirmatory margin
+registration, and vendor notification with a right of reply.
 
-\section{Ethics and reproducibility}
-
-This work republishes no frame. The audit's public artifact ships identifiers, labels and
-statistics; a small set of downscaled stills appears only in an interactive viewer, chosen so
-that a judge-versus-rater disagreement can be inspected, and only from the corpus whose owner
-licensed redistribution. Frames showing any person other than the camera wearer are withheld
-after a manual review, and that review is by eye and cannot be automated. Adding labels during
-this work created 30 new candidate frames that no one had reviewed; they are excluded and the
-build refuses to include them.
-
-Worker identifiers are used only as statistical clusters and no per-worker result is reported. We
-make no claim about the consent instrument behind the corpus, which is not published, and we
-draw no inference about intent from the vendor's repository history; where we report a schema
-change between releases we report the fact and stop.
-
-
-We did not contact the vendor before publishing. That was a pre-registered choice rather than an
-oversight: publishing first keeps the work independent rather than negotiated, and the artifact
-is built so that either outcome is useful to them, a confirmation with intervals they did not
-have or a problem found before a customer finds it. The decision recorded a reversal condition,
-that a finding turning out to be a live security or privacy exposure rather than a measurement
-question would warrant private disclosure first. Nothing here is one.
-
-The author is also the rater. That matters for reading Section~\ref{sec:moved}, where the second
-batch of labels was collected by someone who knew which direction would move the margin, and it
-is why Section~\ref{sec:sensitivity} reports the results without those labels. The author has an
-interest in the vendor whose work is measured being aware of it. That interest is contained
-structurally rather than by assertion: the protocol, hypotheses and stopping rules were frozen
-before any result was seen, so no finding could be shaped by how it would be received.
-
-The protocol, the decision log, every result file and the labels are public:
-code and protocol at \url{https://github.com/caiotheodoro/vernier}, the labels, membership,
-judge output and result files at \url{https://huggingface.co/datasets/caiotheodoro/vernier},
-the distilled probe at \url{https://huggingface.co/caiotheodoro/vernier-rung1-probe}, and a
-frame-by-frame view of every judge--rater disagreement at
-\url{https://huggingface.co/spaces/caiotheodoro/vernier}. A longer, less formal account is at
-\url{https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way}.
-
-\paragraph{Disclosures and licence.} The code, the analysis scripts and the text were written
-with an AI coding assistant, under the author's direction and review; the labels are the
-author's own. The author works on a commercial AI gateway; nothing from that product is used, and the frames come from third parties' dataset
-releases. The code and data in the repository are Apache-2.0; this paper is released under
-CC BY 4.0.
-
-The measurement card reports \texttt{\vernierVerdict} with \vernierNClaims{} claims because one
-pre-registered item could not be checked at all: a matched three-corpus transfer probe, blocked
-because EPIC-KITCHENS-100 registration requires an institutional email this author does not have
-and the evaluation release ships no downstream-task labels. That the blocking reason is access
-rather than method is itself an instance of this paper's argument. This paper was built from commit \texttt{\vernierGitRev} against
-measurement card digest \texttt{\vernierCardDigest}, and every table in it is generated from
-those artifacts rather than transcribed.
+\paragraph{Availability, disclosures, and licence.}
+Code, frozen pre-registration, written rubric, and decision log are public at
+\url{https://github.com/caiotheodoro/vernier}; human labels, sample memberships, judge outputs,
+and result files at \url{https://huggingface.co/datasets/caiotheodoro/vernier}; the negative
+rung-1 probe at \url{https://huggingface.co/caiotheodoro/vernier-rung1-probe}; the interactive
+disagreement viewer at \url{https://huggingface.co/spaces/caiotheodoro/vernier}; and an earlier
+informal writeup (5 September 2026) at
+\url{https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way}. The code, analysis scripts,
+and manuscript text were written with an AI coding assistant under the author's direction and
+review; all human gold labels are the author's own. The author works on a commercial AI gateway;
+nothing from that product is used here. The author has an interest in the audited vendor being
+aware of this work, structurally bounded by pre-registration before data collection. Code and data
+are licensed Apache-2.0; this paper is CC BY 4.0. Built from commit \texttt{\vernierGitRev}
+against measurement card digest \texttt{\vernierCardDigest} (\vernierNClaims{} claims; card
+verdict \texttt{\vernierVerdict} due to the blocked transfer probe).
 
 \section{Conclusion}
+\label{sec:conclusion}
 
-A published corpus quality statistic produced by one model pass is an upper bound with an
-unstated width. On this corpus the cluster-aware interval is 12 to 29\% wider than an independent-frames
-calculation would suggest, and the direction of the bias is knowable and consistent across two
-model families. The comparative claim that the corpus leads a well-known academic dataset does
-not survive correction cleanly and does not fail either. Settling it does not need a better
-judge. It needs about 89 gold frames per arm on the
-manipulation comparison, against the 63 and 60 that exist, once the vendor's own full-size
-labelled arms are used as the model arm rather than the 200-frame pool we first drew. That is
-roughly 55 more labelled frames. It is a step the vendor could have taken before publishing the
-number, at no marginal labelling cost beyond what it had already spent.
+Single-pass VLM quality metrics published without intervals or human calibration conceal three
+measurement hazards that show up directly on Egocentric-10K. First, against our \vernierNPrimary{}-frame
+single-rater gold set, the vendor's own stored \texttt{gemini-2.5-flash} labels over-call $\geq$1
+hand on 9 of 24 at-risk frames while under-calling 0 of 129, and over-call active manipulation on
+10 of 33 against 4 of 120---an asymmetry corroborated by an open-weights judge across both tasks.
+Second, video frames are clustered by camera wearer and factory: worker clustering widens
+intervals by 12 to 29\% (factory clustering by 48 to 138\%), yet omitting cluster identifiers from
+evaluation releases prevents anyone outside the vendor from computing cluster-robust intervals on
+the published sample. Third, correcting both sides of the active-manipulation lead over
+EPIC-KITCHENS-100 shifts it from $+6.62$ to $-1.32$\,pp ($[-10.78, +8.14]$ iid, wider under
+clustering), leaving the comparative claim unresolved. Closing that gap does not require a newer
+model judge: it requires an independent second rater on the 153 gold frames, roughly 55 to 110
+additional gold labels per arm, and worker identifiers shipped alongside evaluation frames.
 
 \appendix
-\section{Corrections to our own reported claims}
-\label{app:deviations}
 
-Every departure from the frozen protocol, and every correction to a number this project had
-already published. The decision log holds the full record; this table is the subset that changed
-something a reader would rely on.
+\section{Pre-registration outcomes and protocol deviations}
+\label{app:prereg}
 
-\begin{tabular}{@{}llp{0.52\linewidth}@{}}
+Table~\ref{tab:ledger} summarises every hypothesis pre-registered in
+\texttt{docs/PRE-REGISTRATION.md} alongside the exploratory comparative margin. Table~\ref{tab:dev}
+lists the substantive methodological deviations from the frozen protocol.
+
+\begin{table}[h]
+\centering\footnotesize
+\input{generated/ledger}
+\caption{Complete slate of pre-registered hypotheses, thresholds, observed outcomes, and the
+exploratory comparative margin.}
+\label{tab:ledger}
+\end{table}
+
+\begin{table}[h]
+\centering\footnotesize
+\begin{tabular}{@{}lp{0.76\linewidth}@{}}
 \toprule
-id & date & what changed \\
+area & departure from frozen protocol and impact \\
 \midrule
-D042 & 2026-09-01 & The pre-registered judge became unreachable for new API keys. H1 was
-redefined from a live replication into a comparison against the vendor's stored labels. \\
-D057 & 2026-09-03 & Human gold cut from 600 primary and 100 retest to 93 and 30. Every interval
-downstream is correspondingly wider. \\
-D058 & 2026-09-03 & The retest was redrawn from the rater's own primary pool, because the
-original draw overlapped it on only four frames. \\
-D076 & 2026-09-05 & The blind re-label was specified at seven days and ran at a median of 2.4
-hours, with 0 of 34 pairs meeting the rule. The agreement figures are unchanged; what they
-license is narrower. \\
-D078 & 2026-09-05 & Seven labels violated a rubric rule nothing enforced. Correcting them moved
-judge--human AC1 on manipulation from 0.899 to 0.863, moved two prevalence estimates, and
-removed a clean zero-error result on the EPIC arm. \\
-D082 & 2026-09-05 & A coverage table reported the cross-domain experiment as tested. Its model
-was never fitted. \\
-D085 & 2026-09-05 & Sixty labels added after results were public, taking $n$ from 93 to 153.
-Both corrected margins moved toward the published values, the price of separating them rose from
-42 to 59 gold frames per arm on a calculation later found wrong (D088), and the error asymmetry
-weakened from absolute to 26 of 28. \\
-D087 & 2026-09-05 & Two errors in this paper's own first draft: the headline asymmetry was
-computed on the ternary hand count rather than on the indicator the published figure reports,
-and the design-effect width was stated as 12--29\% too narrow when that figure is how much wider
-the cluster-aware interval is. \\
+Judge panel & \texttt{gemini-2.5-flash} became unreachable for new API keys (HTTP 404); live calls
+switched to self-hosted \texttt{Qwen3-VL-8B-Instruct-FP8}, and comparisons run against the
+vendor's stored \texttt{gemini-2.5-flash} labels shipped in the evaluation parquets. \\
+Gold sample size & Primary human gold was reduced from 600 to 93 frames (33/30/30) and later
+expanded by 60 frames (to 63 Egocentric-10K, 60 EPIC-KITCHENS-100, 30 Ego4D; total 153) after
+initial results were public, widening intervals relative to the original plan. \\
+Retest separation & The blind intra-rater retest was specified at $\geq 7$ days and ran at a
+median of 2.4 hours (0 of 34 valid pairs met the rule), narrowing it to within-session
+consistency; one pair whose retest predated its primary label was excluded. \\
+Rubric rule 12 & Seven labels recorded 0 visible hands with manipulation \texttt{true} (violating
+frozen rule 12) before software enforcement existed; correcting them moved manipulation agreement
+and two prevalence estimates before publication. \\
+Distillation backbone & Frozen DINOv3 weights were gated without access; the negative rung-1 probe
+used ungated \texttt{facebook/dinov2-small} with a 95\% Wilson lower-bound threshold search. \\
+Exploratory \& post hoc & The comparative prevalence margin (\S\ref{sec:prevalence}), the vendor
+9{,}800-frame PPI++ arm, exact unequal-cluster ANOVA ICCs, factory-level clustering, and
+evaluation cluster-sensitivity bounds (\S\ref{sec:cluster}) were added outside the frozen
+registration and are reported as exploratory or post hoc. \\
 \bottomrule
 \end{tabular}
+\caption{Substantive methodological deviations from \texttt{docs/PRE-REGISTRATION.md}. Full dated
+records appear in the repository's decision log.}
+\label{tab:dev}
+\end{table}
 
-\section{Citation verification, including our own errors}
-\label{app:citations}
-
-Twenty references were opened at the source in this project's literature pass, and every
-bibliography entry here was re-resolved against arXiv before it was written. Eight attributions
-were wrong and are recorded so that a reader can weigh the rest.
-
-\begin{tabular}{@{}lp{0.62\linewidth}@{}}
-\toprule
-reference & what was wrong \\
-\midrule
-arXiv:2607.02417 & Cited for a 91.3\% human-agreement figure on egocentric video. It is a
-camera-motion generation paper with no judge validation and no such figure. Refuted. \\
-arXiv:2503.05965 & Cited as prior support for the prompt-sensitivity hypothesis. Its
-rating-indeterminacy examples are toxicity, factuality, helpfulness and relevance. Refuted. \\
-arXiv:2408.15204 & Cited as the prediction-powered inference paper. It is Confidence-Driven
-Inference; PPI is arXiv:2301.09633. Refuted as a PPI citation, retained as CDI. \\
-arXiv:2206.01670 & Claimed to support a wider benchmark suite than it does. Downgraded. \\
-arXiv:2309.02423 & Claimed never to compare hand distributions across datasets; it does.
-Downgraded. \\
-arXiv:2402.04788 & Pairwise agreement understated as 53--71\%; the paper reports 72--79\%.
-Downgraded. \\
-arXiv:2502.04144 & Best-two annotator merging applies only above an IoU threshold. Downgraded. \\
-arXiv:2606.00093 & Cited as the source of Gwet's AC1. It is an agreement-reporting checklist and
-does not mention AC1; the statistic is Gwet (2008). Found while preparing this paper. \\
-\bottomrule
-\end{tabular}
-
-\medskip\noindent
-Two figures repeated in secondary sources, a ``16.8\,pp prevalence spread from prompt choice''
-and a ``19\% to 54\% neutral'' shift, could not be attributed to any source and are cited
-nowhere in this work.
-
-\section{Confusion matrices, per corpus and judge}
+\section{Per-corpus confusion matrices}
 \label{app:confusion}
 
-\smallskip
-{\footnotesize\input{generated/confusion_per_corpus}}
+\begin{table}[h]
+\centering\footnotesize
+\input{generated/confusion_per_corpus}
+\caption{Per-corpus confusion matrices ($n = \vernierNPrimary{}$) for both the vendor's stored
+\texttt{gemini-2.5-flash} labels and \texttt{Qwen3-VL}. On EPIC-KITCHENS-100 manipulation,
+\texttt{gemini-2.5-flash} records 1 over-call (TF) against 2 under-calls (FT), reversing the
+pooled direction.}
+\label{tab:conf}
+\end{table}
 
-\medskip\noindent
-The vendor's matrices are analysis this project had not previously published. Note the
-EPIC-KITCHENS manipulation cell, where the vendor's judge under-reports more often than it
-over-reports, against the pooled direction.
-
-\section{Variance decomposition of the corrected estimates}
+\section{Open-judge prevalences and PPI++ variance decomposition}
 \label{app:ppivar}
 
-\smallskip
-{\small\input{generated/ppi_variance}}
+\begin{table}[h]
+\centering\footnotesize
+\input{generated/prevalence}
+\caption{Gold-corrected prevalences using the live open judge (\texttt{Qwen3-VL}) over the
+200-frame gold pools ($N \approx 140$ unlabelled frames per corpus). Intervals are iid lower
+bounds on width.}
+\label{tab:prev}
+\end{table}
 
-\medskip\noindent
-$\lambda$ is the control-variate coefficient, estimated on the gold sample and clipped to
-$[0,1]$ by the reference implementation's convention. The gold term dominates in every cell, at
-55 to 80\% of total variance, so the binding constraint on these intervals is human labels
-rather than judge labels. That is the quantitative form of the finding in
-Section~\ref{sec:moved}: collecting 60 more labels narrowed the intervals without resolving the
-comparison, and raised the estimated number needed to resolve it.
+\begin{table}[h]
+\centering\footnotesize
+\input{generated/ppi_variance}
+\caption{PPI++ variance decomposition for both the vendor full arm ($N = 9{,}800$) and the
+open-judge pool ($N \approx 140$). Moving from $N \approx 140$ to $N = 9{,}800$ collapses the
+iid unlabelled variance share from 20--45\% to under 1\%, leaving gold sample size (and, under
+clustering, the cluster variance floor) as the binding constraint.}
+\label{tab:ppivar}
+\end{table}
 
-\section{Cluster structure and the implied ICC}
+\section{Raw-corpus cluster structure and exact ANOVA ICCs}
 \label{app:clusters}
 
-\smallskip
-{\small\input{generated/cluster_detail}}
-
-\medskip\noindent
-The design effect is not transferable on its own, because it depends on the mean cluster size
-through $\text{deff} \approx 1 + (\bar{m} - 1)\rho$. The implied intra-cluster correlation is the
-transferable quantity, and a vendor draw with a different frames-per-worker profile would imply
-a different design effect from the same $\rho$.
-
-\section{Run and cost ledger}
-\label{app:runs}
-
-\smallskip
-{\footnotesize\input{generated/run_ledger}}
-
-\medskip\noindent
-Cost and per-call latency were not persisted for the eight prompt-sweep passes; only their rates
-are committed. The attributable total is therefore a lower bound on total spend.
+\begin{table}[h]
+\centering\footnotesize
+\input{generated/cluster_detail}
+\caption{Cluster-size distribution, Kish's unequal-cluster factor $\tilde{m} = \sum m_i^2 / N$,
+bootstrap design effect range, and exact one-way random-effects ANOVA $\hat{\rho}$ at both the
+worker and factory levels on \texttt{S10k-U} ($n = 9{,}989$) and \texttt{S10k-S} ($n = 9{,}983$).
+Because $\tilde{m}$ is nearly twice $\bar{m}$ at both levels, unequal cluster sizes account for a
+substantial share of the measured design effects.}
+\label{tab:clusterdetail}
+\end{table}
 
 \bibliographystyle{plainnat}
 \bibliography{refs}

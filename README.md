@@ -134,11 +134,14 @@ corpus under each of the two pre-registered designs, judged, and bootstrapped by
 (B = 10,000). Pre-registered threshold: a design effect of 2, which the same frozen document
 also phrases as "twice the width", a design effect of 4 under its own definition
 (`docs/DECISIONS.md` D074). Measured: 1.25–1.66 across both arms and all three figures
-(±0.05 Monte Carlo band), largest on 2-hands both times. Every figure exceeds 1, so an iid
-interval on this corpus is 12–29% too narrow in width; none reaches 2, so H2 fails under
-either reading. Reviewed independently, numbers reproduced bit-for-bit (D074). The corpus
-also ships 2,144 workers against the published 2,153 (`docs/UPSTREAM-FINDINGS.md` F12).
-`docs/DECISIONS.md` D072.
+(±0.05 Monte Carlo band), largest on 2-hands both times. Every figure exceeds 1, so the
+worker-aware interval is 12–29% wider than an iid interval (equivalently, iid understates
+width by 11–22%); none reaches 2, so H2 fails under either reading. Post hoc (D092,
+`data/cluster_posthoc.json`), clustering over the 85 factories reaches design effects of
+2.18–5.65 (widening intervals 48–138%), and exact unequal-cluster ANOVA gives
+$\hat{\rho}_w = 0.039\text{--}0.106$. Reviewed independently, numbers reproduced bit-for-bit
+(D074). The corpus also ships 2,144 workers against the published 2,153
+(`docs/UPSTREAM-FINDINGS.md` F12). `docs/DECISIONS.md` D072, D092.
 
 ## Who this is for
 
@@ -169,8 +172,9 @@ also ships 2,144 workers against the published 2,153 (`docs/UPSTREAM-FINDINGS.md
 | Reproducing all of it | `docs/REPRODUCTION.md` |
 | What is inherited, and from where | `docs/LINEAGE.md` |
 | Decisions and what would reverse them | `docs/DECISIONS.md` |
+| Follow-up v2 study design (second rater, registered margin, vendor reply) | `docs/DESIGN-V2.md` |
 | Where the work currently stands | `docs/HANDOFF.md` |
-| The paper, deposited on Zenodo (CC BY 4.0; D090) | [10.5281/zenodo.24453957](https://doi.org/10.5281/zenodo.24453957); source `paper/vernier.tex`, `make paper` |
+| The paper, deposited on Zenodo (CC BY 4.0; v1.0 D090, v2.0 D093/D094) | [10.5281/zenodo.24453957](https://doi.org/10.5281/zenodo.24453957); source `paper/vernier.tex`, `make paper` |
 | The data, on the Hub (labels, membership, judge output, results; no images) | [`caiotheodoro/vernier`](https://huggingface.co/datasets/caiotheodoro/vernier) |
 | The rung-1 probe, a published negative result | [`caiotheodoro/vernier-rung1-probe`](https://huggingface.co/caiotheodoro/vernier-rung1-probe) |
 | The writeup, with the argument and the charts | [caio.theodoro.dev](https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way) |

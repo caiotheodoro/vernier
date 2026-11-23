@@ -1,8 +1,11 @@
-\begin{tabular}{@{}lrrrrrll@{}}
+\begin{tabular}{@{}lrrrlrr@{}}
 \toprule
-draw & clusters & obs & mean size & min & max & design effect & implied ICC \\
+draw (level) & clusters & $\bar{m}$ & $\tilde{m}$ & min--max & deff range & ANOVA $\hat{\rho}$ \\
 \midrule
-S10k-U & 1966 & 9989 & 5.08 & 1 & 90 & 1.25--1.62 & 0.062--0.153 \\
-S10k-S & 1999 & 9983 & 4.99 & 1 & 112 & 1.29--1.66 & 0.073--0.164 \\
+S10k-U (worker) & 1966 & 5.08 & 9.27 & 1--90 & 1.25--1.62 & 0.039--0.106 \\
+S10k-S (worker) & 1999 & 4.99 & 9.69 & 1--112 & 1.29--1.66 & 0.062--0.103 \\
+\midrule
+S10k-U (factory) & 85 & 117.52 & 257.95 & 2--608 & 2.41--5.65 & 0.014--0.028 \\
+S10k-S (factory) & 85 & 117.45 & 257.46 & 4--622 & 2.18--3.95 & 0.014--0.020 \\
 \bottomrule
 \end{tabular}

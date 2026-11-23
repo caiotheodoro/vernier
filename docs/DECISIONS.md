@@ -3303,3 +3303,55 @@ so this is recorded as a check that passed rather than an assumption.
 **Not done here (deferred to `docs/DESIGN-V2.md`).** Recruiting a second independent rater on all 153 frames, registering the comparative margin estimand, collecting additional gold labels, and contacting the vendor for a right of reply and frame-to-worker linkage each require human effort, new registration, or external communication and are drafted in `docs/DESIGN-V2.md` for the owner rather than executed here.
 
 **Reversal.** If any formula in `scripts/cluster_posthoc.py` is found wrong, `data/cluster_posthoc.json` is replaced and the error recorded under a later entry. No registered artifact is touched.
+
+---
+
+## D092 — What D091 computed: exact ANOVA ICCs, factory clustering (deff 2.18–5.65), and evaluation cluster sensitivity (2026-11-23 UTC)
+
+Figures come from `data/cluster_posthoc.json`, written by `scripts/cluster_posthoc.py` after D091 was committed (`52ab038`). Post hoc, zero API spend, no pass/fail criterion; no registered artifact (`wave4_analysis.json`, `h2_design_effect.*.json`, `margin_exploratory.json`) was altered.
+
+- **A. Exact unequal-cluster ANOVA ICC and factory-level clustering (`S10k-U`, `S10k-S`).**
+  - Worker cluster sizes are heavily skewed (1 to 90 on `S10k-U`, $\bar{m} = 5.08$, $\text{CV} = 0.908$, Kish $\tilde{m} = 9.27$; 1 to 112 on `S10k-S`, $\bar{m} = 4.99$, $\text{CV} = 0.969$, Kish $\tilde{m} = 9.69$). Exact one-way random-effects ANOVA yields $\hat{\rho}_w = 0.039$ ($\geq$1 hand), $0.106$ (2 hands), $0.070$ (active manipulation) on `S10k-U`, and $0.062$, $0.103$, $0.068$ on `S10k-S` — substantially lower than D088's equal-cluster approximation ($0.062\text{--}0.164$), showing that unequal worker-hour skew drives roughly half of the measured worker design effect.
+  - Clustering over `factory_id` (85 factories, $B = 10{,}000$, seed 777) produces much larger design effects on every task: `S10k-U` $\text{deff}_f = 2.41$ ($\geq$1 hand, +55.4\% width), $5.65$ (2 hands, +137.6\% width), $2.85$ (active manipulation, +68.7\% width); `S10k-S` $\text{deff}_f = 2.18$ (+47.6\%), $3.95$ (+98.7\%), $3.56$ (+88.8\%). H2 as pre-registered over `worker_id` still fails unchanged; factory-level clustering is reported strictly post hoc.
+- **B. Post-hoc cluster sensitivity for the evaluation-arm PPI++ intervals (Broska & Howes, 2026, arXiv:2610.09601).**
+  - For the primary vendor full-arm ($N = 9{,}800$) active-manipulation margin against EPIC-KITCHENS-100 (point $-1.32$\,pp vs.\ published $+6.62$\,pp; registered iid 95\% CI $[-10.78, +8.14]$, SE $4.83$\,pp, unlabelled floor $0.67$\,pp, 89 gold frames per arm to exclude $+6.62$\,pp):
+    - **Model 1 (empirical `S10k-U` worker shares + EPIC $K=37$ equal-weight lower bound):** on Egocentric-10K, $n_{\text{gold}}=63$ barely clusters ($\text{deff}_{\text{gold}} = 1.004$) while $N=9{,}800$ scales by $1.64$; on EPIC-KITCHENS-100 ($K=37$, $\tilde{m} = 265.8$), the unlabelled variance floor jumps from $0.67$\,pp to $1.51$\,pp ($\rho=0.02$), $2.59$\,pp ($\rho = \hat{\rho}_{\text{ego}} = 0.070$), and $3.04$\,pp ($\rho=0.10$), widening the margin CI to $[-10.94, +8.30]$, $[-11.28, +8.64]$, and $[-11.48, +8.84]$, and raising required gold per arm to 93, 102, and 109. On $\geq$1 hand, the $K=37$ cluster floor exceeds the gap at all three $\rho$ values, making separation unachievable by labelling alone.
+    - **Model 2 (conservative direct $\sqrt{\text{deff}_{\max}}$ inflation, $\text{deff} = 1.291$):** margin CI widens to $[-12.07, +9.43]$ (SE $5.49$\,pp), raising required gold per arm from 89 to 115.
+- **C. Artifact-backed error direction for both judges ($n=153$).**
+  - Vendor's stored `gemini-2.5-flash`: $\geq$1 hand 9/24 over (37.5\% $[21.2, 57.3]$) vs.\ 0/129 under ($[0.0, 2.9]$, Fisher $p = 1.3\times 10^{-8}$); manipulation 10/33 over (30.3\% $[17.4, 47.3]$) vs.\ 4/120 under (3.3\% $[1.3, 8.3]$, $p = 3.4\times 10^{-5}$). Reverses on EPIC-KITCHENS-100 manipulation (1 over vs.\ 2 under). Stable across first 93 (7/21 vs.\ 0/72; 8/27 vs.\ 1/66) and excluding $\leq 2$\,s labels (9/24 vs.\ 0/105; 10/33 vs.\ 3/96). Zero manipulation false positives carry the `idle-grip` tag in either judge.
+- **Checked.** Unit tests in `tests/test_cluster_posthoc.py` verify synthetic ANOVA ICC=0/1 golden cases, Wilson intervals, multinomial $\tilde{m}$, and exact agreement of `data/cluster_posthoc.json` against `h2_design_effect.*.json`, `margin_exploratory.json`, and `frames.json`.
+- **Reversal.** If any calculation in `scripts/cluster_posthoc.py` is found wrong, replace `data/cluster_posthoc.json` under a later entry.
+
+---
+
+## D093 — Paper v2 revamp: lead with empirical findings, state caveats once, move registration/deviations to Appendix A, add Broska & Howes (2026) (2026-11-23 UTC)
+
+`paper/vernier.tex` is revised in place to `paper-v2.0` (the deposited v1 text remains at tag `paper-v1.0` / Zenodo 24453957).
+
+- **Title.** *When a Model Judge Certifies a Dataset: Asymmetric Over-Calling, Worker Clustering, and Unresolved Margins in Egocentric-10K.* States the subject and three surviving empirical findings without claiming an "upper bound" headline (gated on a second independent rater and the EPIC-KITCHENS-100 manipulation reversal cell).
+- **Abstract & structure.** Cuts the confessional opening ("None of the pre-registered hypotheses was confirmed") and drops the `NOT_VERIFIED` verdict from the abstract. Leads with the vendor's own stored labels (9/24 vs.\ 0/129; 10/33 vs.\ 4/120) alongside the open judge, then worker/factory clustering, then gold-corrected margins and their labelling budget (89 per arm iid, 93–115 under clustering), closing with the single-rater / EPIC reversal gate. Cuts repo housekeeping from the paper body ("What moved while we watched", citation-errors appendix, run/cost ledger, decision-log IDs, and the 42$\to$59$\to$226$\to$89 history), renames failure-framed sections to constructive headings, states every limitation once in Section 8, and puts the complete pre-registered hypothesis ledger and compact deviation table in Appendix A.
+- **Tables & framing fixes.** Table 1 (`error_direction.tex`) now leads with `gemini-2.5-flash` (vendor, stored) rows above `Qwen3-VL`, with Wilson 95\% CIs and Fisher $p$-values. Table 2 (`disagreement_tags.tex`) provides the structured rubric edge-case breakdown (explaining why no raw frames are embedded in the immutable PDF per `docs/ETHICS.md` §4's withdrawal guarantee, linking the interactive Space). Table 4 (`margins.tex`) includes both vendor full-arm and open-judge margins. Table 5 (`design_effect.tex`) and Table 6 (`cluster_sensitivity.tex`) add worker/factory CIs, exact ANOVA $\hat{\rho}_w$, and post-hoc cluster sensitivity. Cross-model comparison phrasing clarifies accurately that two of three rates land within 1\,pp on both releases while 2 hands misses by $>6$\,pp, failing H1's all-three criterion.
+- **Citations.** Adds Broska & Howes (2026), *Cluster-Robust Prediction-Powered Inference* (`arXiv:2610.09601`, verified at source on 2026-11-23).
+- **Stale doc counts fixed.** `docs/REPRODUCTION.md:75`, `docs/COVERAGE.md`, and `scripts/emit_card.py` `sample_definition` updated from stale pre-D085 `93` counts to `153`; `MEASUREMENT_CARD.json` and `space/public/data/stats.json` regenerated to stay in sync.
+- **Reversal.** Tag `paper-v1.0` preserves the first version; any error found in v2 is corrected under a later entry.
+
+---
+
+## D094 — Paper publication date set to 5 September 2026, superseding D090's date argument (2026-11-23 UTC)
+
+On the owner's instruction across repositories (recorded in `lacuna` D114): the paper's publication date is the date its work was first published — for `vernier`, **5 September 2026**, the date of the blog post (`https://caio.theodoro.dev/blog/vernier-judge-errors-run-one-way`) and the first committed `paper/vernier.tex` source.
+
+- `CITATION.cff`: `date-released` updated from `2026-11-23` to `2026-09-05` (with updated v2 title, abstract, and keywords).
+- `.zenodo.json`: `publication_date` updated from `2026-11-23` to `2026-09-05`, `version` set to `paper-v2.0`, `notes` recording first publication on 5 September 2026 and this v2 revision of 23 November 2026, plus updated title, abstract, keywords, related identifiers, and Broska & Howes (2026) reference.
+- `paper/vernier.tex`: `\date{First version 5 September 2026; this version 23 November 2026}`.
+- **On Zenodo.** Nothing is uploaded or modified remotely by this entry; record 24453957 remains as deposited until the owner uploads `paper-v2.0`.
+- **Reversal.** A later entry changes the three date fields if the owner prefers a different date convention.
+
+---
+
+## D095 — Follow-up work requiring human raters, new registration, or vendor outreach drafted as `docs/DESIGN-V2.md` (2026-11-23 UTC)
+
+`docs/DESIGN-V2.md` specifies the four follow-up items that cannot be completed from existing committed artifacts alone: (1) an independent second rater (`R2`) labelling all 153 existing frames blind under `docs/RUBRIC.md` v1.2.0 to resolve the single-rater / upper-bound gate; (2) pre-registering the comparative active-manipulation margin estimand (`docs/PREREG-V2.md`, with an external timestamp deposit); (3) collecting the ~55 (iid) to ~120 (cluster-buffered) additional gold frames per arm from the frozen `G200-ego` and `G200-epic` pools at zero API spend; and (4) notifying Build AI with a right of reply and requesting a frame-to-worker mapping on `Egocentric-10K-Evaluation`.
+
+- **Why it stops at a design.** Recruiting a second rater, freezing owner predictions, and sending external vendor correspondence are the owner's acts.
+- **Reversal.** The file is a draft; a later entry freezes or replaces it.

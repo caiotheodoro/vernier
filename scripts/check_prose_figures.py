@@ -55,10 +55,30 @@ _TRANSFORMS: dict[str, _Transform] = {
 
 
 def _resolve(path: str, pointer: str, root: Path = _ROOT) -> Any:
-    """`data/x.json` + `a.b.0.c` -> the value. Dotted, with integer segments indexing lists."""
+    """`data/x.json` + `a.b.0.c` -> the value. Dotted, with integer segments indexing lists.
+    Supports keys containing literal dots (e.g. `gemini-2.5-flash`) by joining segments.
+    """
     node: Any = json.loads((root / path).read_text())
-    for segment in pointer.split("."):
-        node = node[int(segment)] if isinstance(node, list) else node[segment]
+    parts = pointer.split(".")
+    i = 0
+    while i < len(parts):
+        if isinstance(node, list):
+            node = node[int(parts[i])]
+            i += 1
+        elif parts[i] in node:
+            node = node[parts[i]]
+            i += 1
+        else:
+            matched = False
+            for j in range(i + 2, len(parts) + 1):
+                candidate = ".".join(parts[i:j])
+                if candidate in node:
+                    node = node[candidate]
+                    i = j
+                    matched = True
+                    break
+            if not matched:
+                raise KeyError(parts[i])
     return node
 
 
@@ -78,10 +98,12 @@ _H2U = "data/h2_design_effect.S10k-U.json"
 _H2S = "data/h2_design_effect.S10k-S.json"
 _RUNG1 = "data/rung1_distillation.json"
 _MARGIN = "data/margin_exploratory.json"
+_POSTHOC = "data/cluster_posthoc.json"
 _STATS = "space/public/data/stats.json"
 _ERRDIR = "confusion.error_direction"
 _EPIC_MANIP = "comparisons.egocentric-10k_minus_epic-kitchens-100.manipulation"
 _EPIC_HAND = "comparisons.egocentric-10k_minus_epic-kitchens-100.hand_count"
+_PH_VEND_MANIP = "evaluation_cluster_sensitivity.arms.vendor_full_arm.egocentric_minus_epic_margin.manipulation"
 
 _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     # H1, both releases
@@ -171,24 +193,42 @@ _PINS: tuple[tuple[str, str, str, str, str], ...] = (
     (_B, "129", _STATS, f"{_ERRDIR}.hand_count.at_risk_under", "raw_int"),
     (_B, "33", _STATS, f"{_ERRDIR}.manipulation.at_risk_over", "raw_int"),
     (_B, "120", _STATS, f"{_ERRDIR}.manipulation.at_risk_under", "raw_int"),
-    # paper/vernier.tex -- prose figures only; its tables are generated (D086) and cannot drift.
+    # paper/vernier.tex -- prose figures only; its tables are generated (D086, D093) and cannot drift.
     (_P, "96.42", _E2, "H1.hand_ge1_rate.published", "pct2"),
     (_P, "91.66", _E2, "H1.active_manipulation_rate.published", "pct2"),
     (_P, "76.34", _E2, "H1.hand_eq2_rate.published", "pct2"),
+    (_P, "6.32", _E2, "H1.hand_eq2_rate.diff_pp", "pp2"),
+    (_P, "6.14", _E100K, "published_comparison.hand_eq2_rate.diff_pp", "pp2"),
+    (_P, "9", _POSTHOC, "error_direction_both_judges.judges.gemini-2.5-flash.overall.hand_ge1.over", "raw_int"),
+    (_P, "37.5", _POSTHOC, "error_direction_both_judges.judges.gemini-2.5-flash.overall.hand_ge1.over_wilson.rate_pct", "pp1"),
+    (_P, "21.2", _POSTHOC, "error_direction_both_judges.judges.gemini-2.5-flash.overall.hand_ge1.over_wilson.lo_pct", "pp1"),
+    (_P, "57.3", _POSTHOC, "error_direction_both_judges.judges.gemini-2.5-flash.overall.hand_ge1.over_wilson.hi_pct", "pp1"),
     (_P, "6", _STATS, f"{_ERRDIR}.hand_ge1.over", "raw_int"),
     (_P, "24", _STATS, f"{_ERRDIR}.hand_ge1.at_risk_over", "raw_int"),
     (_P, "10", _STATS, f"{_ERRDIR}.hand_one_to_two", "raw_int"),
     (_P, "129", _STATS, f"{_ERRDIR}.hand_count.at_risk_under", "raw_int"),
-        (_P, "10", _STATS, f"{_ERRDIR}.manipulation.over", "raw_int"),
+    (_P, "10", _STATS, f"{_ERRDIR}.manipulation.over", "raw_int"),
     (_P, "-1.02", _MARGIN, f"{_EPIC_MANIP}.corrected_margin_pp", "pp2"),
     (_P, "-11.68", _MARGIN, f"{_EPIC_MANIP}.ci_pp.lo", "pp2"),
     (_P, "9.65", _MARGIN, f"{_EPIC_MANIP}.ci_pp.hi", "pp2"),
     (_P, "6.62", _MARGIN, f"{_EPIC_MANIP}.published_margin_pp", "pp2"),
+    (_P, "6.05", _MARGIN, f"{_EPIC_HAND}.published_margin_pp", "pp2"),
     (_P, "226", _MARGIN, f"{_EPIC_MANIP}.gold_per_arm_to_exclude_published.gold_per_arm", "raw_int"),
     (_P, "89", _MARGIN, "vendor_full_arm.comparisons.egocentric-10k_minus_epic-kitchens-100.manipulation.gold_per_arm_to_exclude_published.gold_per_arm", "raw_int"),
     (_P, "-1.32", _MARGIN, "vendor_full_arm.comparisons.egocentric-10k_minus_epic-kitchens-100.manipulation.corrected_margin_pp", "pp2"),
     (_P, "-10.78", _MARGIN, "vendor_full_arm.comparisons.egocentric-10k_minus_epic-kitchens-100.manipulation.ci_pp.lo", "pp2"),
     (_P, "8.14", _MARGIN, "vendor_full_arm.comparisons.egocentric-10k_minus_epic-kitchens-100.manipulation.ci_pp.hi", "pp2"),
+    (_P, "84.43", _MARGIN, "vendor_full_arm.prevalence.egocentric-10k.manipulation.value", "pct2"),
+    (_P, "91.72", _MARGIN, "vendor_full_arm.prevalence.egocentric-10k.hand_count.value", "pct2"),
+    (_P, "-11.28", _POSTHOC, f"{_PH_VEND_MANIP}.model1_epic_k37_grid.1.margin_ci_pp.lo", "pp2"),
+    (_P, "8.64", _POSTHOC, f"{_PH_VEND_MANIP}.model1_epic_k37_grid.1.margin_ci_pp.hi", "pp2"),
+    (_P, "-12.07", _POSTHOC, f"{_PH_VEND_MANIP}.model2_direct_deff.ci_pp.lo", "pp2"),
+    (_P, "9.43", _POSTHOC, f"{_PH_VEND_MANIP}.model2_direct_deff.ci_pp.hi", "pp2"),
+    (_P, "115", _POSTHOC, f"{_PH_VEND_MANIP}.model2_direct_deff.gold_per_arm_to_exclude_published.gold_per_arm", "raw_int"),
+    (_P, "2.18", _POSTHOC, "raw_corpus_clustering.S10k-S.tasks.hand_ge1.factory_deff", "ratio2"),
+    (_P, "5.65", _POSTHOC, "raw_corpus_clustering.S10k-U.tasks.hand_eq2.factory_deff", "ratio2"),
+    (_P, "0.039", _POSTHOC, "raw_corpus_clustering.S10k-U.tasks.hand_ge1.worker_anova.icc", "ratio3"),
+    (_P, "0.106", _POSTHOC, "raw_corpus_clustering.S10k-U.tasks.hand_eq2.worker_anova.icc", "ratio3"),
     (_P, "4.76", _W4, "H5.egocentric.error_rate", "pct2"),
     (_P, "8.33", _W4, "H5.epic_kitchens.error_rate", "pct2"),
     (_P, "0.6933", _RUNG1, "fidelity_vs_gemini_2_5_flash", "ratio4"),

@@ -1,0 +1,1481 @@
+{
+  "decision": "D091",
+  "status": "post_hoc",
+  "B": 10000,
+  "seed": 777,
+  "raw_corpus_clustering": {
+    "S10k-U": {
+      "n_ok": 9989,
+      "worker_clusters": {
+        "n_clusters": 1966,
+        "n_observations": 9989,
+        "mean_cluster_size": 5.08087487283825,
+        "min_cluster_size": 1,
+        "max_cluster_size": 90
+      },
+      "factory_clusters": {
+        "n_clusters": 85,
+        "n_observations": 9989,
+        "mean_cluster_size": 117.51764705882353,
+        "min_cluster_size": 2,
+        "max_cluster_size": 608
+      },
+      "tasks": {
+        "hand_ge1": {
+          "point_estimate": 0.9489438382220442,
+          "iid_ci": {
+            "lo": 0.9445389928921814,
+            "hi": 0.9531509660626689,
+            "method": "iid",
+            "clusters": null,
+            "B": null
+          },
+          "worker_ci": {
+            "lo": 0.9440811883658584,
+            "hi": 0.9537285865173507,
+            "method": "cluster-bootstrap",
+            "clusters": 1966,
+            "B": 10000
+          },
+          "worker_deff": 1.254917190211891,
+          "worker_width_excess_pct": 12.023086469347511,
+          "worker_anova": {
+            "icc": 0.0388728750285341,
+            "m_bar": 5.08087487283825,
+            "m0": 5.078745296671122,
+            "m_tilde": 9.26549204124537,
+            "cv_cluster_size": 0.9075250394208046,
+            "sum_p_sq": 0.000927569530608206,
+            "deff_analytic": 1.3213034391686744
+          },
+          "factory_ci": {
+            "lo": 0.9420899433180003,
+            "hi": 0.955471395240909,
+            "method": "cluster-bootstrap",
+            "clusters": 85,
+            "B": 10000
+          },
+          "factory_deff": 2.4143550664120466,
+          "factory_deff_fresh_iid": 2.4143550664120466,
+          "factory_width_excess_pct": 55.381950895592965,
+          "factory_anova": {
+            "icc": 0.014069547593187839,
+            "m_bar": 117.51764705882353,
+            "m0": 115.84585186562362,
+            "m_tilde": 257.9484432876164,
+            "cv_cluster_size": 1.0931496886569245,
+            "sum_p_sq": 0.02582324990365566,
+            "deff_analytic": 4.615148351830645
+          }
+        },
+        "hand_eq2": {
+          "point_estimate": 0.8079887876664331,
+          "iid_ci": {
+            "lo": 0.8001801982180399,
+            "hi": 0.8155971568725598,
+            "method": "iid",
+            "clusters": null,
+            "B": null
+          },
+          "worker_ci": {
+            "lo": 0.7981902460415058,
+            "hi": 0.8178293024567629,
+            "method": "cluster-bootstrap",
+            "clusters": 1966,
+            "B": 10000
+          },
+          "worker_deff": 1.6227208635034607,
+          "worker_width_excess_pct": 27.386061384417594,
+          "worker_anova": {
+            "icc": 0.10573771512368253,
+            "m_bar": 5.08087487283825,
+            "m0": 5.078745296671122,
+            "m_tilde": 9.26549204124537,
+            "cv_cluster_size": 0.9075250394208046,
+            "sum_p_sq": 0.000927569530608206,
+            "deff_analytic": 1.8739742428142683
+          },
+          "factory_ci": {
+            "lo": 0.7885043193352695,
+            "hi": 0.8251383723412676,
+            "method": "cluster-bootstrap",
+            "clusters": 85,
+            "B": 10000
+          },
+          "factory_deff": 5.646411473622033,
+          "factory_deff_fresh_iid": 5.646411473622033,
+          "factory_width_excess_pct": 137.62178927072392,
+          "factory_anova": {
+            "icc": 0.027880459284923855,
+            "m_bar": 117.51764705882353,
+            "m0": 115.84585186562362,
+            "m_tilde": 257.9484432876164,
+            "cv_cluster_size": 1.0931496886569245,
+            "sum_p_sq": 0.02582324990365566,
+            "deff_analytic": 8.163840611404954
+          }
+        },
+        "active_manipulation": {
+          "point_estimate": 0.8981880068074882,
+          "iid_ci": {
+            "lo": 0.8920812894183602,
+            "hi": 0.9041946140754831,
+            "method": "iid",
+            "clusters": null,
+            "B": null
+          },
+          "worker_ci": {
+            "lo": 0.8912721936598443,
+            "hi": 0.904946632001388,
+            "method": "cluster-bootstrap",
+            "clusters": 1966,
+            "B": 10000
+          },
+          "worker_deff": 1.2743604373621555,
+          "worker_width_excess_pct": 12.88757404436307,
+          "worker_anova": {
+            "icc": 0.0704776359764238,
+            "m_bar": 5.08087487283825,
+            "m0": 5.078745296671122,
+            "m_tilde": 9.26549204124537,
+            "cv_cluster_size": 0.9075250394208046,
+            "sum_p_sq": 0.000927569530608206,
+            "deff_analytic": 1.5825323392489192
+          },
+          "factory_ci": {
+            "lo": 0.887287729385187,
+            "hi": 0.9077273442110068,
+            "method": "cluster-bootstrap",
+            "clusters": 85,
+            "B": 10000
+          },
+          "factory_deff": 2.8472047569139454,
+          "factory_deff_fresh_iid": 2.8472047569139454,
+          "factory_width_excess_pct": 68.73662189678757,
+          "factory_anova": {
+            "icc": 0.016862312039516866,
+            "m_bar": 117.51764705882353,
+            "m0": 115.84585186562362,
+            "m_tilde": 257.9484432876164,
+            "cv_cluster_size": 1.0931496886569245,
+            "sum_p_sq": 0.02582324990365566,
+            "deff_analytic": 5.33274482878389
+          }
+        }
+      }
+    },
+    "S10k-S": {
+      "n_ok": 9983,
+      "worker_clusters": {
+        "n_clusters": 1999,
+        "n_observations": 9983,
+        "mean_cluster_size": 4.99399699849925,
+        "min_cluster_size": 1,
+        "max_cluster_size": 112
+      },
+      "factory_clusters": {
+        "n_clusters": 85,
+        "n_observations": 9983,
+        "mean_cluster_size": 117.44705882352942,
+        "min_cluster_size": 4,
+        "max_cluster_size": 622
+      },
+      "tasks": {
+        "hand_ge1": {
+          "point_estimate": 0.9511168987278373,
+          "iid_ci": {
+            "lo": 0.9469097465691676,
+            "hi": 0.9553240508865071,
+            "method": "iid",
+            "clusters": null,
+            "B": null
+          },
+          "worker_ci": {
+            "lo": 0.9461991964223844,
+            "hi": 0.9558417700398205,
+            "method": "cluster-bootstrap",
+            "clusters": 1999,
+            "B": 10000
+          },
+          "worker_deff": 1.3132563110735354,
+          "worker_width_excess_pct": 14.59739574150607,
+          "worker_anova": {
+            "icc": 0.06168127574683406,
+            "m_bar": 4.99399699849925,
+            "m0": 4.991647963700453,
+            "m_tilde": 9.687368526495042,
+            "cv_cluster_size": 0.9694341818413084,
+            "sum_p_sq": 0.0009703865097160214,
+            "deff_analytic": 1.5358479735971082
+          },
+          "factory_ci": {
+            "lo": 0.9446509988052283,
+            "hi": 0.9570733398703118,
+            "method": "cluster-bootstrap",
+            "clusters": 85,
+            "B": 10000
+          },
+          "factory_deff": 2.1795682257753115,
+          "factory_deff_fresh_iid": 2.1795682257753115,
+          "factory_width_excess_pct": 47.633608158010944,
+          "factory_anova": {
+            "icc": 0.014375640679318175,
+            "m_bar": 117.44705882352942,
+            "m0": 115.78020014977842,
+            "m_tilde": 257.46318741861165,
+            "cv_cluster_size": 1.091862524070543,
+            "sum_p_sq": 0.025790162017290556,
+            "deff_analytic": 4.686822629802595
+          }
+        },
+        "hand_eq2": {
+          "point_estimate": 0.8204948412300912,
+          "iid_ci": {
+            "lo": 0.8129820695181809,
+            "hi": 0.8280076129420014,
+            "method": "iid",
+            "clusters": null,
+            "B": null
+          },
+          "worker_ci": {
+            "lo": 0.8107638290041952,
+            "hi": 0.8300938242716644,
+            "method": "cluster-bootstrap",
+            "clusters": 1999,
+            "B": 10000
+          },
+          "worker_deff": 1.6550195166543795,
+          "worker_width_excess_pct": 28.647561836763135,
+          "worker_anova": {
+            "icc": 0.10294947599870843,
+            "m_bar": 4.99399699849925,
+            "m0": 4.991647963700453,
+            "m_tilde": 9.687368526495042,
+            "cv_cluster_size": 0.9694341818413084,
+            "sum_p_sq": 0.0009703865097160214,
+            "deff_analytic": 1.8943600376103364
+          },
+          "factory_ci": {
+            "lo": 0.8049542954298498,
+            "hi": 0.8348054284093742,
+            "method": "cluster-bootstrap",
+            "clusters": 85,
+            "B": 10000
+          },
+          "factory_deff": 3.9469467063786747,
+          "factory_deff_fresh_iid": 3.9469467063786747,
+          "factory_width_excess_pct": 98.66924035639424,
+          "factory_anova": {
+            "icc": 0.019640925638973104,
+            "m_bar": 117.44705882352942,
+            "m0": 115.78020014977842,
+            "m_tilde": 257.46318741861165,
+            "cv_cluster_size": 1.091862524070543,
+            "sum_p_sq": 0.025790162017290556,
+            "deff_analytic": 6.037174393222974
+          }
+        },
+        "active_manipulation": {
+          "point_estimate": 0.9038365220875488,
+          "iid_ci": {
+            "lo": 0.8980266452970049,
+            "hi": 0.9095462285886006,
+            "method": "iid",
+            "clusters": null,
+            "B": null
+          },
+          "worker_ci": {
+            "lo": 0.8972565722802248,
+            "hi": 0.9103448797485082,
+            "method": "cluster-bootstrap",
+            "clusters": 1999,
+            "B": 10000
+          },
+          "worker_deff": 1.2909024919332928,
+          "worker_width_excess_pct": 13.617889961629404,
+          "worker_anova": {
+            "icc": 0.06768658259878745,
+            "m_bar": 4.99399699849925,
+            "m0": 4.991647963700453,
+            "m_tilde": 9.687368526495042,
+            "cv_cluster_size": 0.9694341818413084,
+            "sum_p_sq": 0.0009703865097160214,
+            "deff_analytic": 1.588018287334713
+          },
+          "factory_ci": {
+            "lo": 0.8921694828510618,
+            "hi": 0.9139142167443134,
+            "method": "cluster-bootstrap",
+            "clusters": 85,
+            "B": 10000
+          },
+          "factory_deff": 3.5631545167478818,
+          "factory_deff_fresh_iid": 3.5631545167478818,
+          "factory_width_excess_pct": 88.76319865768014,
+          "factory_anova": {
+            "icc": 0.016832644485855124,
+            "m_bar": 117.44705882352942,
+            "m0": 115.78020014977842,
+            "m_tilde": 257.46318741861165,
+            "cv_cluster_size": 1.091862524070543,
+            "sum_p_sq": 0.025790162017290556,
+            "deff_analytic": 5.316953657526723
+          }
+        }
+      }
+    }
+  },
+  "evaluation_cluster_sensitivity": {
+    "why_sensitivity_not_direct": "Build AI's evaluation parquets ship frame_id as a bare UUID4 with worker_id=null, factory_id=null, clip_id=null across all 30,000 evaluation frames (F9), so direct Cluster-Robust PPI++ (Broska & Howes, 2026, arXiv:2610.09601) cannot be computed on the evaluation arms.",
+    "ego_s10ku_sum_p_sq": 0.000927569530608206,
+    "epic_participants_K": 37,
+    "arms": {
+      "vendor_full_arm": {
+        "egocentric_10k_prevalence": {
+          "hand_count": {
+            "point_pct": 91.7152893944463,
+            "rho_ego_anova": 0.0388728750285341,
+            "deff_max_measured": 1.3132563110735354,
+            "model1_ego_deff_gold": 1.0022355522555038,
+            "model1_ego_deff_unl": 1.3533254282529228,
+            "iid_ci_pct": {
+              "lo": 86.40734164679603,
+              "hi": 97.02323714209656,
+              "se_pp": 2.708186369504075
+            },
+            "model1_worker_scaled_ci_pct": {
+              "lo": 86.39741452096466,
+              "hi": 97.03316426792793,
+              "se_pp": 2.713251322691818
+            },
+            "model2_direct_deff_ci_pct": {
+              "lo": 85.63251950831916,
+              "hi": 97.79805928057344,
+              "se_pp": 3.1035110512781108
+            }
+          },
+          "manipulation": {
+            "point_pct": 84.43237634036664,
+            "rho_ego_anova": 0.0704776359764238,
+            "deff_max_measured": 1.2909024919332928,
+            "model1_ego_deff_gold": 1.0040531202787037,
+            "model1_ego_deff_unl": 1.6405891227583478,
+            "iid_ci_pct": {
+              "lo": 76.6535875376966,
+              "hi": 92.2111651430367,
+              "se_pp": 3.968842725697074
+            },
+            "model1_worker_scaled_ci_pct": {
+              "lo": 76.63270547508354,
+              "hi": 92.23204720564975,
+              "se_pp": 3.9794970350506005
+            },
+            "model2_direct_deff_ci_pct": {
+              "lo": 75.59428063820144,
+              "hi": 93.27047204253185,
+              "se_pp": 4.509315360832635
+            }
+          }
+        },
+        "egocentric_minus_epic_margin": {
+          "hand_count": {
+            "published_margin_pp": 6.05,
+            "corrected_margin_pp": 4.714533536547583,
+            "iid_ci_pp": {
+              "lo": -2.3133170879576017,
+              "hi": 11.742384161052767,
+              "se_pp": 3.5857039618788784
+            },
+            "iid_gold_per_arm": {
+              "achievable_by_labelling_alone": true,
+              "gold_per_arm": 2246,
+              "floor_half_width_pp": 0.6618811032969218
+            },
+            "model2_direct_deff": {
+              "deff_multiplier": 1.3132563110735354,
+              "ci_pp": {
+                "lo": -3.3392002557385294,
+                "hi": 12.768267328833694,
+                "se_pp": 4.1091233593132
+              },
+              "published_inside_ci": true,
+              "gold_per_arm_to_exclude_published": {
+                "achievable_by_labelling_alone": true,
+                "gold_per_arm": 3285,
+                "floor_half_width_pp": 0.7584985072834202
+              }
+            },
+            "model1_epic_k37_grid": [
+              {
+                "scenario": "low_0.02",
+                "rho_epic": 0.02,
+                "epic_deff_gold": 1.0318918918918918,
+                "epic_deff_unl": 6.296756756756757,
+                "margin_ci_pp": {
+                  "lo": -2.4856028389397085,
+                  "hi": 11.914669912034874,
+                  "se_pp": 3.6736064704663196
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": false,
+                  "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+                  "floor_half_width_pp": 1.4697387887082742
+                }
+              },
+              {
+                "scenario": "matched_ego_anova",
+                "rho_epic": 0.0388728750285341,
+                "epic_deff_gold": 1.0619864763968516,
+                "epic_deff_unl": 11.29500817309745,
+                "margin_ci_pp": {
+                  "lo": -2.6377150402961096,
+                  "hi": 12.066782113391275,
+                  "se_pp": 3.7512161625607874
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": false,
+                  "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+                  "floor_half_width_pp": 1.9351409683621417
+                }
+              },
+              {
+                "scenario": "high_0.10",
+                "rho_epic": 0.1,
+                "epic_deff_gold": 1.1594594594594594,
+                "epic_deff_unl": 27.48378378378379,
+                "margin_ci_pp": {
+                  "lo": -3.1101163606528077,
+                  "hi": 12.539183433747974,
+                  "se_pp": 3.9922416732757497
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": false,
+                  "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+                  "floor_half_width_pp": 2.979469209210818
+                }
+              }
+            ]
+          },
+          "manipulation": {
+            "published_margin_pp": 6.619999999999992,
+            "corrected_margin_pp": -1.3216627752796084,
+            "iid_ci_pp": {
+              "lo": -10.784772011486627,
+              "hi": 8.14144646092741,
+              "se_pp": 4.828205676660805
+            },
+            "iid_gold_per_arm": {
+              "achievable_by_labelling_alone": true,
+              "gold_per_arm": 89,
+              "floor_half_width_pp": 0.6746732379524762
+            },
+            "model2_direct_deff": {
+              "deff_multiplier": 1.2909024919332928,
+              "ci_pp": {
+                "lo": -12.073447814222089,
+                "hi": 9.430122263662872,
+                "se_pp": 5.485705412829618
+              },
+              "published_inside_ci": true,
+              "gold_per_arm_to_exclude_published": {
+                "achievable_by_labelling_alone": true,
+                "gold_per_arm": 115,
+                "floor_half_width_pp": 0.7665494970974066
+              }
+            },
+            "model1_epic_k37_grid": [
+              {
+                "scenario": "low_0.02",
+                "rho_epic": 0.02,
+                "epic_deff_gold": 1.0318918918918918,
+                "epic_deff_unl": 6.296756756756757,
+                "margin_ci_pp": {
+                  "lo": -10.941238101444387,
+                  "hi": 8.29791255088517,
+                  "se_pp": 4.908036781309637
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": true,
+                  "gold_per_arm": 93,
+                  "floor_half_width_pp": 1.5101560293131453
+                }
+              },
+              {
+                "scenario": "matched_ego_anova",
+                "rho_epic": 0.0704776359764238,
+                "epic_deff_gold": 1.112383257367811,
+                "epic_deff_unl": 19.665144727918296,
+                "margin_ci_pp": {
+                  "lo": -11.284141043288853,
+                  "hi": 8.640815492729637,
+                  "se_pp": 5.082990476657736
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": true,
+                  "gold_per_arm": 102,
+                  "floor_half_width_pp": 2.5853993357392206
+                }
+              },
+              {
+                "scenario": "high_0.10",
+                "rho_epic": 0.1,
+                "epic_deff_gold": 1.1594594594594594,
+                "epic_deff_unl": 27.48378378378379,
+                "margin_ci_pp": {
+                  "lo": -11.479327867831126,
+                  "hi": 8.836002317271909,
+                  "se_pp": 5.182577421153595
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": true,
+                  "gold_per_arm": 109,
+                  "floor_half_width_pp": 3.043000120056234
+                }
+              }
+            ]
+          }
+        }
+      },
+      "open_judge_arm": {
+        "egocentric_10k_prevalence": {
+          "hand_count": {
+            "point_pct": 92.43309002433091,
+            "rho_ego_anova": 0.0388728750285341,
+            "deff_max_measured": 1.3132563110735354,
+            "model1_ego_deff_gold": 1.0022355522555038,
+            "model1_ego_deff_unl": 1.004903792044331,
+            "iid_ci_pct": {
+              "lo": 86.9497349809276,
+              "hi": 97.91644506773422,
+              "se_pp": 2.797681532240035
+            },
+            "model1_worker_scaled_ci_pct": {
+              "lo": 86.94092358847402,
+              "hi": 97.9252564601878,
+              "se_pp": 2.802177223244098
+            },
+            "model2_direct_deff_ci_pct": {
+              "lo": 86.14930794533021,
+              "hi": 98.71687210333162,
+              "se_pp": 3.2060701770881437
+            }
+          },
+          "manipulation": {
+            "point_pct": 85.0557049558202,
+            "rho_ego_anova": 0.0704776359764238,
+            "deff_max_measured": 1.2909024919332928,
+            "model1_ego_deff_gold": 1.0040531202787037,
+            "model1_ego_deff_unl": 1.0088907154500597,
+            "iid_ci_pct": {
+              "lo": 77.89957308696617,
+              "hi": 92.21183682467424,
+              "se_pp": 3.6511547790167005
+            },
+            "model1_worker_scaled_ci_pct": {
+              "lo": 77.8772440397629,
+              "hi": 92.2341658718775,
+              "se_pp": 3.6625473593801092
+            },
+            "model2_direct_deff_ci_pct": {
+              "lo": 76.92505892355653,
+              "hi": 93.18635098808386,
+              "se_pp": 4.148365019151968
+            }
+          }
+        },
+        "egocentric_minus_epic_margin": {
+          "hand_count": {
+            "published_margin_pp": 6.05,
+            "corrected_margin_pp": 3.015100606341481,
+            "iid_ci_pp": {
+              "lo": -5.2289352923827375,
+              "hi": 11.2591365050657,
+              "se_pp": 4.206218054899029
+            },
+            "iid_gold_per_arm": {
+              "achievable_by_labelling_alone": false,
+              "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+              "floor_half_width_pp": 5.296311384221151
+            },
+            "model2_direct_deff": {
+              "deff_multiplier": 1.3132563110735354,
+              "ci_pp": {
+                "lo": -6.432349837591336,
+                "hi": 12.462551050274298,
+                "se_pp": 4.820216350123319
+              },
+              "published_inside_ci": true,
+              "gold_per_arm_to_exclude_published": {
+                "achievable_by_labelling_alone": false,
+                "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+                "floor_half_width_pp": 6.06943491667835
+              }
+            },
+            "model1_epic_k37_grid": [
+              {
+                "scenario": "low_0.02",
+                "rho_epic": 0.02,
+                "epic_deff_gold": 1.0318918918918918,
+                "epic_deff_unl": 1.075135135135135,
+                "margin_ci_pp": {
+                  "lo": -5.351767059890523,
+                  "hi": 11.381968272573486,
+                  "se_pp": 4.268888475619343
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": false,
+                  "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+                  "floor_half_width_pp": 5.420538259803412
+                }
+              },
+              {
+                "scenario": "matched_ego_anova",
+                "rho_epic": 0.0388728750285341,
+                "epic_deff_gold": 1.0619864763968516,
+                "epic_deff_unl": 1.1460359359180066,
+                "margin_ci_pp": {
+                  "lo": -5.460663398807801,
+                  "hi": 11.490864611490762,
+                  "se_pp": 4.324448853144766
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": false,
+                  "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+                  "floor_half_width_pp": 5.530585782993814
+                }
+              },
+              {
+                "scenario": "high_0.10",
+                "rho_epic": 0.1,
+                "epic_deff_gold": 1.1594594594594594,
+                "epic_deff_unl": 1.3756756756756756,
+                "margin_ci_pp": {
+                  "lo": -5.804141005885301,
+                  "hi": 11.834342218568263,
+                  "se_pp": 4.4996957504279855
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": false,
+                  "reason": "the unlabelled pool alone contributes more variance than the target allows; no number of gold labels reaches it without a larger judged pool",
+                  "floor_half_width_pp": 5.8728788145206385
+                }
+              }
+            ]
+          },
+          "manipulation": {
+            "published_margin_pp": 6.619999999999992,
+            "corrected_margin_pp": -1.015723615608377,
+            "iid_ci_pp": {
+              "lo": -11.676473227806767,
+              "hi": 9.645025996590013,
+              "se_pp": 5.439257913047904
+            },
+            "iid_gold_per_arm": {
+              "achievable_by_labelling_alone": true,
+              "gold_per_arm": 226,
+              "floor_half_width_pp": 6.142977322540821
+            },
+            "model2_direct_deff": {
+              "deff_multiplier": 1.2909024919332928,
+              "ci_pp": {
+                "lo": -13.12824237908078,
+                "hi": 11.096795147864023,
+                "se_pp": 6.1799700703759886
+              },
+              "published_inside_ci": true,
+              "gold_per_arm_to_exclude_published": {
+                "achievable_by_labelling_alone": true,
+                "gold_per_arm": 625,
+                "floor_half_width_pp": 6.979521214692279
+              }
+            },
+            "model1_epic_k37_grid": [
+              {
+                "scenario": "low_0.02",
+                "rho_epic": 0.02,
+                "epic_deff_gold": 1.0318918918918918,
+                "epic_deff_unl": 1.075135135135135,
+                "margin_ci_pp": {
+                  "lo": -11.813366047962841,
+                  "hi": 9.781918816746087,
+                  "se_pp": 5.5091024720479
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": true,
+                  "gold_per_arm": 246,
+                  "floor_half_width_pp": 6.24745689710831
+                }
+              },
+              {
+                "scenario": "matched_ego_anova",
+                "rho_epic": 0.0704776359764238,
+                "epic_deff_gold": 1.112383257367811,
+                "epic_deff_unl": 1.2647673351546733,
+                "margin_ci_pp": {
+                  "lo": -12.11505448971345,
+                  "hi": 10.083607258496695,
+                  "se_pp": 5.66302797482769
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": true,
+                  "gold_per_arm": 301,
+                  "floor_half_width_pp": 6.463442999306411
+                }
+              },
+              {
+                "scenario": "high_0.10",
+                "rho_epic": 0.1,
+                "epic_deff_gold": 1.1594594594594594,
+                "epic_deff_unl": 1.3756756756756756,
+                "margin_ci_pp": {
+                  "lo": -12.287758485729235,
+                  "hi": 10.25631125451248,
+                  "se_pp": 5.751143877659605
+                },
+                "published_inside_ci": true,
+                "gold_per_arm_to_exclude_published": {
+                  "achievable_by_labelling_alone": true,
+                  "gold_per_arm": 343,
+                  "floor_half_width_pp": 6.586482959368619
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "error_direction_both_judges": {
+    "n_primary": 153,
+    "judges": {
+      "gemini-2.5-flash": {
+        "overall": {
+          "n": 153,
+          "hand_ge1": {
+            "over": 9,
+            "at_risk_over": 24,
+            "over_wilson": {
+              "rate_pct": 37.5,
+              "lo_pct": 21.159367559548777,
+              "hi_pct": 57.290037557325725
+            },
+            "under": 0,
+            "at_risk_under": 129,
+            "under_wilson": {
+              "rate_pct": 0.0,
+              "lo_pct": 0.0,
+              "hi_pct": 2.8917619956878258
+            },
+            "fisher_p": 1.3125524209489247e-08
+          },
+          "manipulation": {
+            "over": 10,
+            "at_risk_over": 33,
+            "over_wilson": {
+              "rate_pct": 30.303030303030305,
+              "lo_pct": 17.375531424053605,
+              "hi_pct": 47.33813514580058
+            },
+            "under": 4,
+            "at_risk_under": 120,
+            "under_wilson": {
+              "rate_pct": 3.3333333333333335,
+              "lo_pct": 1.30375510983506,
+              "hi_pct": 8.258033755910601
+            },
+            "fisher_p": 3.414829921769251e-05
+          },
+          "hand_count_ternary": {
+            "over": 15,
+            "at_risk_over": 59,
+            "under": 3,
+            "at_risk_under": 129,
+            "one_to_two": 6,
+            "two_to_one": 3
+          }
+        },
+        "per_corpus": {
+          "egocentric-10k": {
+            "n": 63,
+            "hand_ge1": {
+              "over": 3,
+              "at_risk_over": 5,
+              "over_wilson": {
+                "rate_pct": 60.0,
+                "lo_pct": 23.07242812760128,
+                "hi_pct": 88.2379225767352
+              },
+              "under": 0,
+              "at_risk_under": 58,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 6.211785578720291
+              },
+              "fisher_p": 0.0002518193951298129
+            },
+            "manipulation": {
+              "over": 6,
+              "at_risk_over": 9,
+              "over_wilson": {
+                "rate_pct": 66.66666666666666,
+                "lo_pct": 35.420213558039634,
+                "hi_pct": 87.9416181613089
+              },
+              "under": 1,
+              "at_risk_under": 54,
+              "under_wilson": {
+                "rate_pct": 1.8518518518518516,
+                "lo_pct": 0.3276487718229068,
+                "hi_pct": 9.771437488781931
+              },
+              "fisher_p": 8.263586413746484e-06
+            },
+            "hand_count_ternary": {
+              "over": 8,
+              "at_risk_over": 15,
+              "under": 1,
+              "at_risk_under": 58,
+              "one_to_two": 5,
+              "two_to_one": 1
+            }
+          },
+          "epic-kitchens-100": {
+            "n": 60,
+            "hand_ge1": {
+              "over": 2,
+              "at_risk_over": 8,
+              "over_wilson": {
+                "rate_pct": 25.0,
+                "lo_pct": 7.1479212752109,
+                "hi_pct": 59.07245696898311
+              },
+              "under": 0,
+              "at_risk_under": 52,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 6.879223612386235
+              },
+              "fisher_p": 0.015819209039548022
+            },
+            "manipulation": {
+              "over": 1,
+              "at_risk_over": 11,
+              "over_wilson": {
+                "rate_pct": 9.090909090909092,
+                "lo_pct": 1.6232172885884855,
+                "hi_pct": 37.73584364515957
+              },
+              "under": 2,
+              "at_risk_under": 49,
+              "under_wilson": {
+                "rate_pct": 4.081632653061225,
+                "lo_pct": 1.1265633366185788,
+                "hi_pct": 13.713032306080065
+              },
+              "fisher_p": 0.46160140268848615
+            },
+            "hand_count_ternary": {
+              "over": 3,
+              "at_risk_over": 27,
+              "under": 0,
+              "at_risk_under": 52,
+              "one_to_two": 1,
+              "two_to_one": 0
+            }
+          },
+          "ego4d": {
+            "n": 30,
+            "hand_ge1": {
+              "over": 4,
+              "at_risk_over": 11,
+              "over_wilson": {
+                "rate_pct": 36.36363636363637,
+                "lo_pct": 15.166471095367573,
+                "hi_pct": 64.6198825492151
+              },
+              "under": 0,
+              "at_risk_under": 19,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 16.817922405261626
+              },
+              "fisher_p": 0.012041598248494798
+            },
+            "manipulation": {
+              "over": 3,
+              "at_risk_over": 13,
+              "over_wilson": {
+                "rate_pct": 23.076923076923077,
+                "lo_pct": 8.179528718498569,
+                "hi_pct": 50.256375946727495
+              },
+              "under": 1,
+              "at_risk_under": 17,
+              "under_wilson": {
+                "rate_pct": 5.88235294117647,
+                "lo_pct": 1.0460400984997564,
+                "hi_pct": 26.982030637575406
+              },
+              "fisher_p": 0.29034847655537316
+            },
+            "hand_count_ternary": {
+              "over": 4,
+              "at_risk_over": 17,
+              "under": 2,
+              "at_risk_under": 19,
+              "one_to_two": 0,
+              "two_to_one": 2
+            }
+          }
+        },
+        "sensitivity": {
+          "first_batch_93": {
+            "n": 93,
+            "hand_ge1": {
+              "over": 7,
+              "at_risk_over": 21,
+              "over_wilson": {
+                "rate_pct": 33.33333333333333,
+                "lo_pct": 17.194752605083476,
+                "hi_pct": 54.62654802574476
+              },
+              "under": 0,
+              "at_risk_under": 72,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 5.065117259645781
+              },
+              "fisher_p": 1.2274080024546947e-05
+            },
+            "manipulation": {
+              "over": 8,
+              "at_risk_over": 27,
+              "over_wilson": {
+                "rate_pct": 29.629629629629626,
+                "lo_pct": 15.853040469779762,
+                "hi_pct": 48.480682964148144
+              },
+              "under": 1,
+              "at_risk_under": 66,
+              "under_wilson": {
+                "rate_pct": 1.5151515151515151,
+                "lo_pct": 0.26796405439821064,
+                "hi_pct": 8.095920262066398
+              },
+              "fisher_p": 0.00015721162553555178
+            },
+            "hand_count_ternary": {
+              "over": 13,
+              "at_risk_over": 40,
+              "under": 3,
+              "at_risk_under": 72,
+              "one_to_two": 6,
+              "two_to_one": 3
+            }
+          },
+          "all_153": {
+            "n": 153,
+            "hand_ge1": {
+              "over": 9,
+              "at_risk_over": 24,
+              "over_wilson": {
+                "rate_pct": 37.5,
+                "lo_pct": 21.159367559548777,
+                "hi_pct": 57.290037557325725
+              },
+              "under": 0,
+              "at_risk_under": 129,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 2.8917619956878258
+              },
+              "fisher_p": 1.3125524209489247e-08
+            },
+            "manipulation": {
+              "over": 10,
+              "at_risk_over": 33,
+              "over_wilson": {
+                "rate_pct": 30.303030303030305,
+                "lo_pct": 17.375531424053605,
+                "hi_pct": 47.33813514580058
+              },
+              "under": 4,
+              "at_risk_under": 120,
+              "under_wilson": {
+                "rate_pct": 3.3333333333333335,
+                "lo_pct": 1.30375510983506,
+                "hi_pct": 8.258033755910601
+              },
+              "fisher_p": 3.414829921769251e-05
+            },
+            "hand_count_ternary": {
+              "over": 15,
+              "at_risk_over": 59,
+              "under": 3,
+              "at_risk_under": 129,
+              "one_to_two": 6,
+              "two_to_one": 3
+            }
+          },
+          "excluding_le_2s": {
+            "n": 129,
+            "hand_ge1": {
+              "over": 9,
+              "at_risk_over": 24,
+              "over_wilson": {
+                "rate_pct": 37.5,
+                "lo_pct": 21.159367559548777,
+                "hi_pct": 57.290037557325725
+              },
+              "under": 0,
+              "at_risk_under": 105,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 3.5294076929109894
+              },
+              "fisher_p": 6.380432263253846e-08
+            },
+            "manipulation": {
+              "over": 10,
+              "at_risk_over": 33,
+              "over_wilson": {
+                "rate_pct": 30.303030303030305,
+                "lo_pct": 17.375531424053605,
+                "hi_pct": 47.33813514580058
+              },
+              "under": 3,
+              "at_risk_under": 96,
+              "under_wilson": {
+                "rate_pct": 3.125,
+                "lo_pct": 1.0684070371201164,
+                "hi_pct": 8.78867932453698
+              },
+              "fisher_p": 6.0068647284651634e-05
+            },
+            "hand_count_ternary": {
+              "over": 15,
+              "at_risk_over": 54,
+              "under": 3,
+              "at_risk_under": 105,
+              "one_to_two": 6,
+              "two_to_one": 3
+            }
+          }
+        },
+        "disagreement_tags": {
+          "hand_ge1": {
+            "over_n": 9,
+            "over_in_atlas": 0,
+            "over_tags": {
+              "edge": 1,
+              "idle-grip": 0,
+              "other-person": 2,
+              "untagged": 6
+            },
+            "under_n": 0,
+            "under_in_atlas": 0,
+            "under_tags": {
+              "idle-grip": 0
+            }
+          },
+          "manipulation": {
+            "over_n": 10,
+            "over_in_atlas": 1,
+            "over_tags": {
+              "blur": 1,
+              "edge": 1,
+              "idle-grip": 0,
+              "other-person": 3,
+              "self-contact": 1,
+              "untagged": 4
+            },
+            "under_n": 4,
+            "under_in_atlas": 0,
+            "under_tags": {
+              "between-actions": 1,
+              "blur": 2,
+              "idle-grip": 0,
+              "untagged": 1
+            }
+          }
+        }
+      },
+      "qwen3-vl": {
+        "overall": {
+          "n": 153,
+          "hand_ge1": {
+            "over": 6,
+            "at_risk_over": 24,
+            "over_wilson": {
+              "rate_pct": 25.0,
+              "lo_pct": 11.999366228595004,
+              "hi_pct": 44.899444005154
+            },
+            "under": 0,
+            "at_risk_under": 129,
+            "under_wilson": {
+              "rate_pct": 0.0,
+              "lo_pct": 0.0,
+              "hi_pct": 2.8917619956878258
+            },
+            "fisher_p": 8.342830899650418e-06
+          },
+          "manipulation": {
+            "over": 10,
+            "at_risk_over": 33,
+            "over_wilson": {
+              "rate_pct": 30.303030303030305,
+              "lo_pct": 17.375531424053605,
+              "hi_pct": 47.33813514580058
+            },
+            "under": 2,
+            "at_risk_under": 120,
+            "under_wilson": {
+              "rate_pct": 1.6666666666666667,
+              "lo_pct": 0.4582564565921137,
+              "hi_pct": 5.87359629721589
+            },
+            "fisher_p": 3.101786955374222e-06
+          },
+          "hand_count_ternary": {
+            "over": 16,
+            "at_risk_over": 59,
+            "under": 0,
+            "at_risk_under": 129,
+            "one_to_two": 10,
+            "two_to_one": 0
+          }
+        },
+        "per_corpus": {
+          "egocentric-10k": {
+            "n": 63,
+            "hand_ge1": {
+              "over": 2,
+              "at_risk_over": 5,
+              "over_wilson": {
+                "rate_pct": 40.0,
+                "lo_pct": 11.762077423264783,
+                "hi_pct": 76.9275718723987
+              },
+              "under": 0,
+              "at_risk_under": 58,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 6.211785578720291
+              },
+              "fisher_p": 0.005120327700972863
+            },
+            "manipulation": {
+              "over": 3,
+              "at_risk_over": 9,
+              "over_wilson": {
+                "rate_pct": 33.33333333333333,
+                "lo_pct": 12.05838183869109,
+                "hi_pct": 64.57978644196037
+              },
+              "under": 0,
+              "at_risk_under": 54,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 6.64135880908964
+              },
+              "fisher_p": 0.0021152829190904283
+            },
+            "hand_count_ternary": {
+              "over": 6,
+              "at_risk_over": 15,
+              "under": 0,
+              "at_risk_under": 58,
+              "one_to_two": 4,
+              "two_to_one": 0
+            }
+          },
+          "epic-kitchens-100": {
+            "n": 60,
+            "hand_ge1": {
+              "over": 2,
+              "at_risk_over": 8,
+              "over_wilson": {
+                "rate_pct": 25.0,
+                "lo_pct": 7.1479212752109,
+                "hi_pct": 59.07245696898311
+              },
+              "under": 0,
+              "at_risk_under": 52,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 6.879223612386235
+              },
+              "fisher_p": 0.015819209039548022
+            },
+            "manipulation": {
+              "over": 3,
+              "at_risk_over": 11,
+              "over_wilson": {
+                "rate_pct": 27.27272727272727,
+                "lo_pct": 9.746059290024888,
+                "hi_pct": 56.56453011761291
+              },
+              "under": 2,
+              "at_risk_under": 49,
+              "under_wilson": {
+                "rate_pct": 4.081632653061225,
+                "lo_pct": 1.1265633366185788,
+                "hi_pct": 13.713032306080065
+              },
+              "fisher_p": 0.0385739333722969
+            },
+            "hand_count_ternary": {
+              "over": 6,
+              "at_risk_over": 27,
+              "under": 0,
+              "at_risk_under": 52,
+              "one_to_two": 4,
+              "two_to_one": 0
+            }
+          },
+          "ego4d": {
+            "n": 30,
+            "hand_ge1": {
+              "over": 2,
+              "at_risk_over": 11,
+              "over_wilson": {
+                "rate_pct": 18.181818181818183,
+                "lo_pct": 5.136768974608513,
+                "hi_pct": 47.69805619608442
+              },
+              "under": 0,
+              "at_risk_under": 19,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 16.817922405261626
+              },
+              "fisher_p": 0.1264367816091954
+            },
+            "manipulation": {
+              "over": 4,
+              "at_risk_over": 13,
+              "over_wilson": {
+                "rate_pct": 30.76923076923077,
+                "lo_pct": 12.680703655710515,
+                "hi_pct": 57.63065681945096
+              },
+              "under": 0,
+              "at_risk_under": 17,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 18.43181350088518
+              },
+              "fisher_p": 0.026090129538405407
+            },
+            "hand_count_ternary": {
+              "over": 4,
+              "at_risk_over": 17,
+              "under": 0,
+              "at_risk_under": 19,
+              "one_to_two": 2,
+              "two_to_one": 0
+            }
+          }
+        },
+        "sensitivity": {
+          "first_batch_93": {
+            "n": 93,
+            "hand_ge1": {
+              "over": 5,
+              "at_risk_over": 21,
+              "over_wilson": {
+                "rate_pct": 23.809523809523807,
+                "lo_pct": 10.628013022636464,
+                "hi_pct": 45.09117368295076
+              },
+              "under": 0,
+              "at_risk_under": 72,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 5.065117259645781
+              },
+              "fisher_p": 0.0003915431527830476
+            },
+            "manipulation": {
+              "over": 8,
+              "at_risk_over": 27,
+              "over_wilson": {
+                "rate_pct": 29.629629629629626,
+                "lo_pct": 15.853040469779762,
+                "hi_pct": 48.480682964148144
+              },
+              "under": 0,
+              "at_risk_under": 66,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 5.500255701354129
+              },
+              "fisher_p": 2.1799328173771455e-05
+            },
+            "hand_count_ternary": {
+              "over": 14,
+              "at_risk_over": 40,
+              "under": 0,
+              "at_risk_under": 72,
+              "one_to_two": 9,
+              "two_to_one": 0
+            }
+          },
+          "all_153": {
+            "n": 153,
+            "hand_ge1": {
+              "over": 6,
+              "at_risk_over": 24,
+              "over_wilson": {
+                "rate_pct": 25.0,
+                "lo_pct": 11.999366228595004,
+                "hi_pct": 44.899444005154
+              },
+              "under": 0,
+              "at_risk_under": 129,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 2.8917619956878258
+              },
+              "fisher_p": 8.342830899650418e-06
+            },
+            "manipulation": {
+              "over": 10,
+              "at_risk_over": 33,
+              "over_wilson": {
+                "rate_pct": 30.303030303030305,
+                "lo_pct": 17.375531424053605,
+                "hi_pct": 47.33813514580058
+              },
+              "under": 2,
+              "at_risk_under": 120,
+              "under_wilson": {
+                "rate_pct": 1.6666666666666667,
+                "lo_pct": 0.4582564565921137,
+                "hi_pct": 5.87359629721589
+              },
+              "fisher_p": 3.101786955374222e-06
+            },
+            "hand_count_ternary": {
+              "over": 16,
+              "at_risk_over": 59,
+              "under": 0,
+              "at_risk_under": 129,
+              "one_to_two": 10,
+              "two_to_one": 0
+            }
+          },
+          "excluding_le_2s": {
+            "n": 129,
+            "hand_ge1": {
+              "over": 6,
+              "at_risk_over": 24,
+              "over_wilson": {
+                "rate_pct": 25.0,
+                "lo_pct": 11.999366228595004,
+                "hi_pct": 44.899444005154
+              },
+              "under": 0,
+              "at_risk_under": 105,
+              "under_wilson": {
+                "rate_pct": 0.0,
+                "lo_pct": 0.0,
+                "hi_pct": 3.5294076929109894
+              },
+              "fisher_p": 2.3662411665908598e-05
+            },
+            "manipulation": {
+              "over": 10,
+              "at_risk_over": 33,
+              "over_wilson": {
+                "rate_pct": 30.303030303030305,
+                "lo_pct": 17.375531424053605,
+                "hi_pct": 47.33813514580058
+              },
+              "under": 1,
+              "at_risk_under": 96,
+              "under_wilson": {
+                "rate_pct": 1.0416666666666665,
+                "lo_pct": 0.18411702168162486,
+                "hi_pct": 5.666617622715785
+              },
+              "fisher_p": 3.4129391021122735e-06
+            },
+            "hand_count_ternary": {
+              "over": 16,
+              "at_risk_over": 54,
+              "under": 0,
+              "at_risk_under": 105,
+              "one_to_two": 10,
+              "two_to_one": 0
+            }
+          }
+        },
+        "disagreement_tags": {
+          "hand_ge1": {
+            "over_n": 6,
+            "over_in_atlas": 0,
+            "over_tags": {
+              "blur": 1,
+              "edge": 1,
+              "idle-grip": 0,
+              "self-contact": 1,
+              "untagged": 3
+            },
+            "under_n": 0,
+            "under_in_atlas": 0,
+            "under_tags": {
+              "idle-grip": 0
+            }
+          },
+          "manipulation": {
+            "over_n": 10,
+            "over_in_atlas": 1,
+            "over_tags": {
+              "between-actions": 1,
+              "blur": 3,
+              "edge": 1,
+              "idle-grip": 0,
+              "other-person": 1,
+              "self-contact": 1,
+              "untagged": 3
+            },
+            "under_n": 2,
+            "under_in_atlas": 0,
+            "under_tags": {
+              "blur": 1,
+              "idle-grip": 0,
+              "untagged": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,14 +1,10 @@
-"""Generate the paper's numeric tables as LaTeX, straight from the result files.
+"""Generate the paper's numeric tables as LaTeX, straight from the committed result files.
 
 `AGENTS.md` rule 2 says every figure in prose cites the file that produces it, and
-`scripts/check_prose_figures.py` (D081) enforces that for the two markdown writeups by pinning
-literals. A paper is worse than prose for this: a table has dozens of cells, and a `.tex` file
-is the last place anyone re-checks before submitting. So the paper's tables are not written at
-all. They are emitted here from `data/*.json` and `space/public/data/stats.json` and pulled in
-with `\\input`, which makes drift impossible rather than detectable.
-
-Prose figures inside `paper/vernier.tex` are a different matter and are pinned the same way the
-markdown is (D086).
+`scripts/check_prose_figures.py` (D081) enforces that for markdown and LaTeX prose by pinning
+literals. Numeric tables are never hand-typed in `paper/vernier.tex`; they are emitted here
+from `data/*.json` (including `data/cluster_posthoc.json`, D091/D092) and
+`space/public/data/{frames,stats}.json`, and pulled in with `\\input`.
 
 Every table is a `booktabs` `tabular` with no surrounding `table` environment, so the paper
 controls placement, captions and labels.
@@ -17,6 +13,7 @@ controls placement, captions and labels.
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -29,6 +26,9 @@ _CORPUS_LABEL = {
     "G200-ego": "Egocentric-10K",
     "G200-ego4d": "Ego4D",
     "G200-epic": "EPIC-KITCHENS-100",
+    "egocentric-10k": "Egocentric-10K",
+    "ego4d": "Ego4D",
+    "epic-kitchens-100": "EPIC-KITCHENS-100",
 }
 _TASK_LABEL = {"hand_count": "$\\geq$1 hand", "manipulation": "active manipulation"}
 
@@ -42,6 +42,14 @@ def _pct(x: float) -> str:
     return f"{x * 100:.2f}"
 
 
+def _fmt_p(p: float) -> str:
+    if p < 1e-4:
+        exp = math.floor(math.log10(p))
+        mant = p / (10**exp)
+        return f"${mant:.1f}\\times 10^{{{exp}}}$"
+    return f"{p:.4f}"
+
+
 def _load() -> dict[str, Any]:
     return {
         "e2": json.loads((_DATA / "e2_full_n10000.json").read_text()),
@@ -52,6 +60,7 @@ def _load() -> dict[str, Any]:
         "margin": json.loads((_DATA / "margin_exploratory.json").read_text()),
         "h2u": json.loads((_DATA / "h2_design_effect.S10k-U.json").read_text()),
         "h2s": json.loads((_DATA / "h2_design_effect.S10k-S.json").read_text()),
+        "posthoc": json.loads((_DATA / "cluster_posthoc.json").read_text()),
         "stats": json.loads((_ROOT / "space" / "public" / "data" / "stats.json").read_text()),
         "card": json.loads((_ROOT / "MEASUREMENT_CARD.json").read_text()),
     }
@@ -77,32 +86,72 @@ def _replication(d: dict[str, Any]) -> str:
     body = "\n".join(rows)
     return (
         "\\begin{tabular}{llrrr}\n\\toprule\n"
-        "release & figure & measured & published & diff (pp) \\\\\n\\midrule\n"
+        "release & figure & Qwen3-VL (\\%) & published (\\%) & diff (pp) \\\\\n\\midrule\n"
         f"{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
 
 def _error_direction(d: dict[str, Any]) -> str:
-    """D087: the indicator rows come first because they are the estimand the published figure
-    reports. The ternary hand count is kept underneath, and the 1->2 confusions that separate
-    the two are called out, so a reader can see exactly which errors bear on which claim."""
-    e = d["stats"]["confusion"]["error_direction"]
-    g, m, h = e["hand_ge1"], e["manipulation"], e["hand_count"]
-    rows = [
-        f"$\\geq$1 hand (the published indicator) & {g['over']} & {g['at_risk_over']} & "
-        f"{g['under']} & {g['at_risk_under']} \\\\",
-        f"active manipulation & {m['over']} & {m['at_risk_over']} & "
-        f"{m['under']} & {m['at_risk_under']} \\\\",
-        "\\midrule",
-        f"hand count, ternary & {h['over']} & {h['at_risk_over']} & "
-        f"{h['under']} & {h['at_risk_under']} \\\\",
-        f"\\quad of which one-against-two & {e['hand_one_to_two']} & --- & 0 & --- \\\\",
-    ]
+    """Both judges against the single rater (n=153), vendor's own stored labels first (D092).
+
+    Binary indicator rows come first because they match the published estimands; ternary hand
+    count and one-against-two confusions sit underneath.
+    """
+    judges = d["posthoc"]["error_direction_both_judges"]["judges"]
+    rows: list[str] = []
+    for jkey, jlabel in (
+        ("gemini-2.5-flash", "gemini-2.5-flash (vendor)"),
+        ("qwen3-vl", "Qwen3-VL (open)"),
+    ):
+        ov = judges[jkey]["overall"]
+        g, m, h = ov["hand_ge1"], ov["manipulation"], ov["hand_count_ternary"]
+        if rows:
+            rows.append("\\midrule")
+        for tlabel, b in (("$\\geq$1 hand", g), ("active manipulation", m)):
+            ow, uw = b["over_wilson"], b["under_wilson"]
+            rows.append(
+                f"{jlabel} & {tlabel} & {b['over']}/{b['at_risk_over']} & "
+                f"{ow['rate_pct']:.1f} [{ow['lo_pct']:.1f}, {ow['hi_pct']:.1f}] & "
+                f"{b['under']}/{b['at_risk_under']} & "
+                f"{uw['rate_pct']:.1f} [{uw['lo_pct']:.1f}, {uw['hi_pct']:.1f}] & "
+                f"{_fmt_p(b['fisher_p'])} \\\\"
+            )
+        rows.append(
+            f"{jlabel} & hand count, ternary & {h['over']}/{h['at_risk_over']} & --- & "
+            f"{h['under']}/{h['at_risk_under']} & --- & --- \\\\"
+        )
+        rows.append(
+            f"\\quad of which 1$\\leftrightarrow$2 & & {h['one_to_two']} (1$\\to$2) & --- & "
+            f"{h['two_to_one']} (2$\\to$1) & --- & --- \\\\"
+        )
     body = "\n".join(rows)
     return (
-        "\\begin{tabular}{lrrrr}\n\\toprule\n"
-        "task & over & at risk & under & at risk \\\\\n\\midrule\n"
-        f"{body}\n\\bottomrule\n\\end{{tabular}}\n"
+        "\\begin{tabular}{@{}llrlrlr@{}}\n\\toprule\n"
+        "judge & task & over & rate (95\\% CI) & under & rate (95\\% CI) & Fisher $p$ \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
+def _disagreement_tags(d: dict[str, Any]) -> str:
+    """Structured breakdown of disagreements by rubric edge-case tag (n=153)."""
+    judges = d["posthoc"]["error_direction_both_judges"]["judges"]
+    tag_cols = ("other-person", "blur", "edge", "self-contact", "between-actions", "idle-grip", "untagged")
+    rows: list[str] = []
+    for jkey, jlabel in (("gemini-2.5-flash", "gemini-2.5-flash"), ("qwen3-vl", "Qwen3-VL")):
+        tb = judges[jkey]["disagreement_tags"]
+        for tkey, tlabel in (("hand_ge1", "$\\geq$1 hand"), ("manipulation", "manipulation")):
+            block = tb[tkey]
+            for direction, n_key, tags_key in (("over", "over_n", "over_tags"), ("under", "under_n", "under_tags")):
+                n_val = block[n_key]
+                if n_val == 0:
+                    continue
+                counts = " & ".join(str(block[tags_key].get(c, 0)) for c in tag_cols)
+                rows.append(f"{jlabel} & {tlabel} & {direction} & {n_val} & {counts} \\\\")
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}lllr rrrrrrr@{}}\n\\toprule\n"
+        "judge & task & dir. & $n$ & other & blur & edge & self & betw. & idle & none \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
 
@@ -119,60 +168,152 @@ def _prevalence(d: dict[str, Any]) -> str:
     body = "\n".join(rows)
     return (
         "\\begin{tabular}{@{}llrrrlr@{}}\n\\toprule\n"
-        "corpus & task & published & judge & PPI++ & 95\\% CI & $n_{\\text{gold}}$ \\\\\n"
+        "corpus & task & published & judge & PPI++ & 95\\% iid CI & $n_{\\text{gold}}$ \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
+def _vendor_prevalence(d: dict[str, Any]) -> str:
+    """Gold-corrected prevalence with the vendor's stored labels over N=9,800 per corpus."""
+    v = d["margin"]["vendor_full_arm"]["prevalence"]
+    arm_of = {"egocentric-10k": "G200-ego", "epic-kitchens-100": "G200-epic", "ego4d": "G200-ego4d"}
+    order = ["egocentric-10k", "epic-kitchens-100", "ego4d"]
+    rows = []
+    for corpus in order:
+        for task in ("hand_count", "manipulation"):
+            b = v[corpus][task]
+            published = d["wave4"]["ppi"][arm_of[corpus]][task]["published"]
+            rows.append(
+                f"{_CORPUS_LABEL[corpus]} & {_TASK_LABEL[task]} & {_pct(published)} & {_pct(b['value'])} & "
+                f"[{_pct(b['ci']['lo'])}, {_pct(b['ci']['hi'])}] & {b['n_gold']} & {b['n_unlabelled']:,} \\\\"
+            )
+    body = "\n".join(rows)
+    return (
+        "\\begin{tabular}{@{}llrrlrr@{}}\n\\toprule\n"
+        "corpus & task & published & corrected & 95\\% iid CI & $n_{\\text{gold}}$ & $N$ \\\\\n"
         f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
 
 def _margins(d: dict[str, Any]) -> str:
-    rows = []
-    for key, comp in d["margin"]["comparisons"].items():
-        other = _CORPUS_LABEL["G200-epic"] if "epic" in key else _CORPUS_LABEL["G200-ego4d"]
-        for task, m in comp.items():
-            inside = "yes" if m["published_inside_corrected_ci"] else "no"
-            rows.append(
-                f"{other} & {_TASK_LABEL[task]} & {m['published_margin_pp']:+.2f} & "
-                f"{m['corrected_margin_pp']:+.2f} & "
-                f"[{m['ci_pp']['lo']:+.2f}, {m['ci_pp']['hi']:+.2f}] & {inside} \\\\"
-            )
+    """Published margin vs gold-corrected margin for both the vendor full arm and the open judge."""
+    short_task = {"hand_count": "$\\geq$1 hand", "manipulation": "manipulation"}
+    rows: list[str] = []
+    for arm_label, block in (
+        ("vendor ($N{=}9{,}800$)", d["margin"]["vendor_full_arm"]["comparisons"]),
+        ("open ($N{\\approx}140$)", d["margin"]["comparisons"]),
+    ):
+        if rows:
+            rows.append("\\midrule")
+        for key, comp in block.items():
+            other = "EPIC-KITCHENS-100" if "epic" in key else "Ego4D"
+            for task, m in comp.items():
+                inside = "yes" if m["published_inside_corrected_ci"] else "no"
+                sizing = m["gold_per_arm_to_exclude_published"]
+                n_req = str(sizing["gold_per_arm"]) if sizing["achievable_by_labelling_alone"] else "floor"
+                rows.append(
+                    f"{arm_label} & {other} & {short_task[task]} & {m['published_margin_pp']:+.2f} & "
+                    f"{m['corrected_margin_pp']:+.2f} & "
+                    f"[{m['ci_pp']['lo']:+.2f}, {m['ci_pp']['hi']:+.2f}] & {inside} & {n_req} \\\\"
+                )
     body = "\n".join(rows)
     return (
-        "\\begin{tabular}{@{}llrrlc@{}}\n\\toprule\n"
-        "vs. & task & published & corrected & 95\\% CI & published inside \\\\\n"
+        "\\begin{tabular}{@{}lllrrlcr@{}}\n\\toprule\n"
+        "model arm & vs. & task & pub. & corr. & 95\\% iid CI & in CI & $n$/arm \\\\\n"
         f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
 
 def _design_effect(d: dict[str, Any]) -> str:
-    rows = []
-    for task, name in (
-        ("hand_ge1", "$\\geq$1 hand"),
-        ("hand_eq2", "2 hands"),
-        ("active_manipulation", "active manipulation"),
-    ):
-        u = d["h2u"]["tasks"][task]
-        s = d["h2s"]["tasks"][task]
-        rows.append(f"{name} & {u['design_effect']:.2f} & {s['design_effect']:.2f} \\\\")
+    """Raw-corpus iid vs worker-clustered vs factory-clustered intervals and exact ANOVA ICC."""
+    rc = d["posthoc"]["raw_corpus_clustering"]
+    rows: list[str] = []
+    for draw in ("S10k-U", "S10k-S"):
+        if rows:
+            rows.append("\\midrule")
+        for task, name in (
+            ("hand_ge1", "$\\geq$1 hand"),
+            ("hand_eq2", "2 hands"),
+            ("active_manipulation", "manipulation"),
+        ):
+            t = rc[draw]["tasks"][task]
+            iid = t["iid_ci"]
+            wk = t["worker_ci"]
+            rows.append(
+                f"{draw} & {name} & {_pct(t['point_estimate'])} & "
+                f"[{_pct(iid['lo'])}, {_pct(iid['hi'])}] & "
+                f"[{_pct(wk['lo'])}, {_pct(wk['hi'])}] & "
+                f"{t['worker_deff']:.2f} & {t['worker_anova']['icc']:.3f} & "
+                f"{t['factory_deff']:.2f} \\\\"
+            )
     body = "\n".join(rows)
-    u_c = d["h2u"]["clusters"]["n_clusters"]
-    s_c = d["h2s"]["clusters"]["n_clusters"]
     return (
-        "\\begin{tabular}{lrr}\n\\toprule\n"
-        f"figure & S10k-U ({u_c} clusters) & S10k-S ({s_c} clusters) \\\\\n"
+        "\\begin{tabular}{@{}llrllrrr@{}}\n\\toprule\n"
+        "draw & figure & rate & iid 95\\% CI & worker 95\\% CI & deff$_w$ & $\\hat{\\rho}_w$ & deff$_f$ \\\\\n"
+        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
+    )
+
+
+def _cluster_sensitivity(d: dict[str, Any]) -> str:
+    """Post-hoc cluster-sensitivity table for the vendor full-arm EPIC manipulation margin (D092)."""
+    m = d["posthoc"]["evaluation_cluster_sensitivity"]["arms"]["vendor_full_arm"][
+        "egocentric_minus_epic_margin"
+    ]["manipulation"]
+    rows = [
+        (
+            "Registered iid (lower bound on width)",
+            f"[{m['iid_ci_pp']['lo']:+.2f}, {m['iid_ci_pp']['hi']:+.2f}]",
+            f"{m['iid_ci_pp']['se_pp']:.2f}",
+            f"{m['iid_gold_per_arm']['floor_half_width_pp']:.2f}",
+            str(m["iid_gold_per_arm"]["gold_per_arm"]),
+        ),
+    ]
+    labels = {
+        "low_0.02": "Post hoc M1: worker-scaled + EPIC $K{=}37$ ($\\rho{=}0.02$)",
+        "matched_ego_anova": "Post hoc M1: worker-scaled + EPIC $K{=}37$ ($\\rho{=}\\hat{\\rho}_{\\text{ego}}{=}0.070$)",
+        "high_0.10": "Post hoc M1: worker-scaled + EPIC $K{=}37$ ($\\rho{=}0.10$)",
+    }
+    for entry in m["model1_epic_k37_grid"]:
+        sz = entry["gold_per_arm_to_exclude_published"]
+        n_req = str(sz["gold_per_arm"]) if sz["achievable_by_labelling_alone"] else "unachievable"
+        rows.append(
+            (
+                labels[entry["scenario"]],
+                f"[{entry['margin_ci_pp']['lo']:+.2f}, {entry['margin_ci_pp']['hi']:+.2f}]",
+                f"{entry['margin_ci_pp']['se_pp']:.2f}",
+                f"{sz['floor_half_width_pp']:.2f}",
+                n_req,
+            )
+        )
+    m2 = m["model2_direct_deff"]
+    sz2 = m2["gold_per_arm_to_exclude_published"]
+    rows.append(
+        (
+            f"Post hoc M2: direct $\\sqrt{{\\text{{deff}}_{{\\max}}}}$ scaling (deff={m2['deff_multiplier']:.2f})",
+            f"[{m2['ci_pp']['lo']:+.2f}, {m2['ci_pp']['hi']:+.2f}]",
+            f"{m2['ci_pp']['se_pp']:.2f}",
+            f"{sz2['floor_half_width_pp']:.2f}",
+            str(sz2["gold_per_arm"]),
+        )
+    )
+    body = "\n".join(f"{a} & {b} & {c} & {e} & {f} \\\\" for a, b, c, e, f in rows)
+    return (
+        "\\begin{tabular}{@{}llrrr@{}}\n\\toprule\n"
+        "variance assumption (point $-1.32$\\,pp vs.\\ $+6.62$\\,pp) & 95\\% CI (pp) & SE & floor & $n$/arm \\\\\n"
         f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
 
 def _ledger(d: dict[str, Any]) -> str:
-    """All eight pre-registered hypotheses with their outcome, before any result is discussed."""
+    """Appendix A: all pre-registered hypotheses with their threshold and observed outcome."""
     w, e5, r1, m = d["wave4"], d["e5"], d["rung1"], d["margin"]
     h2max = max(d["h2u"]["design_effect_max"], d["h2s"]["design_effect_max"])
     rows = [
-        ("H8", "participant counts differ across corpora", "computable, no threshold",
+        ("H8", "participant counts differ across corpora", "computable, no bar",
          "58.2$\\times$", "reported"),
-        ("H1", "all three figures reproduce within $\\pm$2\\,pp", "$\\pm$2\\,pp",
+        ("H1", "all three figures within $\\pm$2\\,pp (open judge)", "$\\pm$2\\,pp",
          f"{d['e2']['H1']['hand_eq2_rate']['diff_pp']:.2f}\\,pp on 2 hands", "fails"),
-        ("H1b", "the two P0 prompts disagree by $\\geq$1\\,pp", "$\\geq$1\\,pp",
+        ("H1b", "P0a vs.\\ P0b manipulation disagree by $\\geq$1\\,pp", "$\\geq$1\\,pp",
          f"{d['e2']['H1b']['diff_pp']:.2f}\\,pp", "null"),
         ("H2", "design effect over worker id $\\geq$ 2", "$\\geq$ 2",
          f"{h2max:.2f} max", "fails"),
@@ -184,20 +325,20 @@ def _ledger(d: dict[str, Any]) -> str:
          f"{w['H5']['diff_pp']:+.2f}\\,pp", "fails"),
         ("H6", "agreement floor 0.80 at coverage $\\geq$ 0.70", "0.80 at 0.70",
          f"fidelity {r1['fidelity_vs_gemini_2_5_flash']:.3f}", "fails"),
-        ("H7", "calibration not measurable under the published protocol", "n/a",
-         f"ECE {w['H7_calibration']['hand_count']['ece']:.3f}", "measured, degenerate"),
+        ("H7", "calibration not measurable on published protocol", "n/a",
+         f"ECE {w['H7_calibration']['hand_count']['ece']:.3f}", "degenerate"),
     ]
     body = "\n".join(f"{h} & {claim} & {thr} & {obs} & {verdict} \\\\" for h, claim, thr, obs, verdict in rows)
-    em = m["comparisons"]["egocentric-10k_minus_epic-kitchens-100"]["manipulation"]
+    vm = m["vendor_full_arm"]["comparisons"]["egocentric-10k_minus_epic-kitchens-100"]["manipulation"]
     body += (
         "\n\\midrule\n\\multicolumn{5}{l}{\\emph{Not pre-registered, reported as exploratory:}} \\\\\n"
-        f"--- & gold-corrected margin vs.\\ EPIC-KITCHENS-100 & none & "
-        f"{em['corrected_margin_pp']:+.2f}\\,pp & unresolved \\\\"
+        f"--- & gold-corrected margin vs.\\ EPIC (vendor arm) & none & "
+        f"{vm['corrected_margin_pp']:+.2f}\\,pp & unresolved \\\\"
     )
     return (
         "\\begin{tabular}{@{}lp{0.34\\linewidth}p{0.15\\linewidth}p{0.20\\linewidth}l@{}}\n"
         "\\toprule\n"
-        "id & pre-registered claim & threshold & observed & verdict \\\\\n"
+        "id & pre-registered claim & threshold & observed & outcome \\\\\n"
         f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
@@ -216,7 +357,6 @@ def _provenance(d: dict[str, Any]) -> str:
     )
 
 
-
 # ── appendices ──────────────────────────────────────────────────────────────────────────────
 
 
@@ -231,14 +371,13 @@ def _var(xs: list[float]) -> float:
 
 
 def _confusion_per_corpus(d: dict[str, Any]) -> str:
-    """Appendix C. Per corpus and judge, which the pooled matrix in stats.json does not carry.
-    The vendor's own confusion matrices are analysis this project has not published before."""
+    """Appendix B: per-corpus confusion matrices for both judges (n=153)."""
     frames = json.loads((_ROOT / "space" / "public" / "data" / "frames.json").read_text())
     labelled = [f for f in frames if f.get("r")]
     rows = []
     for corpus in ("egocentric-10k", "epic-kitchens-100", "ego4d"):
         arm = [f for f in labelled if f["corpus"] == corpus]
-        for judge, key in (("Qwen3-VL", "q"), ("gemini-2.5-flash", "g")):
+        for judge, key in (("gemini-2.5-flash", "g"), ("Qwen3-VL", "q")):
             hands = [[0, 0, 0] for _ in range(3)]
             manip = [[0, 0], [0, 0]]
             for f in arm:
@@ -246,7 +385,7 @@ def _confusion_per_corpus(d: dict[str, Any]) -> str:
                 manip[int(f[key]["m"])][int(f["r"]["m"])] += 1
             flat = " & ".join(str(hands[j][r]) for j in range(3) for r in range(3))
             rows.append(
-                f"{corpus} & {judge} & {len(arm)} & {flat} & "
+                f"{_CORPUS_LABEL[corpus]} & {judge} & {len(arm)} & {flat} & "
                 f"{manip[0][0]} & {manip[0][1]} & {manip[1][0]} & {manip[1][1]} \\\\"
             )
     body = "\n".join(rows)
@@ -262,190 +401,172 @@ def _confusion_per_corpus(d: dict[str, Any]) -> str:
 
 
 def _ppi_variance(d: dict[str, Any]) -> str:
-    """Appendix D. The estimator throws its variance components away, so they are recomputed
-    here from the same per-frame data. Answers "why not just label more": the gold term
-    dominates, so the unlabelled pool is not the binding constraint."""
+    """Appendix C: PPI++ variance decomposition for both open-judge and vendor full-arm pools."""
     frames = json.loads((_ROOT / "space" / "public" / "data" / "frames.json").read_text())
-    corpus_of = {"G200-ego": "egocentric-10k", "G200-ego4d": "ego4d", "G200-epic": "epic-kitchens-100"}
-    rows = []
-    for arm, corpus in corpus_of.items():
-        pool = [f for f in frames if f["corpus"] == corpus]
-        gold = [f for f in pool if f.get("r")]
-        unl = [f for f in pool if not f.get("r")]
-        for task, key in (("hand_count", "h"), ("manipulation", "m")):
-            def ind(v: Any, _t: str = task) -> float:
-                return float(v >= 1) if _t == "hand_count" else float(bool(v))
-            y = [ind(f["r"][key]) for f in gold]
-            fg = [ind(f["q"][key]) for f in gold]
-            fu = [ind(f["q"][key]) for f in unl]
-            n, N = len(y), len(fu)
-            vfg = _var(fg)
-            mfg, my = _mean(fg), _mean(y)
-            cov = sum((a - mfg) * (b - my) for a, b in zip(fg, y)) / (n - 1)
-            lam = min(1.0, max(0.0, cov / vfg)) if vfg > 0 else 0.0
-            resid = [b - lam * a for a, b in zip(fg, y)]
-            gold_term = _var(resid) / n
-            unl_term = (lam**2) * _var(fu) / N
-            share = 100 * gold_term / (gold_term + unl_term)
-            rows.append(
-                f"{_CORPUS_LABEL[arm]} & {_TASK_LABEL[task]} & {n} & {N} & {lam:.3f} & "
-                f"{gold_term:.2e} & {unl_term:.2e} & {share:.1f} \\\\"
-            )
+    stored = json.loads((_DATA / "rung1_stored_labels.json").read_text())
+    arm_ids: dict[str, set[str]] = {}
+    for corpus, sample in (
+        ("egocentric-10k", "E10k-ego"),
+        ("epic-kitchens-100", "E10k-epic"),
+        ("ego4d", "E10k-ego4d"),
+    ):
+        arm_ids[corpus] = {
+            r["frame_id"] for r in json.loads((_DATA / "membership" / f"{sample}.json").read_text())
+        }
+
+    rows: list[str] = []
+    for arm_label, use_vendor in (("vendor ($N=9{,}800$)", True), ("open ($N\\approx 140$)", False)):
+        if rows:
+            rows.append("\\midrule")
+        for corpus in ("egocentric-10k", "epic-kitchens-100", "ego4d"):
+            pool = [f for f in frames if f["corpus"] == corpus]
+            gold = [f for f in pool if f.get("r")]
+            unl_open = [f for f in pool if not f.get("r")]
+            unl_vendor = [r for r in stored if r["frame_id"] in arm_ids[corpus]]
+            for task, key, skey in (("hand_count", "h", "hands_visible"), ("manipulation", "m", "manipulation")):
+                def ind(v: Any, _t: str = task) -> float:
+                    return float(v >= 1) if _t == "hand_count" else float(bool(v))
+
+                y = [ind(f["r"][key]) for f in gold]
+                jkey = "g" if use_vendor else "q"
+                fg = [ind(f[jkey][key]) for f in gold]
+                fu = (
+                    [ind(r[skey]) for r in unl_vendor]
+                    if use_vendor
+                    else [ind(f["q"][key]) for f in unl_open]
+                )
+                n, big_n = len(y), len(fu)
+                vfg = _var(fg)
+                mfg, my = _mean(fg), _mean(y)
+                cov = sum((a - mfg) * (b - my) for a, b in zip(fg, y)) / (n - 1)
+                lam = min(1.0, max(0.0, cov / vfg)) if vfg > 0 else 0.0
+                resid = [b - lam * a for a, b in zip(fg, y)]
+                gold_term = _var(resid) / n
+                unl_term = (lam**2) * _var(fu) / big_n
+                share = 100 * gold_term / (gold_term + unl_term)
+                rows.append(
+                    f"{arm_label} & {_CORPUS_LABEL[corpus]} & {_TASK_LABEL[task]} & {n} & {big_n:,} & "
+                    f"{lam:.3f} & {gold_term:.2e} & {unl_term:.2e} & {share:.1f} \\\\"
+                )
     body = "\n".join(rows)
     return (
-        "\\begin{tabular}{@{}llrrrrrr@{}}\n\\toprule\n"
-        "corpus & task & $n_{\\text{gold}}$ & $N$ & $\\lambda$ & gold term & unlabelled term "
-        "& gold \\% \\\\\n"
+        "\\begin{tabular}{@{}lllrrrrrr@{}}\n\\toprule\n"
+        "arm & corpus & task & $n$ & $N$ & $\\lambda$ & gold var & unl.\\ var & gold \\% \\\\\n"
         f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
-    )
-
-
-def _run_ledger(d: dict[str, Any]) -> str:
-    """Appendix F. Every live judge run, so the cost claim is inspectable."""
-    rows = []
-    total = 0.0
-    for r in d["stats"]["runs"]:
-        cost = r.get("cost_usd")
-        if cost is not None:
-            total += cost
-        cost_s = f"{cost:.4f}" if cost is not None else "---"
-        rows.append(
-            f"{r['id'].replace('_', ' ')} & {r['sample']} & {r['n_requested']} & {r['n_ok']} & {cost_s} \\\\"
-        )
-    body = "\n".join(rows)
-    return (
-        "\\begin{tabular}{@{}llrrr@{}}\n\\toprule\n"
-        "run & sample & requested & ok & cost (USD) \\\\\n"
-        f"\\midrule\n{body}\n\\midrule\n"
-        f"\\multicolumn{{4}}{{l}}{{attributable total}} & {total:.2f} \\\\\n"
-        "\\bottomrule\n\\end{tabular}\n"
     )
 
 
 def _cluster_detail(d: dict[str, Any]) -> str:
-    """Appendix E. Cluster structure behind the design effect, and the implied ICC, which is the
-    quantity that transfers to a different draw. The design effect itself does not, because it
-    depends on the mean cluster size."""
-    rows = []
-    for name, key in (("S10k-U", "h2u"), ("S10k-S", "h2s")):
-        c = d[key]["clusters"]
-        mbar = c["mean_cluster_size"]
-        lo, hi = d[key]["design_effect_min"], d[key]["design_effect_max"]
-        icc_lo = (lo - 1) / (mbar - 1)
-        icc_hi = (hi - 1) / (mbar - 1)
-        rows.append(
-            f"{name} & {c['n_clusters']} & {c['n_observations']} & {mbar:.2f} & "
-            f"{c['min_cluster_size']} & {c['max_cluster_size']} & "
-            f"{lo:.2f}--{hi:.2f} & {icc_lo:.3f}--{icc_hi:.3f} \\\\"
-        )
+    """Appendix D: exact unequal-cluster ANOVA ICC and Kish m_tilde for workers and factories."""
+    rc = d["posthoc"]["raw_corpus_clustering"]
+    rows: list[str] = []
+    for level_label, c_key, a_key, d_key in (
+        ("worker", "worker_clusters", "worker_anova", "worker_deff"),
+        ("factory", "factory_clusters", "factory_anova", "factory_deff"),
+    ):
+        if rows:
+            rows.append("\\midrule")
+        for draw in ("S10k-U", "S10k-S"):
+            c = rc[draw][c_key]
+            tasks = rc[draw]["tasks"]
+            deffs = [tasks[t][d_key] for t in ("hand_ge1", "hand_eq2", "active_manipulation")]
+            iccs = [tasks[t][a_key]["icc"] for t in ("hand_ge1", "hand_eq2", "active_manipulation")]
+            an = tasks["hand_ge1"][a_key]
+            rows.append(
+                f"{draw} ({level_label}) & {c['n_clusters']} & {c['mean_cluster_size']:.2f} & "
+                f"{an['m_tilde']:.2f} & {c['min_cluster_size']}--{c['max_cluster_size']} & "
+                f"{min(deffs):.2f}--{max(deffs):.2f} & {min(iccs):.3f}--{max(iccs):.3f} \\\\"
+            )
     body = "\n".join(rows)
     return (
-        "\\begin{tabular}{@{}lrrrrrll@{}}\n\\toprule\n"
-        "draw & clusters & obs & mean size & min & max & design effect & implied ICC \\\\\n"
+        "\\begin{tabular}{@{}lrrrlrr@{}}\n\\toprule\n"
+        "draw (level) & clusters & $\\bar{m}$ & $\\tilde{m}$ & min--max & deff range & ANOVA $\\hat{\\rho}$ \\\\\n"
         f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
 
-
 def _fig_forest(d: dict[str, Any]) -> str:
-    """The published mark has no width. That is the whole argument and a table buries it.
-
-    pgfplots rather than an image, so the coordinates come from the artifacts like every table
-    here and no plotting dependency enters the project.
-    """
+    """Active-manipulation prevalence: published point (no CI), open-judge PPI++, vendor full-arm PPI++."""
+    vprev = d["margin"]["vendor_full_arm"]["prevalence"]
     rows: list[str] = []
-    pub, judge, ppi = [], [], []
+    pub, open_ppi, vendor_ppi = [], [], []
     y = 0
     labels = []
-    for arm, corpus in (("G200-ego", "Egocentric-10K"), ("G200-epic", "EPIC-KITCHENS-100"),
-                        ("G200-ego4d", "Ego4D")):
+    for arm, corpus_key, label in (
+        ("G200-ego", "egocentric-10k", "Egocentric-10K"),
+        ("G200-epic", "epic-kitchens-100", "EPIC-KITCHENS-100"),
+        ("G200-ego4d", "ego4d", "Ego4D"),
+    ):
         block = d["wave4"]["ppi"][arm]["manipulation"]
+        vblock = vprev[corpus_key]["manipulation"]
         y += 1
-        labels.append(f"{y}/{corpus}")
+        labels.append(f"{y}/{label}")
         pub.append(f"({block['published']},{y})")
-        judge.append(f"({block['naive']['value']},{y})")
         p_ = block["ppi"]
-        half = (p_["ci"]["hi"] - p_["ci"]["lo"]) / 2
-        ppi.append(f"({p_['value']},{y}) +- ({half},0)")
+        half_open = (p_["ci"]["hi"] - p_["ci"]["lo"]) / 2
+        open_ppi.append(f"({p_['value']},{y - 0.14:.2f}) +- ({half_open},0)")
+        half_vend = (vblock["ci"]["hi"] - vblock["ci"]["lo"]) / 2
+        vendor_ppi.append(f"({vblock['value']},{y + 0.14:.2f}) +- ({half_vend},0)")
     rows.append("\\begin{tikzpicture}")
-    yticks = ",".join(l.split("/")[1] for l in labels)
+    yticks = ",".join(lbl.split("/")[1] for lbl in labels)
     opts = (
-        "width=\\linewidth,height=5.2cm,xlabel={active manipulation prevalence},"
-        "xmin=0.35,xmax=1.02,ytick={1,2,3},yticklabels={" + yticks + "},"
+        "width=0.78\\linewidth,height=5.4cm,xlabel={active manipulation prevalence},"
+        "xmin=0.30,xmax=1.00,ytick={1,2,3},yticklabels={" + yticks + "},"
         "ymin=0.4,ymax=3.6,y dir=reverse,legend pos=south west,legend cell align=left,"
         "legend style={font=\\footnotesize,draw=none,fill=none},grid=major,"
         "major grid style={dotted,gray!40},tick label style={font=\\footnotesize},"
         "label style={font=\\footnotesize}"
     )
     rows.append("\\begin{axis}[" + opts + "]")
-    rows.append("\\addplot+[only marks,mark=|,mark size=5pt,black,thick] coordinates {"
-                + " ".join(pub) + "};")
-    rows.append("\\addlegendentry{published, no interval}")
-    rows.append("\\addplot+[only marks,mark=o,gray] coordinates {" + " ".join(judge) + "};")
-    rows.append("\\addlegendentry{judge alone}")
-    rows.append("\\addplot+[only marks,mark=*,error bars/.cd,x dir=both,x explicit] coordinates {"
-                + " ".join(ppi) + "};")
-    rows.append("\\addlegendentry{PPI++ with 95\\% interval}")
+    rows.append(
+        "\\addplot+[only marks,mark=|,mark size=6pt,black,very thick] coordinates {"
+        + " ".join(pub)
+        + "};"
+    )
+    rows.append("\\addlegendentry{published (no interval)}")
+    rows.append(
+        "\\addplot+[only marks,mark=*,black,error bars/.cd,x dir=both,x explicit] coordinates {"
+        + " ".join(vendor_ppi)
+        + "};"
+    )
+    rows.append("\\addlegendentry{vendor stored arm ($N=9{,}800$), PPI++ 95\\% iid CI}")
+    rows.append(
+        "\\addplot+[only marks,mark=o,gray!80!black,error bars/.cd,x dir=both,x explicit] coordinates {"
+        + " ".join(open_ppi)
+        + "};"
+    )
+    rows.append("\\addlegendentry{open judge ($N\\approx 140$), PPI++ 95\\% iid CI}")
     rows.append("\\end{axis}")
     rows.append("\\end{tikzpicture}")
     return "\n".join(rows) + "\n"
 
 
-
-def _vendor_prevalence(d: dict[str, Any]) -> str:
-    """D089: the same correction with the vendor's own judge over its own 9,800-frame arms."""
-    v = d["margin"]["vendor_full_arm"]["prevalence"]
-    arm_of = {"egocentric-10k": "G200-ego", "epic-kitchens-100": "G200-epic", "ego4d": "G200-ego4d"}
-    order = ["egocentric-10k", "epic-kitchens-100", "ego4d"]
-    rows = []
-    for corpus in order:
-        for task in ("hand_count", "manipulation"):
-            b = v[corpus][task]
-            published = d["wave4"]["ppi"][arm_of[corpus]][task]["published"]
+def _sensitivity(d: dict[str, Any]) -> str:
+    """Batch and labelling-pace sensitivity for both judges (first 93, all 153, >2s)."""
+    judges = d["posthoc"]["error_direction_both_judges"]["judges"]
+    rows: list[str] = []
+    for jkey, jlabel in (("gemini-2.5-flash", "gemini-2.5-flash"), ("qwen3-vl", "Qwen3-VL")):
+        if rows:
+            rows.append("\\midrule")
+        sens = judges[jkey]["sensitivity"]
+        for skey, slabel in (
+            ("first_batch_93", "first batch"),
+            ("all_153", "all labels"),
+            ("excluding_le_2s", "excl.\\ $\\leq$2\\,s"),
+        ):
+            b = sens[skey]
+            g, m = b["hand_ge1"], b["manipulation"]
             rows.append(
-                f"{corpus} & {_TASK_LABEL[task]} & {_pct(published)} & {_pct(b['value'])} & "
-                f"[{_pct(b['ci']['lo'])}, {_pct(b['ci']['hi'])}] & {b['n_gold']} & {b['n_unlabelled']} \\\\"
+                f"{jlabel} & {slabel} & {b['n']} & "
+                f"{g['over']}/{g['at_risk_over']} & {g['under']}/{g['at_risk_under']} & "
+                f"{m['over']}/{m['at_risk_over']} & {m['under']}/{m['at_risk_under']} \\\\"
             )
     body = "\n".join(rows)
     return (
-        "\\begin{tabular}{@{}llrrlrr@{}}\n\\toprule\n"
-        "corpus & task & published & corrected & 95\\% CI & $n_{\\text{gold}}$ & $N$ \\\\\n"
-        f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
-    )
-
-
-def _sensitivity(d: dict[str, Any]) -> str:
-    """D089: every headline number on the first 93 labels, on all 153, and on 153 minus the
-    labels recorded in two seconds or less. The second batch was collected after results were
-    public and three times faster, and disclosing that without testing it is where this project's
-    candour previously stopped."""
-    frames = [f for f in json.loads((_ROOT / "space" / "public" / "data" / "frames.json").read_text())
-              if f.get("r")]
-    cut = "2026-09-04"
-    subsets = {
-        "first batch ($n=93$)": [f for f in frames if f["r"]["at"] < cut],
-        "all labels ($n=153$)": frames,
-        "excluding $\\leq$2\\,s labels": [f for f in frames if f["r"]["s"] > 2],
-    }
-    rows = []
-    for name, fs in subsets.items():
-        over = sum(1 for f in fs if f["r"]["h"] == 0 and f["q"]["h"] >= 1)
-        at_o = sum(1 for f in fs if f["r"]["h"] == 0)
-        und = sum(1 for f in fs if f["r"]["h"] >= 1 and f["q"]["h"] == 0)
-        at_u = sum(1 for f in fs if f["r"]["h"] >= 1)
-        m_o = sum(1 for f in fs if f["q"]["m"] and not f["r"]["m"])
-        m_ao = sum(1 for f in fs if not f["r"]["m"])
-        m_u = sum(1 for f in fs if (not f["q"]["m"]) and f["r"]["m"])
-        m_au = sum(1 for f in fs if f["r"]["m"])
-        rows.append(
-            f"{name} & {len(fs)} & {over}/{at_o} & {und}/{at_u} & {m_o}/{m_ao} & {m_u}/{m_au} \\\\"
-        )
-    body = "\n".join(rows)
-    return (
-        "\\begin{tabular}{@{}lrrrrr@{}}\n\\toprule\n"
-        "& & \\multicolumn{2}{c}{$\\geq$1 hand} & \\multicolumn{2}{c}{manipulation} \\\\\n"
-        "\\cmidrule(lr){3-4}\\cmidrule(lr){5-6}\n"
-        "subset & $n$ & over & under & over & under \\\\\n"
+        "\\begin{tabular}{@{}llrrrrr@{}}\n\\toprule\n"
+        "& & & \\multicolumn{2}{c}{$\\geq$1 hand} & \\multicolumn{2}{c}{manipulation} \\\\\n"
+        "\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}\n"
+        "judge & subset & $n$ & over & under & over & under \\\\\n"
         f"\\midrule\n{body}\n\\bottomrule\n\\end{{tabular}}\n"
     )
 
@@ -456,13 +577,14 @@ def main() -> int:
     tables = {
         "replication": _replication(d),
         "error_direction": _error_direction(d),
+        "disagreement_tags": _disagreement_tags(d),
         "prevalence": _prevalence(d),
         "margins": _margins(d),
         "design_effect": _design_effect(d),
+        "cluster_sensitivity": _cluster_sensitivity(d),
         "ledger": _ledger(d),
         "confusion_per_corpus": _confusion_per_corpus(d),
         "ppi_variance": _ppi_variance(d),
-        "run_ledger": _run_ledger(d),
         "cluster_detail": _cluster_detail(d),
         "fig_forest": _fig_forest(d),
         "vendor_prevalence": _vendor_prevalence(d),
@@ -471,6 +593,10 @@ def main() -> int:
     for name, tex in tables.items():
         (_OUT / f"{name}.tex").write_text(tex)
     (_OUT / "provenance.tex").write_text(_provenance(d))
+    # Remove retired run_ledger.tex if present so paper/generated/ holds only active tables.
+    retired = _OUT / "run_ledger.tex"
+    if retired.exists():
+        retired.unlink()
     print(f"wrote {len(tables) + 1} files to {_OUT.relative_to(_ROOT)}")
     return 0
 

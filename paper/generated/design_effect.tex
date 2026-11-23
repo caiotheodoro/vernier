@@ -1,9 +1,13 @@
-\begin{tabular}{lrr}
+\begin{tabular}{@{}llrllrrr@{}}
 \toprule
-figure & S10k-U (1966 clusters) & S10k-S (1999 clusters) \\
+draw & figure & rate & iid 95\% CI & worker 95\% CI & deff$_w$ & $\hat{\rho}_w$ & deff$_f$ \\
 \midrule
-$\geq$1 hand & 1.25 & 1.31 \\
-2 hands & 1.62 & 1.66 \\
-active manipulation & 1.27 & 1.29 \\
+S10k-U & $\geq$1 hand & 94.89 & [94.45, 95.32] & [94.41, 95.37] & 1.25 & 0.039 & 2.41 \\
+S10k-U & 2 hands & 80.80 & [80.02, 81.56] & [79.82, 81.78] & 1.62 & 0.106 & 5.65 \\
+S10k-U & manipulation & 89.82 & [89.21, 90.42] & [89.13, 90.49] & 1.27 & 0.070 & 2.85 \\
+\midrule
+S10k-S & $\geq$1 hand & 95.11 & [94.69, 95.53] & [94.62, 95.58] & 1.31 & 0.062 & 2.18 \\
+S10k-S & 2 hands & 82.05 & [81.30, 82.80] & [81.08, 83.01] & 1.66 & 0.103 & 3.95 \\
+S10k-S & manipulation & 90.38 & [89.80, 90.95] & [89.73, 91.03] & 1.29 & 0.068 & 3.56 \\
 \bottomrule
 \end{tabular}

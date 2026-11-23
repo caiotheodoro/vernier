@@ -1,11 +1,15 @@
-\begin{tabular}{@{}lrrrrr@{}}
+\begin{tabular}{@{}llrrrrr@{}}
 \toprule
-& & \multicolumn{2}{c}{$\geq$1 hand} & \multicolumn{2}{c}{manipulation} \\
-\cmidrule(lr){3-4}\cmidrule(lr){5-6}
-subset & $n$ & over & under & over & under \\
+& & & \multicolumn{2}{c}{$\geq$1 hand} & \multicolumn{2}{c}{manipulation} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+judge & subset & $n$ & over & under & over & under \\
 \midrule
-first batch ($n=93$) & 93 & 5/21 & 0/72 & 8/27 & 0/66 \\
-all labels ($n=153$) & 153 & 6/24 & 0/129 & 10/33 & 2/120 \\
-excluding $\leq$2\,s labels & 129 & 6/24 & 0/105 & 10/33 & 1/96 \\
+gemini-2.5-flash & first batch & 93 & 7/21 & 0/72 & 8/27 & 1/66 \\
+gemini-2.5-flash & all labels & 153 & 9/24 & 0/129 & 10/33 & 4/120 \\
+gemini-2.5-flash & excl.\ $\leq$2\,s & 129 & 9/24 & 0/105 & 10/33 & 3/96 \\
+\midrule
+Qwen3-VL & first batch & 93 & 5/21 & 0/72 & 8/27 & 0/66 \\
+Qwen3-VL & all labels & 153 & 6/24 & 0/129 & 10/33 & 2/120 \\
+Qwen3-VL & excl.\ $\leq$2\,s & 129 & 6/24 & 0/105 & 10/33 & 1/96 \\
 \bottomrule
 \end{tabular}

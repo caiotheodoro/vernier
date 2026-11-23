@@ -1,12 +1,12 @@
 cff-version: 1.2.0
 message: "If you use this work, please cite the paper."
-title: "Asymmetric Judge Error and Clustered Frames: A Pre-Registered Audit of a Commercial Dataset Quality Claim"
+title: "When a Model Judge Certifies a Dataset: Asymmetric Over-Calling, Worker Clustering, and Unresolved Margins in Egocentric-10K"
 type: article
 authors:
   - family-names: Theodoro
     given-names: Caio
     orcid: "https://orcid.org/0009-0005-7343-981X"
-date-released: 2026-11-23
+date-released: 2026-09-05
 doi: 10.5281/zenodo.24453957
 url: "https://doi.org/10.5281/zenodo.24453957"
 repository-code: "https://github.com/caiotheodoro/vernier"
@@ -15,10 +15,12 @@ keywords:
   - dataset auditing
   - LLM-as-judge
   - prediction-powered inference
+  - cluster-robust inference
+  - egocentric video
   - pre-registration
-  - negative results
 abstract: >-
-  A pre-registered audit of a vendor's dataset quality claim: the judge's errors
-  against one rater's labels, the design effect of the corpus, and the
-  gold-corrected comparison against EPIC-KITCHENS-100. The code and data are
+  An audit of a commercial egocentric video dataset's VLM-derived quality claim:
+  asymmetric judge over-calling against 153 single-rater gold frames, worker and
+  factory clustering design effects on raw-corpus draws, and gold-corrected
+  comparative margins against EPIC-KITCHENS-100. The code and data are
   Apache-2.0, the paper CC BY 4.0.
